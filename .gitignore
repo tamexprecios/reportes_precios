@@ -1,0 +1,17 @@
+# Entorno virtual
+venv/
+.env/
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code
+.vscode/
+
+# Jupyter (si lo usas después)
+.ipynb_checkpoints/
+
+# Logs
+*.log
