@@ -14,7 +14,7 @@ st.write("Reportes Área de Precios")
 # ---------------------------
 # URL DE LA API
 # ---------------------------
-API_URL = "http://127.0.0.1:8000/datos"
+API_URL = "https://reportes-precios.onrender.com"
 
 # ---------------------------
 # FUNCIÓN API
@@ -23,8 +23,11 @@ def obtener_datos_api():
     try:
         response = requests.get(API_URL, timeout=30)
 
+        st.write("STATUS CODE:", response.status_code)
+        st.write("RESPUESTA RAW:", response.text)
+
         if response.status_code != 200:
-            st.error(f"Error conectando con la API: {response.status_code}")
+            st.error("Error conectando con la API")
             return pd.DataFrame()
 
         data = response.json()
@@ -33,7 +36,6 @@ def obtener_datos_api():
     except Exception as e:
         st.error(f"Error de conexión: {e}")
         return pd.DataFrame()
-
 # ---------------------------
 # CARGA DE DATOS
 # ---------------------------
