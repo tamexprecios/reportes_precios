@@ -321,4 +321,23 @@ ORDER BY ID, Articulo;
 
     df = pd.read_sql(query, engine)
 
+    print (df)
+
     return df
+
+if __name__ == "__main__":
+
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.width', None)
+
+    df = obtener_datos()
+
+    print("\n===== DATOS OBTENIDOS =====\n")
+
+    print(df.to_string())
+
+    print("\n===== RESUMEN =====")
+    print("Filas:", len(df))
+    print("Columnas:", len(df.columns))
+
+
