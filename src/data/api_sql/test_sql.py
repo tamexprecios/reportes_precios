@@ -211,8 +211,8 @@ Base AS (
 
     WHERE V.Mov = 'Pedido Tamex'
       AND V.Estatus = 'CONCLUIDO'
-      AND V.FechaEmision >= '2026-05-01'
-      AND V.FechaEmision < '2026-05-11'
+      AND V.FechaEmision >= '2026-06-15'
+      AND V.FechaEmision < '2026-06-16'
 ),
 
 LineaCalculada AS (
