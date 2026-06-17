@@ -327,17 +327,14 @@ ORDER BY ID, Articulo;
 
 if __name__ == "__main__":
 
-    pd.set_option('display.max_columns', None)
-    pd.set_option('display.width', None)
+      pd.set_option('display.max_columns', None)
+      pd.set_option('display.width', 200)
 
-    df = obtener_datos()
+      df = obtener_datos()
 
-    print("\n===== DATOS OBTENIDOS =====\n")
+      print(df.head(10))
 
-    print(df.to_string())
 
-    print("\n===== RESUMEN =====")
-    print("Filas:", len(df))
-    print("Columnas:", len(df.columns))
+
 
 
