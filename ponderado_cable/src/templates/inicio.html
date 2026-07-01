@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Inicio
+{% endblock %}
+
+{% block contenido %}
+
+<div class="card shadow">
+
+    <div class="card-body text-center">
+
+        <img src="{{ url_for('static', filename='img/logo_tamex.webp') }}"
+        class="img-fluid mb-2"
+        style="max-height: 120px;">
+
+        <h1 class="display-5 mb-4 titulo-dashboard">
+            Dashboard de Descuento Ponderado
+        </h1>
+
+        <h4 class="text-secondary mb-5">
+            Reporte de Ventas del Cable
+        </h4>
+
+        <div class="row justify-content-center">
+
+            <div class="col-md-2">
+
+                 <a href="/thw"
+                 class="btn btn-cable w-100">
+ 
+                 THW
+
+                 </a>
+            </div>
+
+
+            <div class="col-md-2">
+
+                 <a href="/desnudo"
+                class="btn btn-cable w-100">
+
+                 Cable Desnudo
+
+                 </a>
+
+             </div>
+
+
+            <div class="col-md-2">
+
+                 <a href="/serie8000"
+                 class="btn btn-cable w-100">
+
+                 Serie 8000
+
+                </a>
+
+            </div>
+
+            <div class="col-md-2">
+                 <a href="/resumen"
+                 class="btn btn-resumen w-100">
+
+                 Resumen
+
+                 </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

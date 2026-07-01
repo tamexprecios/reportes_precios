@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+
+{% block titulo %}
+Dashboard THW
+{% endblock %}
+
+
+{% block contenido %}
+
+
+<div class="card shadow">
+
+
+    <div class="card-body">
+
+
+        <h1 class="titulo-dashboard mb-4">
+
+            Dashboard Cable THW
+
+        </h1>
+
+
+        <!-- FILTROS -->
+
+        <form method="POST">
+
+
+            <div class="row g-3 mb-4">
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Fecha inicio
+                    </label>
+
+                    <input type="date"
+                           name="fecha_inicio"
+                           class="form-control">
+
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Fecha fin
+                    </label>
+
+                    <input type="date"
+                           name="fecha_fin"
+                           class="form-control">
+
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Marca
+                    </label>
+
+
+                    <select name="marca"
+                            class="form-select">
+
+
+                        <option value="">
+                            Seleccione
+                        </option>
+
+
+                        <option value="marca1">
+                            Marca 1
+                        </option>
+
+
+                        <option value="marca2">
+                            Marca 2
+                        </option>
+
+
+                        <option value="marca3">
+                            Marca 3
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Almacén
+                    </label>
+
+
+                    <select name="almacen"
+                            class="form-select">
+
+
+                        <option value="">
+                            Seleccione
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Gerente Regional
+                    </label>
+
+
+                    <select name="gerente"
+                            class="form-select">
+
+
+                        <option value="">
+                            Seleccione
+                        </option>
+
+
+                    </select>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <button type="submit"
+                    class="btn btn-cable mb-4">
+
+                Buscar
+
+            </button>
+
+
+        </form>
+
+
+
+        <!-- TABLA CALIBRES -->
+
+
+        <h4>
+            Ventas por calibre
+        </h4>
+
+
+        <table class="table table-bordered">
+
+
+            <thead class="table-dark">
+
+
+                <tr>
+
+                    <th>
+                        Calibre
+                    </th>
+
+
+                    <th>
+                        Ventas
+                    </th>
+
+
+                    <th>
+                        Descuento promedio
+                    </th>
+
+
+                </tr>
+
+
+            </thead>
+
+
+
+            <tbody>
+
+
+                <tr>
+
+
+                    <td>
+                        Ejemplo
+                    </td>
+
+
+                    <td>
+                        0
+                    </td>
+
+
+                    <td>
+                        0 %
+                    </td>
+
+
+                </tr>
+
+
+            </tbody>
+
+
+        </table>
+
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}

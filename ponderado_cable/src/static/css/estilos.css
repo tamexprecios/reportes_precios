@@ -1,0 +1,51 @@
+.titulo-dashboard {
+
+    color: #002B5B;
+
+    font-weight: 800;
+
+}
+
+
+.btn-cable {
+
+    background-color: #002B5B;
+
+    border-color: #002B5B;
+
+    color: white;
+
+}
+
+
+.btn-cable:hover {
+
+    background-color: #001F42;
+
+    border-color: #001F42;
+
+    color: white;
+
+}
+
+
+.btn-resumen {
+
+    background-color: #90C2E7;
+
+    border-color: #90C2E7;
+
+    color: black;
+
+}
+
+
+.btn-resumen:hover {
+
+    background-color: #90C2E7;
+
+    border-color: #90C2E7;
+
+    color: black;
+
+}
