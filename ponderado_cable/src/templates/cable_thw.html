@@ -194,30 +194,15 @@ Dashboard THW
             </thead>
 
 
-
             <tbody>
 
-
+                {% for fila in datos %}
                 <tr>
-
-
-                    <td>
-                        Ejemplo
-                    </td>
-
-
-                    <td>
-                        0
-                    </td>
-
-
-                    <td>
-                        0 %
-                    </td>
-
-
+                    <td>{{ fila['Calibre'] }}</td>
+                    <td>{{ fila['ImporteVenta'] }}</td>
+                    <td>{{ fila['DescuentoLinea'] }}</td>
                 </tr>
-
+                {% endfor %}
 
             </tbody>
 
