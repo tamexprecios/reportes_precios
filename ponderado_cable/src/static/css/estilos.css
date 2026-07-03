@@ -49,3 +49,51 @@
     color: black;
 
 }
+
+/* ==========================
+   KPI DESCUENTO PONDERADO
+========================== */
+
+.kpi-card{
+
+    background-color:#0B3A6E;
+
+    color:white;
+
+    border:none;
+
+    border-radius:12px;
+
+}
+
+.kpi-card .titulo{
+
+    font-size:0.80rem;
+
+    opacity:.85;
+
+    margin-bottom:2px;
+
+}
+
+.kpi-card .subtitulo{
+
+    font-size:1rem;
+
+    font-weight:600;
+
+    margin-bottom:6px;
+
+}
+
+.kpi-card .valor{
+
+    font-size:1.6rem;
+
+    font-weight:700;
+
+    line-height:1.1;
+
+    margin-bottom:0;
+
+}

@@ -1,3 +1,4 @@
+<h1 style="color:red">ESTE ARCHIVO ES EL ACTIVO</h1>
 {% extends "base.html" %}
 
 
@@ -7,7 +8,6 @@ Dashboard THW
 
 
 {% block contenido %}
-
 
 <div class="card shadow">
 
@@ -145,67 +145,108 @@ Dashboard THW
 
 
 
-            <button type="submit"
-                    class="btn btn-cable mb-4">
+           <div class="row mb-3 align-items-stretch">
+
+    <div class="col-md-9 d-flex flex-column justify-content-between">
+
+        <div>
+
+            <button
+                type="submit"
+                class="btn btn-cable">
 
                 Buscar
 
             </button>
 
+        </div>
 
-        </form>
+        <h4 class="mb-0 mt-3">
 
+            Ventas por calibre
+
+        </h4>
+
+    </div>
+
+
+    <div class="col-md-3">
+
+        <div class="card shadow-sm kpi-card h-100">
+
+            <div class="card-body d-flex flex-column justify-content-center text-center">
+
+                <div class="titulo">
+
+                    DESCUENTO PONDERADO
+
+                </div>
+
+                <div class="subtitulo">
+
+                    CALIBRE 12
+
+                </div>
+
+                <div class="valor">
+
+                    {{ "{:.2%}".format(descuento_calibre_12) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</form>
 
 
         <!-- TABLA CALIBRES -->
 
 
-        <h4>
-            Ventas por calibre
-        </h4>
+    <div class="col-md-3">
 
 
         <table class="table table-bordered">
 
 
             <thead class="table-dark">
-
-
                 <tr>
-
-                    <th>
-                        Calibre
-                    </th>
-
-
-                    <th>
-                        Ventas
-                    </th>
-
-
-                    <th>
-                        Descuento promedio
-                    </th>
-
-
+                    <th>Calibre</th>
+                    <th>Precio de Lista</th>
+                    <th>Cantidad</th>
+                    <th>Importe Venta</th>
+                    <th>Precio Promedio</th>
+                    <th>PB x Cantidad</th>
+                    <th>Desc. Equiv sobre PL</th>
                 </tr>
-
-
             </thead>
 
-
             <tbody>
+               {% for fila in datos %}
+               <tr>
 
-                {% for fila in datos %}
-                <tr>
                     <td>{{ fila['Calibre'] }}</td>
-                    <td>{{ fila['ImporteVenta'] }}</td>
-                    <td>{{ fila['DescuentoLinea'] }}</td>
-                </tr>
-                {% endfor %}
 
+                    <td>${{ "{:,.2f}".format(fila['PrecioBase']) }}</td>
+
+                    <td>{{ "{:,.0f}".format(fila['Cantidad']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['ImporteVenta']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['PrecioPromedio']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['PBxCantidad']) }}</td>
+
+                    <td>{{ "{:.2%}".format(fila['DescEquivPL']) }}</td>
+
+               </tr>
+               {% endfor %}
             </tbody>
-
 
         </table>
 

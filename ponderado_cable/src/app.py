@@ -18,5 +18,5 @@ def inicio():
 
 
 if __name__ == "__main__":
-
+    print("APP INICIADA")
     app.run(debug=True)

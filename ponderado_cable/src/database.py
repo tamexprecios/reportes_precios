@@ -48,18 +48,22 @@ if __name__ == "__main__":
 
     probar_conexion()
 
-def ejecutar_sql_desde_archivo(ruta_sql):
+def ejecutar_sql_desde_archivo(ruta_sql, parametros=None):
 
     engine = obtener_conexion()
 
-    # 1. Abrimos el archivo SQL
     with open(ruta_sql, "r", encoding="utf-8") as file:
         query = file.read()
 
-    # 2. Ejecutamos en SQL Server
     with engine.connect() as conexion:
-        df = pd.read_sql(text(query), conexion)
 
-    # 3. Regresamos DataFrame
+        if parametros is None:
+            parametros = {}
+
+        df = pd.read_sql(
+            text(query),
+            conexion,
+            params=parametros
+        )
+
     return df
-    
