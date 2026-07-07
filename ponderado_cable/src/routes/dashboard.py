@@ -1,9 +1,14 @@
-print("ENTRÓ A THW")
-
-import time
-import pandas as pd
 from flask import Blueprint, render_template, request
 from database import ejecutar_sql_desde_archivo
+import os
+import numpy as np
+import pandas as pd
+
+ORDEN_CALIBRES = [
+    "2","4","6","8","10","12","14","16","18","20",
+    "250","300","350","400","500","600","750","1000",
+    "1/0","2/0","3/0","4/0"
+]
 
 dashboard = Blueprint("dashboard", __name__)
 
@@ -11,112 +16,162 @@ dashboard = Blueprint("dashboard", __name__)
 @dashboard.route("/thw", methods=["GET", "POST"])
 def thw():
 
-    print("INICIO THW")
+    datos = []
 
-    # =========================
-    # Filtros del formulario
-    # =========================
+    fecha_inicio_sel = ""
+    fecha_fin_sel = ""
+    
+    descuento_calibre_12 = 0
+    descuento_ponderado = 0
+    precio_calibre_12 = 0
+
+    marcas = []
+    almacenes = []
+    gerentes = []
+
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+
     if request.method == "POST":
+
         fecha_inicio = request.form.get("fecha_inicio")
         fecha_fin = request.form.get("fecha_fin")
-        marca = request.form.get("marca")
-        almacen = request.form.get("almacen")
-        gerente = request.form.get("gerente")
-    else:
-        fecha_inicio = None
-        fecha_fin = None
-        marca = None
-        almacen = None
-        gerente = None
 
-    # =========================
-    # Valores por defecto de fechas
-    # =========================
-    if not fecha_inicio:
-        fecha_inicio = "1900-01-01"
+        fecha_inicio_sel = fecha_inicio
+        fecha_fin_sel = fecha_fin
 
-    if not fecha_fin:
-        fecha_fin = "2100-01-01"
+        marca = request.form.get("marca") or None
+        almacen = request.form.get("almacen") or None
+        gerente = request.form.get("gerente") or None
 
-    # =========================
-    # CONSULTA SQL (MEDIDA DE TIEMPO)
-    # =========================
-    start = time.time()
+        print("FILTROS:", fecha_inicio, fecha_fin, marca, almacen, gerente)
 
-    df = ejecutar_sql_desde_archivo(
-        "../sql/backup_sql/THW.sql",
-        {
+        parametros = {
             "fecha_inicio": fecha_inicio,
             "fecha_fin": fecha_fin,
             "marca": marca,
             "almacen": almacen,
-            "gerente": gerente,
+            "gerente": gerente
         }
-    )
 
-    print("SQL TERMINÓ EN:", round(time.time() - start, 2), "segundos")
+        # limpiar vacíos
+        for k, v in parametros.items():
+            if v == "":
+                parametros[k] = None
 
-    # =========================
-    # LIMPIEZA DE DATOS
-    # =========================
-    df["Cantidad"] = df["Cantidad"].fillna(0)
-    df["ImporteVenta"] = df["ImporteVenta"].fillna(0)
-    df["PBxCantidad"] = df["PBxCantidad"].fillna(0)
-    df["PrecioBase"] = df["PrecioBase"].fillna(0)
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        ruta_sql = os.path.join(BASE_DIR, "sql", "backup_sql", "THW.sql")
 
-    # =========================
-    # CÁLCULOS
-    # =========================
-    df["PrecioPromedio"] = df["ImporteVenta"] / df["Cantidad"].replace(0, 1)
+        df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
-    df["DescEquivPL"] = -(
-        df["ImporteVenta"] / df["PBxCantidad"].replace(0, 1) - 1
-    )
+        if df is None or df.empty:
+            return render_template(
+                "cable_thw.html",
+                datos=[],
+                descuento_calibre_12=0,
+                fecha_inicio=fecha_inicio_sel,
+                fecha_fin=fecha_fin_sel,
+                marcas=[],
+                almacenes=[],
+                gerentes=[]
+            )
 
-    # =========================
-    # AGRUPAR POR CALIBRE
-    # =========================
-    tabla = df.groupby("Calibre", as_index=False).agg({
-        "PrecioBase": "mean",
-        "Cantidad": "sum",
-        "ImporteVenta": "sum",
-        "PBxCantidad": "sum"
-    })
+        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
+        # =========================
 
-    tabla["PrecioPromedio"] = tabla["ImporteVenta"] / tabla["Cantidad"].replace(0, 1)
+        marcas = sorted(df["Categoria"].dropna().unique().tolist())
+        almacenes = sorted(df["Almacen"].dropna().unique().tolist())
+        gerentes = sorted(df["GerenteRegional"].dropna().unique().tolist())
 
-    tabla["DescEquivPL"] = -(
-        tabla["ImporteVenta"] / tabla["PBxCantidad"].replace(0, 1) - 1
-    )
+        # =========================
+        # NUMÉRICOS
+        # =========================
+        for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-    # =========================
-    # ORDEN DE CALIBRES
-    # =========================
-    orden_calibres = [
-        "2","4","6","8","10","12","14","16","18","20",
-        "250","300","350","400","500","600","750","1000",
-        "1/0","2/0","3/0","4/0"
-    ]
+        # =========================
+        # KPI 1 - DESCUENTO PONDERADO DE VENTA
+        # =========================
 
-    tabla["Calibre"] = pd.Categorical(tabla["Calibre"], categories=orden_calibres, ordered=True)
-    tabla = tabla.sort_values("Calibre")
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
 
-    # =========================
-    # KPI CALIBRE 12
-    # =========================
-    base_12 = tabla.loc[tabla["Calibre"] == "12", "PrecioBase"].values
-    desc_12 = tabla.loc[tabla["Calibre"] == "12", "DescEquivPL"].values
+        if total_pb != 0:
+            descuento_ponderado = 1 - (total_importe / total_pb)
+        else:
+            descuento_ponderado = 0 
 
-    base_12 = base_12[0] if len(base_12) else 0
-    desc_12 = desc_12[0] if len(desc_12) else 0
+        # =========================
+        # AGRUPACIÓN
+        # =========================
+        df = df.groupby("Calibre", as_index=False).agg({
+            "PrecioBase": "mean",
+            "Cantidad": "sum",
+            "ImporteVenta": "sum",
+            "PBxCantidad": "sum"
+        })
 
-    descuento_ponderado_12 = base_12 * (1 - desc_12)
+        # =========================
+        # CÁLCULOS
+        # =========================
+        df["PrecioPromedio"] = df.apply(
+            lambda x: x["ImporteVenta"] / x["Cantidad"] if x["Cantidad"] != 0 else 0,
+            axis=1
+        )
 
-    # =========================
-    # RENDER A HTML
-    # =========================
+        df["DescEquivPL"] = df.apply(
+            lambda x: 1 - (x["PrecioPromedio"] / x["PrecioBase"]) if x["PrecioBase"] != 0 else 0,
+            axis=1
+        )
+
+        df = df.fillna(0)
+
+        # =========================
+        # DESC. PONDERADO DE VENTA
+        # =========================
+
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
+
+        if total_pb != 0:
+            descuento_ponderado = -((total_importe / total_pb) - 1)
+        else:
+            descuento_ponderado = 0
+
+        print("TOTAL IMPORTE:", total_importe)
+        print("TOTAL PB:", total_pb)
+        print("DESC PONDERADO:", descuento_ponderado)
+
+        # =========================
+        # PRECIO CAL. 12
+        # =========================
+
+        calibre_12 = df[df["Calibre"] == "12"]
+
+        if not calibre_12.empty:
+
+            precio_base_12 = calibre_12.iloc[0]["PrecioBase"]
+
+            precio_calibre_12 = precio_base_12 * (1 - descuento_ponderado)
+
+        else:
+
+            precio_calibre_12 = 0
+
+        df["Calibre"] = pd.Categorical(df["Calibre"], categories=ORDEN_CALIBRES, ordered=True)
+        df = df.sort_values("Calibre")
+
+        datos = df.to_dict(orient="records")
+
     return render_template(
         "cable_thw.html",
-        datos=tabla.to_dict(orient="records"),
-        descuento_calibre_12=descuento_ponderado_12
+        datos=datos,
+        descuento_calibre_12=descuento_calibre_12,
+        descuento_ponderado=descuento_ponderado,
+        precio_calibre_12=precio_calibre_12,
+        fecha_inicio=fecha_inicio_sel,
+        fecha_fin=fecha_fin_sel,
+        marcas=marcas,
+        almacenes=almacenes,
+        gerentes=gerentes
     )

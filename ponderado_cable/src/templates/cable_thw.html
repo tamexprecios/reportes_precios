@@ -1,4 +1,3 @@
-<h1 style="color:red">ESTE ARCHIVO ES EL ACTIVO</h1>
 {% extends "base.html" %}
 
 
@@ -38,7 +37,9 @@ Dashboard THW
 
                     <input type="date"
                            name="fecha_inicio"
-                           class="form-control">
+                           class="form-control"
+                           value="{{ fecha_inicio }}">
+
 
                 </div>
 
@@ -52,8 +53,8 @@ Dashboard THW
 
                     <input type="date"
                            name="fecha_fin"
-                           class="form-control">
-
+                           class="form-control"
+                           value="{{ fecha_fin }}">
                 </div>
 
 
@@ -65,29 +66,17 @@ Dashboard THW
                     </label>
 
 
-                    <select name="marca"
-                            class="form-select">
-
+                    <select name="marca" class="form-select">
 
                         <option value="">
                             Seleccione
                         </option>
 
-
-                        <option value="marca1">
-                            Marca 1
-                        </option>
-
-
-                        <option value="marca2">
-                            Marca 2
-                        </option>
-
-
-                        <option value="marca3">
-                            Marca 3
-                        </option>
-
+                        {% for m in marcas %}
+                            <option value="{{ m }}">
+                                {{ m }}
+                            </option>
+                        {% endfor %}
 
                     </select>
 
@@ -102,19 +91,19 @@ Dashboard THW
                         Almacén
                     </label>
 
+                    <select name="almacen" class="form-select">
 
-                    <select name="almacen"
-                            class="form-select">
+                        <option value="">TODOS</option>
 
-
-                        <option value="">
-                            Seleccione
-                        </option>
-
+                        {% for a in almacenes %}
+                            <option value="{{ a }}"
+                                {% if request.form.get('almacen') == a %}selected{% endif %}>
+                                {{ a }}
+                            </option>
+                        {% endfor %}
 
                     </select>
-
-
+                    
                 </div>
 
 
@@ -126,14 +115,16 @@ Dashboard THW
                     </label>
 
 
-                    <select name="gerente"
-                            class="form-select">
+                    <select name="gerente" class="form-select">
 
+                        <option value="">TODOS</option>
 
-                        <option value="">
-                            Seleccione
-                        </option>
-
+                        {% for g in gerentes %}
+                            <option value="{{ g }}"
+                                {% if request.form.get('gerente') == g %}selected{% endif %}>
+                                {{ g }}
+                            </option>
+                        {% endfor %}
 
                     </select>
 
@@ -145,21 +136,21 @@ Dashboard THW
 
 
 
-           <div class="row mb-3 align-items-stretch">
+           <div class="row mb-3 align-items-start">
 
-    <div class="col-md-9 d-flex flex-column justify-content-between">
 
-        <div>
+    <!-- IZQUIERDA: BOTÓN + TÍTULO -->
 
-            <button
-                type="submit"
-                class="btn btn-cable">
+    <div class="col-md-6">
 
-                Buscar
+        <button
+            type="submit"
+            class="btn btn-cable">
 
-            </button>
+            Buscar
 
-        </div>
+        </button>
+
 
         <h4 class="mb-0 mt-3">
 
@@ -170,48 +161,86 @@ Dashboard THW
     </div>
 
 
-    <div class="col-md-3">
 
-        <div class="card shadow-sm kpi-card h-100">
+    <!-- DERECHA: TARJETAS KPI -->
 
-            <div class="card-body d-flex flex-column justify-content-center text-center">
+    <div class="col-md-6">
 
-                <div class="titulo">
+        <div class="row g-3">
 
-                    DESCUENTO PONDERADO
 
-                </div>
+            <div class="col-md-6">
 
-                <div class="subtitulo">
+                <div class="card shadow-sm kpi-card h-100">
 
-                    CALIBRE 12
+                    <div class="card-body d-flex flex-column justify-content-center text-center">
 
-                </div>
+                        <div class="titulo">
 
-                <div class="valor">
+                            DESC. PONDERADO DE VENTA
 
-                    {{ "{:.2%}".format(descuento_calibre_12) }}
+                        </div>
+
+
+                        <div class="valor">
+
+                            {{ "{:.2%}".format(descuento_ponderado) }}
+
+                        </div>
+
+
+                    </div>
 
                 </div>
 
             </div>
 
+
+
+            <div class="col-md-6">
+
+                <div class="card shadow-sm kpi-card h-100">
+
+                    <div class="card-body d-flex flex-column justify-content-center text-center">
+
+                        <div class="titulo">
+
+                            CAL. 12
+
+                        </div>
+
+
+                        <div class="valor">
+
+                            ${{ "{:,.2f}".format(precio_calibre_12) }}
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
         </div>
 
     </div>
+
 
 </div>
 
 </form>
 
 
-        <!-- TABLA CALIBRES -->
+    <!-- TABLA CALIBRES -->
 
+<div class="col-md-12">
 
-    <div class="col-md-3">
+    <div class="table-responsive">
 
-
-        <table class="table table-bordered">
+        <table class="table table-bordered table-striped">
 
 
             <thead class="table-dark">
@@ -227,29 +256,28 @@ Dashboard THW
             </thead>
 
             <tbody>
-               {% for fila in datos %}
-               <tr>
+            {% for fila in datos %}
+            <tr>
 
-                    <td>{{ fila['Calibre'] }}</td>
+                <td>{{ fila['Calibre'] }}</td>
 
-                    <td>${{ "{:,.2f}".format(fila['PrecioBase']) }}</td>
+                <td>${{ "{:,.2f}".format(fila['PrecioBase'] or 0) }}</td>
 
-                    <td>{{ "{:,.0f}".format(fila['Cantidad']) }}</td>
+                <td>{{ "{:,.0f}".format(fila['Cantidad'] or 0) }}</td>
 
-                    <td>${{ "{:,.2f}".format(fila['ImporteVenta']) }}</td>
+                <td>${{ "{:,.2f}".format(fila['ImporteVenta'] or 0) }}</td>
 
-                    <td>${{ "{:,.2f}".format(fila['PrecioPromedio']) }}</td>
+                <td>${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}</td>
 
-                    <td>${{ "{:,.2f}".format(fila['PBxCantidad']) }}</td>
+                <td>${{ "{:,.2f}".format(fila['PBxCantidad'] or 0) }}</td>
 
-                    <td>{{ "{:.2%}".format(fila['DescEquivPL']) }}</td>
+                <td>{{ "{:.2%}".format(fila['DescEquivPL'] or 0) }}</td>
 
-               </tr>
-               {% endfor %}
+            </tr>
+            {% endfor %}
             </tbody>
 
         </table>
-
 
 
     </div>

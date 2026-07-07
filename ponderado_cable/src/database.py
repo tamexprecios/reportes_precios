@@ -53,7 +53,9 @@ def ejecutar_sql_desde_archivo(ruta_sql, parametros=None):
     engine = obtener_conexion()
 
     with open(ruta_sql, "r", encoding="utf-8") as file:
-        query = file.read()
+        query = file.read().format(
+            extra_filters=parametros.get("extra_filters", "")
+        )
 
     with engine.connect() as conexion:
 

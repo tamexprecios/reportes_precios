@@ -1,25 +1,223 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Descuento Ponderado de Venta Julio 2026</title>
+
+<style>
+body{
+    font-family: Calibri, Arial, sans-serif;
+    background:#f2f2f2;
+    padding:20px;
+}
+
+.table-container{
+    max-height:700px;
+    overflow-y:auto;
+    border:1px solid #BFBFBF;
+    box-shadow:0 3px 10px rgba(0,0,0,.15);
+    background:white;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+}
+
+th, td{
+    border:1px solid #D9D9D9;
+    padding:7px;
+    text-align:center;
+    font-size:14px;
+}
+
+td{
+    background:#FFFFFF;
+}
+
+tr:nth-child(even) td{
+    background:#FAFAFA;
+}
+
+/* Encabezados fijos */
+th{
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+
+/* Título */
+.title{
+    position:sticky;
+    top:0;
+    z-index:5;
+    background:#1F4E78;
+    color:white;
+    font-size:24px;
+    font-weight:bold;
+}
+
+/* Colores tipo Excel */
+
+.condumex{
+    background:#F4B183;
+    color:#000;
+    font-weight:bold;
+}
+
+.condulac{
+    background:#70AD47;
+    color:#FFF;
+    font-weight:bold;
+}
+
+.kobrex{
+    background:#C00000;
+    color:#FFF;
+    font-weight:bold;
+}
+
+.serie{
+    background:#262626;
+    color:#FFF;
+    font-weight:bold;
+}
+
+.cobre{
+    background:#BF8F00;
+    color:#FFF;
+    font-weight:bold;
+}
+
+.total td{
+    font-weight:bold;
+}
+</style>
+
+</head>
+
+<body>
+
+<button onclick="exportarExcel()">
+    📊 Exportar a Excel
+</button>
+
+<br><br>
+
+<div class="table-container"></div>
+
+<table>
+
+<tr>
+    <th colspan="10" class="title">
+        Descuento Ponderado de Venta de Julio 2026
+    </th>
+</tr>
+
+<tr>
+    <th class="diagonal">
+        <span class="sup">Cable</span>
+        <span class="inf">Fecha</span>
+    </th>
+
+    <th class="condumex">CONDUMEX</th>
+    <th class="condumex">Cal. 12</th>
+
+    <th class="condulac">CONDULAC</th>
+    <th class="condulac">Cal. 12</th>
+
+    <th class="kobrex">KOBREX</th>
+    <th class="kobrex">Cal. 12</th>
+
+    <th class="serie">SERIE 8000</th>
+
+    <th class="cobre">CABLE DESNUDO</th>
+    <th class="cobre">Cal. 12</th>
+</tr>
+
+<tr><td>01/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>02/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>03/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>04/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>05/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>06/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>07/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>08/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>09/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>10/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>11/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>12/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>13/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>14/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>15/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>16/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>17/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>18/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>19/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>20/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>21/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>22/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>23/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>24/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>25/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>26/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>27/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>28/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>29/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>30/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>31/07/2026</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+
+<tr class="total">
+    <td><strong>Pond. del Mes Cal. 12</strong></td>
+
+    <td class="condumex"></td>
+    <td class="condumex"></td>
+
+    <td class="condulac"></td>
+    <td class="condulac"></td>
+
+    <td class="kobrex"></td>
+    <td class="kobrex"></td>
+
+    <td class="serie"></td>
+
+    <td class="cobre"></td>
+    <td class="cobre"></td>
+</tr>
+
+</table>
+
+</div>
 
 
-{% block titulo %}
-Resumen
-{% endblock %}
+<script>
 
+function exportarExcel(){
 
-{% block contenido %}
+    let tabla = document.querySelector("table").outerHTML;
 
-<h1 class="titulo-dashboard text-center">
+    let archivo = new Blob(
+        ['\ufeff', tabla],
+        {type:'application/vnd.ms-excel'}
+    );
 
-Resumen General
+    let url = URL.createObjectURL(archivo);
 
-</h1>
+    let enlace = document.createElement("a");
 
+    enlace.href = url;
+    enlace.download = "Descuento_Ponderado_Julio_2026.xls";
 
-<p class="text-center">
+    document.body.appendChild(enlace);
 
-Aquí estará el resumen del descuento ponderado.
+    enlace.click();
 
-</p>
+    document.body.removeChild(enlace);
 
+}
 
-{% endblock %}
+</script>
+
+</body>
+</html>

@@ -1,25 +1,192 @@
 {% extends "base.html" %}
 
-
 {% block titulo %}
-Cable Desnudo
+Dashboard Cable Desnudo
 {% endblock %}
-
 
 {% block contenido %}
 
-<h1 class="titulo-dashboard text-center">
+<div class="card shadow">
 
-Dashboard Cable Desnudo
+    <div class="card-body">
 
-</h1>
+        <h1 class="titulo-dashboard mb-4">
+            Dashboard Cable Desnudo
+        </h1>
 
+        <!-- FILTROS -->
+        <form method="POST">
 
-<p class="text-center">
+            <div class="row g-3 mb-4">
 
-Aquí estará el reporte del cable desnudo.
+                <!-- Fecha Inicio -->
+                <div class="col-md">
+                    <label class="form-label">
+                        Fecha inicio
+                    </label>
 
-</p>
+                    <input type="date"
+                           name="fecha_inicio"
+                           class="form-control">
+                </div>
 
+                <!-- Fecha Fin -->
+                <div class="col-md">
+                    <label class="form-label">
+                        Fecha fin
+                    </label>
+
+                    <input type="date"
+                           name="fecha_fin"
+                           class="form-control">
+                </div>
+
+                <!-- Almacén -->
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Almacén
+                    </label>
+
+                    <select name="almacen"
+                            class="form-select">
+
+                        <option value="">
+                            Seleccione
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- Gerente Regional -->
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Gerente Regional
+                    </label>
+
+                    <select name="gerente"
+                            class="form-select">
+
+                        <option value="">
+                            Seleccione
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="row mb-3 align-items-stretch">
+
+                <div class="col-md-9 d-flex flex-column justify-content-between">
+
+                    <div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-cable">
+
+                            Buscar
+
+                        </button>
+
+                    </div>
+
+                    <h4 class="mb-0 mt-3">
+
+                        Ventas por calibre
+
+                    </h4>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <div class="card shadow-sm kpi-card h-100">
+
+                        <div class="card-body d-flex flex-column justify-content-center text-center">
+
+                            <div class="titulo">
+
+                                DESCUENTO PONDERADO
+
+                            </div>
+
+                            <div class="subtitulo">
+
+                                CALIBRE 12
+
+                            </div>
+
+                            <div class="valor">
+
+                                {{ "{:.2%}".format(descuento_calibre_12) }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+        <!-- TABLA -->
+
+        <table class="table table-bordered">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th>Calibre</th>
+                    <th>Precio de Lista</th>
+                    <th>Cantidad</th>
+                    <th>Importe Venta</th>
+                    <th>Precio Promedio</th>
+                    <th>PB x Cantidad</th>
+                    <th>Desc. Equiv sobre PL</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for fila in datos %}
+
+                <tr>
+
+                    <td>{{ fila['Calibre'] }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['PrecioBase']) }}</td>
+
+                    <td>{{ "{:,.0f}".format(fila['Cantidad']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['ImporteVenta']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['PrecioPromedio']) }}</td>
+
+                    <td>${{ "{:,.2f}".format(fila['PBxCantidad']) }}</td>
+
+                    <td>{{ "{:.2%}".format(fila['DescEquivPL']) }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
 {% endblock %}
