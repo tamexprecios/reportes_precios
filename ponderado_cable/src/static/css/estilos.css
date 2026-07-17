@@ -97,3 +97,113 @@
     margin-bottom:0;
 
 }
+
+.btn-excel{
+
+    background-color:#198754;
+
+    border-color:#198754;
+
+    color:white;
+
+    font-weight:600;
+
+    white-space: nowrap;
+
+}
+
+.btn-excel:hover{
+
+    background-color:#157347;
+
+    border-color:#146c43;
+
+    color:white;
+
+}
+
+.titulo-cable{
+
+    font-style: italic;
+
+    text-transform: uppercase;
+
+}
+
+/* ==========================
+   TABLA THW
+========================== */
+
+.tabla-thw th{
+
+    text-align: center;
+
+    vertical-align: middle;
+
+}
+
+.tabla-thw td{
+
+    text-align: center;
+
+    vertical-align: middle;
+
+}
+
+/* ==========================
+   COLORES POR MARCA
+========================== */
+
+.tabla-condumex {
+
+    background-color:#F77F00 !important;
+
+    color:white !important;
+
+}
+
+
+.tabla-condulac {
+
+    background-color:#198754 !important;
+
+    color:white !important;
+
+}
+
+
+.tabla-kobrex {
+
+    background-color:#E71D36 !important;
+
+    color:white !important;
+
+}
+
+/* COLORES DINÁMICOS POR MARCA */
+
+.tabla-condumex th,
+.tabla-condumex td {
+
+    background-color: #F77F00 !important;
+    color: white !important;
+
+}
+
+
+.tabla-condulac th,
+.tabla-condulac td {
+
+    background-color: #198754 !important;
+    color: white !important;
+
+}
+
+
+.tabla-kobrex th,
+.tabla-kobrex td {
+
+    background-color: #E71D36 !important;
+    color: white !important;
+
+}

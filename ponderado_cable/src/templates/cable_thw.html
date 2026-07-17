@@ -14,16 +14,26 @@ Dashboard THW
     <div class="card-body">
 
 
-        <h1 class="titulo-dashboard mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
-            Dashboard Cable THW
+            <h1 class="titulo-dashboard titulo-cable mb-0">
 
-        </h1>
+                Cable THW
 
+            </h1>
+
+            <a href="{{ url_for('inicio') }}"
+                class="btn btn-outline-secondary">
+
+                ← Inicio
+
+            </a>
+
+        </div>
 
         <!-- FILTROS -->
 
-        <form method="POST">
+        <form method="POST" id="filtrosTHW">
 
 
             <div class="row g-3 mb-4">
@@ -66,14 +76,18 @@ Dashboard THW
                     </label>
 
 
-                    <select name="marca" class="form-select">
+                    <select name="marca"
+                            id="marca" 
+                            class="form-select">
 
                         <option value="">
-                            Seleccione
+                            TODAS
                         </option>
 
+                        
                         {% for m in marcas %}
-                            <option value="{{ m }}">
+                            <option value="{{ m }}"
+                                {% if request.form.get('marca') == m %}selected{% endif %}>
                                 {{ m }}
                             </option>
                         {% endfor %}
@@ -91,7 +105,9 @@ Dashboard THW
                         Almacén
                     </label>
 
-                    <select name="almacen" class="form-select">
+                    <select name="almacen"
+                            id="almacen"
+                            class="form-select">
 
                         <option value="">TODOS</option>
 
@@ -115,8 +131,9 @@ Dashboard THW
                     </label>
 
 
-                    <select name="gerente" class="form-select">
-
+                    <select name="gerente"
+                            id="gerente"
+                            class="form-select">
                         <option value="">TODOS</option>
 
                         {% for g in gerentes %}
@@ -136,23 +153,32 @@ Dashboard THW
 
 
 
-           <div class="row mb-3 align-items-start">
+<div class="row mb-4 align-items-start">
 
+    <!-- IZQUIERDA -->
 
-    <!-- IZQUIERDA: BOTÓN + TÍTULO -->
+    <div class="col-lg-6">
 
-    <div class="col-md-6">
+        <div class="d-flex gap-2 mb-3">
 
-        <button
-            type="submit"
-            class="btn btn-cable">
+            <button
+                type="submit"
+                class="btn btn-cable">
 
-            Buscar
+                Buscar
 
-        </button>
+            </button>
 
+            <a href="#"
+               class="btn btn-excel">
 
-        <h4 class="mb-0 mt-3">
+                Descargar Excel
+
+            </a>
+
+        </div>
+
+        <h4 class="mb-0">
 
             Ventas por calibre
 
@@ -161,13 +187,11 @@ Dashboard THW
     </div>
 
 
+    <!-- DERECHA -->
 
-    <!-- DERECHA: TARJETAS KPI -->
-
-    <div class="col-md-6">
+    <div class="col-lg-6">
 
         <div class="row g-3">
-
 
             <div class="col-md-6">
 
@@ -181,20 +205,17 @@ Dashboard THW
 
                         </div>
 
-
                         <div class="valor">
 
                             {{ "{:.2%}".format(descuento_ponderado) }}
 
                         </div>
 
-
                     </div>
 
                 </div>
 
             </div>
-
 
 
             <div class="col-md-6">
@@ -209,13 +230,11 @@ Dashboard THW
 
                         </div>
 
-
                         <div class="valor">
 
                             ${{ "{:,.2f}".format(precio_calibre_12) }}
 
                         </div>
-
 
                     </div>
 
@@ -223,13 +242,12 @@ Dashboard THW
 
             </div>
 
-
         </div>
 
     </div>
 
-
 </div>
+
 
 </form>
 
@@ -240,19 +258,61 @@ Dashboard THW
 
     <div class="table-responsive">
 
-        <table class="table table-bordered table-striped">
+        <table class="table table-bordered table-striped tabla-thw">
 
 
-            <thead class="table-dark">
-                <tr>
-                    <th>Calibre</th>
-                    <th>Precio de Lista</th>
-                    <th>Cantidad</th>
-                    <th>Importe Venta</th>
-                    <th>Precio Promedio</th>
-                    <th>PB x Cantidad</th>
-                    <th>Desc. Equiv sobre PL</th>
+            <thead>
+
+                <!-- FILA DE TOTALES -->
+
+                <tr class="{{ color_tabla }}">
+
+                    <th colspan="2"></th>
+
+                    <th class="text-center">
+
+                        {{ "{:,.0f}".format(cantidad_total) }}
+
+                    </th>
+
+                    <th class="text-center">
+
+                        ${{ "{:,.2f}".format(importe_total) }}
+
+                    </th>
+
+                    <th></th>
+
+                    <th class="text-center">
+
+                        ${{ "{:,.2f}".format(pb_total) }}
+
+                    </th>
+
+                    <th></th>
+
                 </tr>
+
+                <!-- ENCABEZADOS -->
+
+                <tr class="{{ color_tabla }}">
+
+                    <th>Calibre</th>
+
+                    <th>Precio de Lista</th>
+
+                    <th>Cantidad</th>
+
+                    <th>Importe Venta</th>
+
+                    <th>Precio Promedio</th>
+
+                    <th>PB x Cantidad</th>
+
+                    <th>Desc. Equiv sobre PL</th>
+ 
+                </tr>
+
             </thead>
 
             <tbody>
@@ -285,5 +345,47 @@ Dashboard THW
 
 </div>
 
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const formulario = document.getElementById("filtrosTHW");
+
+    const fechaInicio = document.querySelector(
+        'input[name="fecha_inicio"]'
+    );
+
+    const fechaFin = document.querySelector(
+        'input[name="fecha_fin"]'
+    );
+
+
+    const filtros = [
+        document.getElementById("marca"),
+        document.getElementById("almacen"),
+        document.getElementById("gerente")
+    ];
+
+
+    filtros.forEach(function(filtro){
+
+        filtro.addEventListener("change", function(){
+
+            if(
+                fechaInicio.value &&
+                fechaFin.value
+            ){
+
+                formulario.requestSubmit();
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
 
 {% endblock %}

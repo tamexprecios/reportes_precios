@@ -15,6 +15,8 @@ dashboard = Blueprint("dashboard", __name__)
 
 @dashboard.route("/thw", methods=["GET", "POST"])
 def thw():
+    
+    print("ENTRANDO A THW")
 
     datos = []
 
@@ -24,6 +26,12 @@ def thw():
     descuento_calibre_12 = 0
     descuento_ponderado = 0
     precio_calibre_12 = 0
+
+    color_tabla = "table-dark"
+
+    cantidad_total = 0
+    importe_total = 0
+    pb_total = 0
 
     marcas = []
     almacenes = []
@@ -43,7 +51,28 @@ def thw():
         almacen = request.form.get("almacen") or None
         gerente = request.form.get("gerente") or None
 
-        print("FILTROS:", fecha_inicio, fecha_fin, marca, almacen, gerente)
+        if marca == "CONDUMEX":
+
+            color_tabla = "tabla-condumex"
+
+
+        elif marca == "CONDULAC":
+
+            color_tabla = "tabla-condulac"
+
+
+        elif marca == "KOBREX":
+
+            color_tabla = "tabla-kobrex"
+
+
+        else:
+
+            color_tabla = "table-dark"
+
+        print("MARCA:", marca)
+        print("COLOR TABLA:", color_tabla)
+
 
         parametros = {
             "fecha_inicio": fecha_inicio,
@@ -63,6 +92,13 @@ def thw():
 
         df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
+        marcas_disponibles = sorted(
+        df["Categoria"].dropna().unique().tolist()
+        )
+
+        print("PARAMETROS ENVIADOS:", parametros)
+        print("REGISTROS OBTENIDOS:", len(df))
+
         if df is None or df.empty:
             return render_template(
                 "cable_thw.html",
@@ -72,14 +108,17 @@ def thw():
                 fecha_fin=fecha_fin_sel,
                 marcas=[],
                 almacenes=[],
-                gerentes=[]
+                gerentes=[],
+                cantidad_total=0,
+                importe_total=0,
+                pb_total=0
             )
 
         # =========================
         # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
         # =========================
 
-        marcas = sorted(df["Categoria"].dropna().unique().tolist())
+        marcas =  ["CONDUMEX","CONDULAC","KOBREX"]
         almacenes = sorted(df["Almacen"].dropna().unique().tolist())
         gerentes = sorted(df["GerenteRegional"].dropna().unique().tolist())
 
@@ -100,6 +139,14 @@ def thw():
             descuento_ponderado = 1 - (total_importe / total_pb)
         else:
             descuento_ponderado = 0 
+
+        # =========================
+        # TOTALES
+        # =========================
+
+        cantidad_total = df["Cantidad"].sum()
+        importe_total = df["ImporteVenta"].sum()
+        pb_total = df["PBxCantidad"].sum() 
 
         # =========================
         # AGRUPACIÓN
@@ -173,5 +220,9 @@ def thw():
         fecha_fin=fecha_fin_sel,
         marcas=marcas,
         almacenes=almacenes,
-        gerentes=gerentes
+        gerentes=gerentes,
+        cantidad_total=cantidad_total,
+        importe_total=importe_total,
+        pb_total=pb_total,
+        color_tabla=color_tabla
     )
