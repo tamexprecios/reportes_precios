@@ -165,7 +165,7 @@
 
 .tabla-condulac {
 
-    background-color:#198754 !important;
+    background-color:#168551 !important;
 
     color:white !important;
 
@@ -194,7 +194,7 @@
 .tabla-condulac th,
 .tabla-condulac td {
 
-    background-color: #198754 !important;
+    background-color: #168551 !important;
     color: white !important;
 
 }
@@ -206,4 +206,43 @@
     background-color: #E71D36 !important;
     color: white !important;
 
+}
+
+.kpi-serie8000 {
+    min-height: 80px;
+}
+
+
+.kpi-body-serie8000 {
+    padding: 8px !important;
+}
+
+
+.kpi-serie8000 .titulo {
+    font-size: 0.75rem;
+}
+
+
+.kpi-serie8000 .valor {
+    font-size: 1.2rem;
+}
+
+.kpi-serie8000-mini {
+    min-height: 40px !important;
+}
+
+
+.kpi-serie8000-mini .card-body {
+    padding: 4px !important;
+}
+
+
+.kpi-serie8000-mini .titulo {
+    font-size: 0.55rem;
+    margin-bottom: 2px;
+}
+
+
+.kpi-serie8000-mini .valor {
+    font-size: 0.9rem;
 }

@@ -169,12 +169,14 @@ Dashboard THW
 
             </button>
 
-            <a href="#"
-               class="btn btn-excel">
+            <button
+                type="submit"
+                formaction="{{ url_for('dashboard.descargar_thw') }}"
+                class="btn btn-excel">
 
                 Descargar Excel
 
-            </a>
+            </button>
 
         </div>
 

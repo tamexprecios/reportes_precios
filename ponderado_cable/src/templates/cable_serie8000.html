@@ -2,24 +2,518 @@
 
 
 {% block titulo %}
-Serie 8000
+Dashboard Serie 8000
 {% endblock %}
 
 
 {% block contenido %}
 
-<h1 class="titulo-dashboard text-center">
-
-Dashboard Serie 8000
-
-</h1>
+<div class="card shadow">
 
 
-<p class="text-center">
+    <div class="card-body">
 
-Aquí estará el reporte de Serie 8000.
 
-</p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
 
+            <h1 class="titulo-dashboard titulo-cable mb-0">
+
+                Serie 8000
+
+            </h1>
+
+            <a href="{{ url_for('inicio') }}"
+                class="btn btn-outline-secondary">
+
+                ← Inicio
+
+            </a>
+
+        </div>
+
+        <!-- FILTROS -->
+
+        <form method="POST" id="filtrosTHW">
+
+
+            <div class="row g-3 mb-4">
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Fecha inicio
+                    </label>
+
+                    <input type="date"
+                           name="fecha_inicio"
+                           class="form-control"
+                           value="{{ fecha_inicio }}">
+
+
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Fecha fin
+                    </label>
+
+                    <input type="date"
+                           name="fecha_fin"
+                           class="form-control"
+                           value="{{ fecha_fin }}">
+                </div>
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Almacén
+                    </label>
+
+                    <select name="almacen"
+                            id="almacen"
+                            class="form-select">
+
+                        <option value="">TODOS</option>
+
+                        {% for a in almacenes %}
+                            <option value="{{ a }}"
+                                {% if request.form.get('almacen') == a %}selected{% endif %}>
+                                {{ a }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+                    
+                </div>
+
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Gerente Regional
+                    </label>
+
+
+                    <select name="gerente"
+                            id="gerente"
+                            class="form-select">
+                        <option value="">TODOS</option>
+
+                        {% for g in gerentes %}
+                            <option value="{{ g }}"
+                                {% if request.form.get('gerente') == g %}selected{% endif %}>
+                                {{ g }}
+                            </option>
+                        {% endfor %}
+
+                    </select>
+
+
+                </div>
+
+
+                <div class="col-md">
+
+                    <label class="form-label">
+                        Tipo
+                    </label>
+
+
+                    <select name="tipo"
+                            id="tipo"
+                            class="form-select">
+
+
+                        <option value="">
+                            TODOS
+                        </option>
+
+
+                        {% for t in tipos %}
+
+                            <option value="{{ t }}"
+                                {% if request.form.get('tipo') == t %}selected{% endif %}>
+
+                                {{ t }}
+
+                            </option>
+
+                        {% endfor %}
+
+
+                    </select>
+
+
+                </div>
+
+            </div>
+
+
+
+<div class="row mb-4 align-items-start">
+
+   <!-- ZONA BOTONES Y KPIs -->
+
+<div class="row mb-4 align-items-start">
+
+
+    <!-- IZQUIERDA -->
+
+    <div class="col-lg-6">
+
+
+        <div class="d-flex gap-2 mb-3">
+
+
+            <button
+                type="submit"
+                class="btn btn-cable">
+
+                Buscar
+
+            </button>
+
+
+           <button
+                type="submit"
+                formaction="{{ url_for('dashboard.descargar_serie8000') }}"
+                class="btn btn-excel">
+
+                Descargar Excel
+
+            </button>
+
+
+        </div>
+
+
+        <h4 class="mb-0">
+
+            Ventas por Artículo
+
+        </h4>
+
+
+    </div>
+
+
+
+    <!-- DERECHA KPIs -->
+
+    <div class="col-lg-6">
+
+
+        <div class="row g-2">
+
+
+            <!-- KPI GRANDE -->
+
+            <div class="col-md-8">
+
+
+                <div class="card shadow-sm kpi-card kpi-serie8000">
+
+
+                    <div class="card-body kpi-body-serie8000 text-center">
+
+
+                        <div class="titulo">
+
+                            DESC. PONDERADO DE VENTA
+
+                        </div>
+
+
+                        <div class="valor">
+
+                            {{ "{:.2%}".format(descuento_ponderado) }}
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- KPIs PEQUEÑOS -->
+
+            <div class="col-md-4">
+
+
+                <div class="row g-2">
+
+
+                    <div class="col-12">
+
+
+                        <div class="card shadow-sm kpi-card kpi-serie8000-mini">
+
+
+                            <div class="card-body kpi-body-serie8000 text-center">
+
+
+                                <div class="titulo">
+
+                                    DESC. MC
+
+                                </div>
+
+
+                                <div class="valor">
+
+                                    {{ "{:.2%}".format(descuento_mc) }}
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="col-12">
+
+
+                        <div class="card shadow-sm kpi-card kpi-serie8000-mini">
+
+
+                            <div class="card-body kpi-body-serie8000 text-center">
+
+
+                                <div class="titulo">
+
+                                    DESC. XHHW
+
+                                </div>
+
+
+                                <div class="valor">
+
+                                    {{ "{:.2%}".format(descuento_xhhw) }}
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+</form>
+
+
+
+<!-- TABLA CALIBRES -->
+
+<div class="row">
+
+    <div class="col-12">
+
+
+        <div class="table-responsive">
+
+
+            <table class="table table-bordered table-striped tabla-thw">
+
+
+                <thead>
+
+
+                    <!-- FILA DE TOTALES -->
+
+                    <tr class="{{ color_tabla }}">
+
+                        <th colspan="3"></th>
+
+
+                        <th class="text-center">
+
+                            {{ "{:,.0f}".format(cantidad_total) }}
+
+                        </th>
+
+
+                        <th class="text-center">
+
+                            ${{ "{:,.2f}".format(importe_total) }}
+
+                        </th>
+
+
+                        <th></th>
+
+
+                        <th class="text-center">
+
+                            ${{ "{:,.2f}".format(pb_total) }}
+
+                        </th>
+
+
+                        <th></th>
+
+
+                    </tr>
+
+
+
+                    <!-- ENCABEZADOS -->
+
+                    <tr class="{{ color_tabla }}">
+
+
+                        <th>Artículo</th>
+
+                        <th>Tipo</th>
+
+                        <th>Precio Base</th>
+
+                        <th>Cantidad</th>
+
+                        <th>Importe Venta</th>
+
+                        <th>Precio Promedio</th>
+
+                        <th>PB x Cantidad</th>
+
+                        <th>Desc. Equiv sobre PL</th>
+
+
+                    </tr>
+
+
+                </thead>
+
+
+
+                <tbody>
+
+
+                {% for fila in datos %}
+
+                <tr>
+
+
+                    <td>{{ fila['Articulo'] }}</td>
+
+
+                    <td>{{ fila['Tipo'] }}</td>
+
+
+                    <td>${{ "{:,.2f}".format(fila['PrecioBase'] or 0) }}</td>
+
+
+                    <td>{{ "{:,.0f}".format(fila['Cantidad'] or 0) }}</td>
+
+
+                    <td>${{ "{:,.2f}".format(fila['ImporteVenta'] or 0) }}</td>
+
+
+                    <td>${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}</td>
+
+
+                    <td>${{ "{:,.2f}".format(fila['PBxCantidad'] or 0) }}</td>
+
+
+                    <td>{{ "{:.2%}".format(fila['DescEquivPL'] or 0) }}</td>
+
+
+                </tr>
+
+
+                {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const formulario = document.getElementById("filtrosTHW");
+
+    const fechaInicio = document.querySelector(
+        'input[name="fecha_inicio"]'
+    );
+
+    const fechaFin = document.querySelector(
+        'input[name="fecha_fin"]'
+    );
+
+
+    const filtros = [
+        document.getElementById("almacen"),
+        document.getElementById("gerente"),
+        document.getElementById("tipo"),
+    ];
+
+
+    filtros.forEach(function(filtro){
+
+        filtro.addEventListener("change", function(){
+
+            if(
+                fechaInicio.value &&
+                fechaFin.value
+            ){
+
+                formulario.requestSubmit();
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
 
 {% endblock %}
