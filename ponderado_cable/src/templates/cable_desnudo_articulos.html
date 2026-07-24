@@ -18,10 +18,10 @@ Dashboard Cable Desnudo
 
         </h1>
 
-        <a href="{{ url_for('inicio') }}"
-            class="btn btn-outline-secondary">
+        <a href="{{ url_for('dashboard.desnudo') }}"
+           class="btn btn-outline-secondary">
 
-            ← Inicio
+           ← Atrás
 
         </a>
 
@@ -139,28 +139,16 @@ Dashboard Cable Desnudo
 
             <button
                 type="submit"
-                formaction="{{ url_for('dashboard.descargar_desnudo') }}"
+                formaction="{{ url_for('dashboard.descargar_desnudo_articulos') }}"
                 class="btn btn-excel">
 
                 Descargar Excel
 
             </button>
 
-            <a href="{{ url_for('dashboard.desnudo_articulos') }}"
-               class="btn btn-resumen">
-
-               Detalles por Artículo
-
-            </a>
 
         </div>
 
-
-        <h4 class="mb-0">
-
-            Ventas por calibre
-
-        </h4>
 
 
     </div>
@@ -294,7 +282,7 @@ Dashboard Cable Desnudo
 
                 <tr class="{{ color_tabla }}">
 
-                    <th>Calibre</th>
+                    <th>Articulo</th>
 
                     <th>Precio Base</th>
 
@@ -320,7 +308,7 @@ Dashboard Cable Desnudo
 
                 <tr>
 
-                    <td>{{ fila['Calibre'] }}</td>
+                    <td>{{ fila['Articulo'] }}</td>
 
                     <td>${{ "{:,.2f}".format(fila['PrecioBase']) }}</td>
 

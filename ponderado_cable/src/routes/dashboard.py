@@ -249,7 +249,6 @@ def desnudo():
     importe_total = 0
     pb_total = 0
 
-    marcas = []
     almacenes = []
     gerentes = []
 
@@ -383,7 +382,7 @@ def desnudo():
         # AGRUPACIÓN CABLE DESNUDO
         # =========================
 
-        df = df.groupby(["Articulo", "Calibre"], as_index=False).agg({
+        df = df.groupby("Calibre", as_index=False).agg({
 
             "PrecioBase": "mean",
             "Cantidad": "sum",
@@ -475,6 +474,253 @@ def desnudo():
         importe_total=importe_total,
         pb_total=pb_total,
     )
+
+@dashboard.route("/desnudo_articulos", methods=["GET", "POST"])
+def desnudo_articulos():
+
+    print("ENTRANDO A DESNUDO ARTICULOS")
+
+    datos = []
+
+    fecha_inicio_sel = ""
+    fecha_fin_sel = ""
+    
+    precio_por_kg = 0
+    precio_calibre_12 = 0
+
+    color_tabla = "table-dark"
+
+    cantidad_total = 0
+    importe_total = 0
+    pb_total = 0
+
+    almacenes = []
+    gerentes = []
+
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+
+    if request.method == "POST":
+
+        fecha_inicio = request.form.get("fecha_inicio")
+        fecha_fin = request.form.get("fecha_fin")
+
+        fecha_inicio_sel = fecha_inicio
+        fecha_fin_sel = fecha_fin
+
+        almacen = request.form.get("almacen") or None
+        gerente = request.form.get("gerente") or None
+
+
+        parametros = {
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "almacen": almacen,
+            "gerente": gerente
+        }
+
+        # limpiar vacíos
+        for k, v in parametros.items():
+            if v == "":
+                parametros[k] = None
+
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        ruta_sql = os.path.join(BASE_DIR, "sql", "backup_sql", "DESNUDO.sql")
+
+        print("ARCHIVO SQL UTILIZADO:")
+        print(ruta_sql)
+
+        df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
+
+        parametros_filtros = {
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "almacen": None,
+        "gerente": None
+        }
+
+
+        df_filtros = ejecutar_sql_desde_archivo(
+        ruta_sql,
+        parametros_filtros
+        )
+
+        print("PARAMETROS ENVIADOS:")
+        print(parametros)
+        print("TOTAL REGISTROS:", len(df))
+        print(df["Linea"].value_counts())
+
+
+        if df is None or df.empty:
+            return render_template(
+            "cable_desnudo_articulos.html",
+            datos=[],
+            precio_por_kg=0,
+            precio_calibre_12=0,
+            fecha_inicio=fecha_inicio_sel,
+            fecha_fin=fecha_fin_sel,
+            almacenes=[],
+            gerentes=[],
+            cantidad_total=0,
+            importe_total=0,
+            pb_total=0
+            )
+
+        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
+        # =========================
+
+        almacenes = sorted(df_filtros["Almacen"].dropna().unique().tolist())
+        gerentes = sorted(df_filtros["GerenteRegional"].dropna().unique().tolist())
+
+        # =========================
+        # FILTROS DINÁMICOS
+        # =========================
+
+        gerentes = sorted(
+            df_filtros["GerenteRegional"]
+            .dropna()
+            .unique()
+            .tolist()
+        )
+
+
+        # Si hay gerente seleccionado,
+        # mostrar solamente sus almacenes
+
+        if gerente:
+
+            almacenes = sorted(
+                df_filtros[
+                df_filtros["GerenteRegional"] == gerente
+                ]["Almacen"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+
+        else:
+
+            almacenes = sorted(
+                df_filtros["Almacen"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+
+        # =========================
+        # NUMÉRICOS
+        # =========================
+        for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+
+        # =========================
+        # TOTALES
+        # =========================
+
+        cantidad_total = df["Cantidad"].sum()
+        importe_total = df["ImporteVenta"].sum()
+        pb_total = df["PBxCantidad"].sum() 
+
+        # =========================
+        # AGRUPACIÓN CABLE DESNUDO
+        # =========================
+
+        df = df.groupby("Articulo", as_index=False).agg({
+
+            "PrecioBase": "mean",
+            "Cantidad": "sum",
+            "ImporteVenta": "sum",
+            "PBxCantidad": "sum",
+            "Convertidor": "first",
+            "CantidadEntreConvertidor": "sum"
+
+        })
+        
+        # =========================
+        # CÁLCULOS CABLE DESNUDO
+        # =========================
+
+
+        df["PrecioPromedio"] = df.apply(
+
+            lambda x:
+                x["ImporteVenta"] / x["Cantidad"]
+                if x["Cantidad"] != 0
+                else 0,
+
+            axis=1
+
+        )
+
+        df["PrecioKg"] = df.apply(
+
+            lambda x:
+                x["ImporteVenta"] / x["CantidadEntreConvertidor"]
+                if x["CantidadEntreConvertidor"] != 0
+                else 0,
+
+            axis=1
+
+        )
+
+
+
+        df = df.fillna(0)
+
+        # =========================
+        # KPI 1 - PRECIO POR KG
+        # =========================
+
+        cantidad_kg_total = df["CantidadEntreConvertidor"].sum()
+        importe_total = df["ImporteVenta"].sum()
+
+        if cantidad_kg_total != 0:
+            precio_por_kg = importe_total / cantidad_kg_total
+        else:
+            precio_por_kg = 0
+            
+        print("==============================")
+        print("TOTAL IMPORTE VENTA:", importe_total)
+        print("TOTAL KG:", cantidad_kg_total)
+        print("PRECIO KG:", precio_por_kg)
+        print("==============================")
+
+        # =========================
+        # KPI 2 - PRECIO CAL. 12
+        # =========================
+
+        if precio_por_kg != 0:
+            precio_calibre_12 = precio_por_kg / 33.33
+        else:
+            precio_calibre_12 = 0
+
+        print("TOTAL KG:", cantidad_kg_total)
+        print("PRECIO POR KG:", precio_por_kg)
+        print("PRECIO CAL.12:", precio_calibre_12)
+
+
+        df = df.sort_values("ImporteVenta",ascending=False)
+
+        datos = df.to_dict(orient="records")
+
+    return render_template(
+        "cable_desnudo_articulos.html",
+        datos=datos,
+        precio_por_kg=precio_por_kg,
+        precio_calibre_12=precio_calibre_12,
+        fecha_inicio=fecha_inicio_sel,
+        fecha_fin=fecha_fin_sel,
+        almacenes=almacenes,
+        gerentes=gerentes,
+        cantidad_total=cantidad_total,
+        importe_total=importe_total,
+        pb_total=pb_total,
+    )
+
+
+
+
 
 @dashboard.route("/serie8000", methods=["GET", "POST"])
 def serie8000():
@@ -869,6 +1115,71 @@ def descargar_desnudo():
     return send_file(
         archivo,
         download_name="Reporte_Desnudo.xlsx",
+        as_attachment=True
+    )
+
+@dashboard.route("/descargar_desnudo_articulos", methods=["POST"])
+def descargar_desnudo_articulos():
+
+    fecha_inicio = request.form.get("fecha_inicio")
+    fecha_fin = request.form.get("fecha_fin")
+
+    almacen = request.form.get("almacen") or None
+    gerente = request.form.get("gerente") or None
+
+
+    parametros = {
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "almacen": almacen,
+        "gerente": gerente
+    }
+
+
+    BASE_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".."
+        )
+    )
+
+
+    ruta_sql = os.path.join(
+        BASE_DIR,
+        "sql",
+        "backup_sql",
+        "DESNUDO_ARTICULOS.sql"
+    )
+
+
+    df = ejecutar_sql_desde_archivo(
+        ruta_sql,
+        parametros
+    )
+
+
+    archivo = BytesIO()
+
+
+    with pd.ExcelWriter(
+        archivo,
+        engine="openpyxl"
+    ) as writer:
+
+        df.to_excel(
+            writer,
+            index=False,
+            sheet_name="DESNUDO_ARTICULOS"
+        )
+
+
+    archivo.seek(0)
+
+
+    return send_file(
+        archivo,
+        download_name="Reporte_Desnudo_Articulos.xlsx",
         as_attachment=True
     )
 
