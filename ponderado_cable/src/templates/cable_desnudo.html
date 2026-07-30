@@ -259,7 +259,7 @@ Dashboard Cable Desnudo
 
                 <tr class="{{ color_tabla }}">
 
-                    <th colspan="2"></th>
+                    <th></th>
 
                     <th class="text-center">
 
@@ -278,14 +278,7 @@ Dashboard Cable Desnudo
                     <th></th>
 
 
-                    <th class="text-center">
-
-                        ${{ "{:,.2f}".format(pb_total) }}
-
-                    </th>
-
-
-                    <th colspan="2"></th>
+                    <th></th>
 
                     </tr>
 
@@ -296,17 +289,11 @@ Dashboard Cable Desnudo
 
                     <th>Calibre</th>
 
-                    <th>Precio Base</th>
-
                     <th>Cantidad</th>
 
                     <th>Importe Venta</th>
 
                     <th>Precio Promedio</th>
-
-                    <th>PB x Cantidad</th>
-
-                    <th>Convertidor</th>
 
                     <th>Precio por Kg.</th>
 
@@ -322,17 +309,11 @@ Dashboard Cable Desnudo
 
                     <td>{{ fila['Calibre'] }}</td>
 
-                    <td>${{ "{:,.2f}".format(fila['PrecioBase']) }}</td>
-
                     <td>{{ "{:,.0f}".format(fila['Cantidad']) }}</td>
 
                     <td>${{ "{:,.2f}".format(fila['ImporteVenta']) }}</td>
 
                     <td>${{ "{:,.2f}".format(fila['PrecioPromedio']) }}</td>
-
-                    <td>${{ "{:,.2f}".format(fila['PBxCantidad']) }}</td>
-
-                    <td>{{ "{:,.2f}".format(fila['Convertidor']) }}</td>
 
                     <td>
                         ${{ "{:,.2f}".format(fila['PrecioKg']) }}

@@ -246,3 +246,73 @@
 .kpi-serie8000-mini .valor {
     font-size: 0.9rem;
 }
+
+/* ==========================
+   TABLA RESUMEN
+========================== */
+
+
+.tabla-resumen th,
+.tabla-resumen td {
+
+    text-align:center;
+    vertical-align:middle;
+
+}
+
+
+/* CONDUMEX */
+
+.resumen-condumex {
+
+    background-color:#F77F00 !important;
+    color:white !important;
+
+}
+
+
+/* CONDULAC */
+
+.resumen-condulac {
+
+    background-color:#168551 !important;
+    color:white !important;
+
+}
+
+
+/* KOBREX */
+
+.resumen-kobrex {
+
+    background-color:#E71D36 !important;
+    color:white !important;
+
+}
+
+
+/* DESNUDO */
+
+.resumen-desnudo {
+
+    background-color:#B87333 !important;
+    color:white !important;
+
+}
+
+
+/* SERIE 8000 */
+
+.resumen-serie8000 {
+
+    background-color:black !important;
+    color:white !important;
+
+}
+
+.resumen-fecha{
+
+    background-color:#002B5B !important;
+    color:white !important;
+
+}

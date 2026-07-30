@@ -22,10 +22,11 @@ Dashboard THW
 
             </h1>
 
-            <a href="{{ url_for('inicio') }}"
+            
+            <a href="{{ url_for('dashboard.thw') }}"
                 class="btn btn-outline-secondary">
 
-                ← Inicio
+            ← Atrás
 
             </a>
 
@@ -170,26 +171,21 @@ Dashboard THW
             </button>
 
             <button
+            
                 type="submit"
-                formaction="{{ url_for('dashboard.descargar_thw') }}"
+                formaction="{{ url_for('dashboard.descargar_thw_articulos') }}"
                 class="btn btn-excel">
 
                 Descargar Excel
 
             </button>
 
-            <a href="{{ url_for('dashboard.thw_articulos') }}"
-               class="btn btn-resumen">
-
-               Detalles por Artículo
-
-            </a>
 
         </div>
 
         <h4 class="mb-0">
 
-            Ventas por calibre
+            Ventas por Artículo
 
         </h4>
 
@@ -273,7 +269,7 @@ Dashboard THW
             <thead>
 
                 <!-- FILA DE TOTALES -->
-                
+
                 <tr class="{{ color_tabla }}">
 
                     <th colspan="2"></th>
@@ -301,25 +297,24 @@ Dashboard THW
                     <th></th>
 
                 </tr>
-
                 <!-- ENCABEZADOS -->
 
                 <tr class="{{ color_tabla }}">
 
-                    <th>Calibre</th>
+                    <th>Articulo</th>
 
                     <th>Precio de Lista</th>
 
                     <th>Cantidad</th>
 
-                    <th>Toneladas</th>
+                    <th>Toneladas</th> 
 
                     <th>Importe Venta</th>
 
                     <th>Precio Promedio</th>
 
                     <th>Desc. Equiv sobre PL</th>
-
+ 
                 </tr>
 
             </thead>
@@ -328,7 +323,7 @@ Dashboard THW
             {% for fila in datos %}
             <tr>
 
-                <td>{{ fila['Calibre'] }}</td>
+                <td>{{ fila['Articulo'] }}</td>
 
                 <td>${{ "{:,.2f}".format(fila['PrecioBase'] or 0) }}</td>
 

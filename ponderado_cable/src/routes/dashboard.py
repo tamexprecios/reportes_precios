@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, send_file
 from database import ejecutar_sql_desde_archivo
+from convertidores import cargar_convertidores
 import os
 import numpy as np
 import pandas as pd
@@ -32,8 +33,8 @@ def thw():
     color_tabla = "table-dark"
 
     cantidad_total = 0
+    toneladas_total = 0
     importe_total = 0
-    pb_total = 0
 
     marcas = []
     almacenes = []
@@ -94,12 +95,96 @@ def thw():
 
         df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
+        if df is not None and not df.empty:
+
+            print("TOTAL REGISTROS SQL:", len(df))
+
+            cantidad_sql = pd.to_numeric(
+            df["Cantidad"],
+            errors="coerce"
+            ).fillna(0).sum()
+
+
+            importe_sql = pd.to_numeric(
+            df["ImporteVenta"],
+            errors="coerce"
+            ).fillna(0).sum()
+
+
+            print("CANTIDAD TOTAL:", cantidad_sql)
+
+            print("IMPORTE TOTAL:",
+            "{:,.2f}".format(importe_sql))
+
+
+        else:
+
+                print("LA CONSULTA NO DEVOLVIÓ DATOS")
+
+
+        print("==============================")
+
+
+        marcas_disponibles = sorted(
+        df["Categoria"].dropna().unique().tolist()
+        )
+
+
+        print("PARAMETROS ENVIADOS:", parametros)
+
+        # =========================
+        # AGREGAR CONVERTIDOR KG/M
+        # =========================
+
+        convertidores = cargar_convertidores()
+
+        duplicados = convertidores[
+            convertidores["ARTICULO"].duplicated(keep=False)
+        ]
+
+        print("TOTAL REGISTROS:", len(convertidores))
+        print("ARTÍCULOS DUPLICADOS:", len(duplicados))
+
+        if not duplicados.empty:
+            print(duplicados.sort_values("ARTICULO"))
+
+        print("==============================")
+
+
+        df["Articulo"] = (
+            df["Articulo"]
+            .astype(str)
+            .str.strip()
+        )
+
+
+        df = df.merge(
+            convertidores,
+            left_on="Articulo",
+            right_on="ARTICULO",
+            how="left"
+        )
+
+
+        df["KG/M"] = (
+            pd.to_numeric(
+                df["KG/M"],
+                errors="coerce"
+            )
+            .fillna(0)
+        )
+
+        print(df[["Articulo","Cantidad","KG/M"]].head(10))
+ 
         marcas_disponibles = sorted(
         df["Categoria"].dropna().unique().tolist()
         )
 
         print("PARAMETROS ENVIADOS:", parametros)
         print("REGISTROS OBTENIDOS:", len(df))
+
+        print(df.columns.tolist())
+        print(df[["Articulo","Cantidad"]].head(10))
 
         if df is None or df.empty:
             return render_template(
@@ -127,9 +212,29 @@ def thw():
         # =========================
         # NUMÉRICOS
         # =========================
-        for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
+        for col in [
+            "Cantidad",
+            "ImporteVenta",
+            "PBxCantidad",
+            "PrecioBase",
+            "KG/M"
+        ]:
+            df[col] = pd.to_numeric(
+                df[col],
+                errors="coerce"
+            ).fillna(0)
+
+
+        # =========================
+        # TONELADAS
+        # =========================
+
+        df["Toneladas"] = (
+            df["Cantidad"] *
+            df["KG/M"]
+        ) / 1000
+        
         # =========================
         # KPI 1 - DESCUENTO PONDERADO DE VENTA
         # =========================
@@ -147,8 +252,9 @@ def thw():
         # =========================
 
         cantidad_total = df["Cantidad"].sum()
+        toneladas_total = df["Toneladas"].sum()
         importe_total = df["ImporteVenta"].sum()
-        pb_total = df["PBxCantidad"].sum() 
+       
 
         # =========================
         # AGRUPACIÓN
@@ -156,6 +262,7 @@ def thw():
         df = df.groupby("Calibre", as_index=False).agg({
             "PrecioBase": "mean",
             "Cantidad": "sum",
+            "Toneladas": "sum",
             "ImporteVenta": "sum",
             "PBxCantidad": "sum"
         })
@@ -210,6 +317,12 @@ def thw():
         df["Calibre"] = pd.Categorical(df["Calibre"], categories=ORDEN_CALIBRES, ordered=True)
         df = df.sort_values("Calibre")
 
+        print(df[[
+        "Calibre",
+        "Cantidad",
+        "Toneladas"
+        ]])
+   
         datos = df.to_dict(orient="records")
 
     return render_template(
@@ -224,8 +337,276 @@ def thw():
         almacenes=almacenes,
         gerentes=gerentes,
         cantidad_total=cantidad_total,
+        toneladas_total=toneladas_total,
         importe_total=importe_total,
-        pb_total=pb_total,
+        color_tabla=color_tabla
+    )
+
+@dashboard.route("/thw_articulos", methods=["GET", "POST"])
+def thw_articulos():
+    
+    print("ENTRANDO A THW ARTICULOS")
+
+
+    datos = []
+
+    fecha_inicio_sel = ""
+    fecha_fin_sel = ""
+    
+    descuento_calibre_12 = 0
+    descuento_ponderado = 0 
+    precio_calibre_12 = 0
+
+    color_tabla = "table-dark"
+
+    cantidad_total = 0
+    toneladas_total = 0
+    importe_total = 0
+
+    marcas = []
+    almacenes = []
+    gerentes = []
+
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+
+    if request.method == "POST":
+
+        fecha_inicio = request.form.get("fecha_inicio")
+        fecha_fin = request.form.get("fecha_fin")
+
+        fecha_inicio_sel = fecha_inicio
+        fecha_fin_sel = fecha_fin
+
+        marca = request.form.get("marca") or None
+        almacen = request.form.get("almacen") or None
+        gerente = request.form.get("gerente") or None
+
+        if marca == "CONDUMEX":
+
+            color_tabla = "tabla-condumex"
+
+
+        elif marca == "CONDULAC":
+
+            color_tabla = "tabla-condulac"
+
+
+        elif marca == "KOBREX":
+
+            color_tabla = "tabla-kobrex"
+
+
+        else:
+
+            color_tabla = "table-dark"
+
+        print("MARCA:", marca)
+        print("COLOR TABLA:", color_tabla)
+
+
+        parametros = {
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "marca": marca,
+            "almacen": almacen,
+            "gerente": gerente
+        }
+
+        # limpiar vacíos
+        for k, v in parametros.items():
+            if v == "":
+                parametros[k] = None
+
+        BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        ruta_sql = os.path.join(BASE_DIR, "sql", "backup_sql", "THW_ARTICULOS.sql")
+
+        df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
+
+        # =========================
+        # AGREGAR CONVERTIDOR KG/M
+        # =========================
+
+        convertidores = cargar_convertidores()
+
+
+        df["Articulo"] = (
+            df["Articulo"]
+            .astype(str)
+            .str.strip()
+        )
+
+        df = df.merge(
+            convertidores,
+            left_on="Articulo",
+            right_on="ARTICULO",
+            how="left"
+        )
+
+        df["KG/M"] = (
+            pd.to_numeric(
+                df["KG/M"],
+                errors="coerce"
+            )
+            .fillna(0)
+        )
+
+        marcas_disponibles = sorted(
+        df["Categoria"].dropna().unique().tolist()
+        )
+
+        print("PARAMETROS ENVIADOS:", parametros)
+        print("REGISTROS OBTENIDOS:", len(df))
+
+        if df is None or df.empty:
+            return render_template(
+                "cable_thw_articulos.html",
+                datos=[],
+                descuento_calibre_12=0,
+                fecha_inicio=fecha_inicio_sel,
+                fecha_fin=fecha_fin_sel,
+                marcas=[],
+                almacenes=[],
+                gerentes=[],
+                cantidad_total=0,
+                importe_total=0,
+                pb_total=0
+            )
+
+        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
+        # =========================
+
+        marcas =  ["CONDUMEX","CONDULAC","KOBREX"]
+        almacenes = sorted(df["Almacen"].dropna().unique().tolist())
+        gerentes = sorted(df["GerenteRegional"].dropna().unique().tolist())
+
+        # =========================
+        # NUMÉRICOS
+        # =========================
+        for col in ["Cantidad","ImporteVenta","PBxCantidad","PrecioBase"]:
+            df[col] = pd.to_numeric(df[col],errors="coerce").fillna(0)
+
+        # =========================
+        # TONELADAS
+        # =========================
+                
+        df["Toneladas"] = (
+            df["Cantidad"]
+            *
+            df["KG/M"]
+            ) / 1000
+                
+
+        # =========================
+        # KPI 1 - DESCUENTO PONDERADO DE VENTA
+        # =========================
+
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
+
+        if total_pb != 0:
+            descuento_ponderado = 1 - (total_importe / total_pb)
+        else:
+            descuento_ponderado = 0 
+
+        # =========================
+        # PRECIO CAL. 12
+        # ANTES DE AGRUPAR ARTICULOS
+        # =========================
+
+        df_calibre_12 = df[df["Calibre"] == "12"]
+
+        if not df_calibre_12.empty:
+
+            precio_base_12 = (
+                pd.to_numeric(
+                    df_calibre_12["PrecioBase"],
+                    errors="coerce"
+            )
+            .fillna(0)
+            .mean()
+            )
+
+            precio_calibre_12 = (
+                precio_base_12 *
+                (1 - descuento_ponderado)
+            )
+
+        else:
+
+            precio_calibre_12 = 0
+
+        # =========================
+        # TOTALES
+        # =========================
+
+        cantidad_total = df["Cantidad"].sum()
+        importe_total = df["ImporteVenta"].sum()
+       
+        # =========================
+        # AGRUPACIÓN
+        # =========================
+        df = df.groupby("Articulo",as_index=False).agg({
+
+        "PrecioBase": "mean",
+        "Cantidad": "sum",
+        "Toneladas": "sum",
+        "ImporteVenta": "sum",
+        "PBxCantidad": "sum"
+
+        })
+
+        toneladas_total = df["Toneladas"].sum()
+        
+        # =========================
+        # CÁLCULOS
+        # =========================
+        df["PrecioPromedio"] = df.apply(
+            lambda x: x["ImporteVenta"] / x["Cantidad"] if x["Cantidad"] != 0 else 0,
+            axis=1
+        )
+
+        df["DescEquivPL"] = df.apply(
+            lambda x: 1 - (x["PrecioPromedio"] / x["PrecioBase"]) if x["PrecioBase"] != 0 else 0,
+            axis=1
+        )
+
+        df = df.fillna(0)
+
+        # =========================
+        # DESC. PONDERADO DE VENTA
+        # =========================
+
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
+
+        if total_pb != 0:
+            descuento_ponderado = -((total_importe / total_pb) - 1)
+        else:
+            descuento_ponderado = 0
+
+        print("TOTAL IMPORTE:", total_importe)
+        print("TOTAL PB:", total_pb)
+        print("DESC PONDERADO:", descuento_ponderado)
+
+        df = df.sort_values("ImporteVenta",ascending=False)
+        
+        datos = df.to_dict(orient="records")
+
+    return render_template(
+        "cable_thw_articulos.html",
+        datos=datos,
+        descuento_calibre_12=descuento_calibre_12,
+        descuento_ponderado=descuento_ponderado,
+        precio_calibre_12=precio_calibre_12,
+        fecha_inicio=fecha_inicio_sel,
+        fecha_fin=fecha_fin_sel,
+        marcas=marcas,
+        almacenes=almacenes,
+        gerentes=gerentes,
+        cantidad_total=cantidad_total,
+        toneladas_total=toneladas_total,
+        importe_total=importe_total,
         color_tabla=color_tabla
     )
 
@@ -719,9 +1100,6 @@ def desnudo_articulos():
     )
 
 
-
-
-
 @dashboard.route("/serie8000", methods=["GET", "POST"])
 def serie8000():
     
@@ -984,7 +1362,257 @@ def serie8000():
         color_tabla=color_tabla
     )
 
+@dashboard.route("/resumen", methods=["GET", "POST"])
+def resumen():
 
+    from datetime import date, timedelta
+
+    datos = []
+
+
+    if request.method == "POST":
+
+        fecha_inicio = request.form.get("fecha_inicio")
+        fecha_fin = request.form.get("fecha_fin")
+
+    else:
+
+        fecha_inicio = date.today().replace(day=1).isoformat()
+        fecha_fin = date.today().isoformat()
+
+
+
+    BASE_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".."
+        )
+    )
+
+
+    def calcular_descuento(df):
+
+        if df is None or df.empty:
+            return 0
+
+
+        importe = pd.to_numeric(
+            df["ImporteVenta"],
+            errors="coerce"
+        ).fillna(0).sum()
+
+
+        pb = pd.to_numeric(
+            df["PBxCantidad"],
+            errors="coerce"
+        ).fillna(0).sum()
+
+
+        if pb == 0:
+            return 0
+
+
+        return 1 - (importe / pb)
+
+
+
+    fecha_actual = date.fromisoformat(fecha_inicio)
+
+    fecha_final = date.fromisoformat(fecha_fin)
+
+
+
+    while fecha_actual <= fecha_final:
+
+
+        fecha_dia = fecha_actual.isoformat()
+
+
+        fila = {
+
+            "fecha": fecha_dia,
+
+            "condumex":0,
+            "cal12_condumex":0,
+
+            "condulac":0,
+            "cal12_condulac":0,
+
+            "kobrex":0,
+            "cal12_kobrex":0,
+
+            "desnudo":0,
+            "cal12_desnudo":0,
+
+            "serie8000":0
+        }
+
+
+
+        # ============================
+        # THW
+        # ============================
+
+        ruta_thw = os.path.join(
+            BASE_DIR,
+            "sql",
+            "backup_sql",
+            "THW.sql"
+        )
+
+
+        df_thw = ejecutar_sql_desde_archivo(
+            ruta_thw,
+            {
+                "fecha_inicio": fecha_dia,
+                "fecha_fin": fecha_dia,
+                "marca": None,
+                "almacen": None,
+                "gerente": None
+            }
+        )
+
+
+
+        if df_thw is not None and not df_thw.empty:
+
+
+            for marca, llave in [
+                ("CONDUMEX","condumex"),
+                ("CONDULAC","condulac"),
+                ("KOBREX","kobrex")
+            ]:
+
+
+                df_marca = df_thw[
+                    df_thw["Categoria"] == marca
+                ]
+
+
+                fila[llave] = calcular_descuento(
+                    df_marca
+                )
+
+
+                calibre12 = df_marca[
+                    df_marca["Calibre"] == "12"
+                ]
+
+
+                if not calibre12.empty:
+
+
+                    precio_base_12 = (
+                        calibre12["PrecioBase"]
+                        .mean()
+                    )
+
+
+                    descuento = calcular_descuento(
+                        df_marca
+                    )
+
+
+                    fila[
+                        f"cal12_{llave}"
+                    ] = precio_base_12 * (1 - descuento)
+
+
+
+        # ============================
+        # DESNUDO
+        # ============================
+
+
+        ruta_desnudo = os.path.join(
+            BASE_DIR,
+            "sql",
+            "backup_sql",
+            "DESNUDO.sql"
+        )
+
+
+        df_desnudo = ejecutar_sql_desde_archivo(
+            ruta_desnudo,
+            {
+                "fecha_inicio": fecha_dia,
+                "fecha_fin": fecha_dia,
+                "almacen": None,
+                "gerente": None
+            }
+        )
+
+
+        if df_desnudo is not None and not df_desnudo.empty:
+
+
+            kg = df_desnudo[
+                "CantidadEntreConvertidor"
+            ].sum()
+
+
+            importe = df_desnudo[
+                "ImporteVenta"
+            ].sum()
+
+
+            if kg != 0:
+
+                fila["desnudo"] = importe / kg
+
+                fila["cal12_desnudo"] = (
+                    fila["desnudo"] / 33.33
+                )
+
+
+
+        # ============================
+        # SERIE 8000
+        # ============================
+
+
+        ruta_serie = os.path.join(
+            BASE_DIR,
+            "sql",
+            "backup_sql",
+            "SERIE_8000.sql"
+        )
+
+
+        df_serie = ejecutar_sql_desde_archivo(
+            ruta_serie,
+            {
+                "fecha_inicio": fecha_dia,
+                "fecha_fin": fecha_dia,
+                "almacen": None,
+                "tipo": None,
+                "extra_filters": ""
+            }
+        )
+
+
+        fila["serie8000"] = calcular_descuento(
+            df_serie
+        )
+
+
+
+        # GUARDAR EL DÍA COMPLETO
+
+        datos.append(fila)
+
+
+        # SIGUIENTE DÍA
+
+        fecha_actual += timedelta(days=1)
+
+
+
+    return render_template(
+        "resumen.html",
+        datos=datos
+    )
 
 @dashboard.route("/descargar_thw", methods=["POST"])
 def descargar_thw():
@@ -1028,6 +1656,116 @@ def descargar_thw():
         parametros
     )
 
+    # =========================
+    # AGREGAR CONVERTIDOR KG/M
+    # =========================
+
+    convertidores = cargar_convertidores()
+
+    df["Articulo"] = (
+    df["Articulo"]
+    .astype(str)
+    .str.strip()
+    )
+
+
+    df = df.merge(
+    convertidores,
+    left_on="Articulo",
+    right_on="ARTICULO",
+    how="left"
+    )
+
+
+    df["KG/M"] = (
+    pd.to_numeric(
+        df["KG/M"],
+        errors="coerce"
+    )
+    .fillna(0)
+    )
+
+
+    # =========================
+    # NUMÉRICOS
+    # =========================
+
+    for col in [
+    "Cantidad",
+    "ImporteVenta",
+    "PBxCantidad",
+    "PrecioBase",
+    "KG/M"
+    ]:
+        
+        df[col] = pd.to_numeric(
+        df[col],
+        errors="coerce"
+    ).fillna(0)
+
+    # =========================
+    # TONELADAS
+    # =========================
+
+    df["Toneladas"] = (
+    df["Cantidad"] *
+    df["KG/M"]
+    ) / 1000
+
+
+    # =========================
+    # AGRUPACIÓN
+    # =========================
+
+    df = df.groupby(
+    "Calibre",
+    as_index=False
+    ).agg({
+
+    "PrecioBase":"mean",
+    "Cantidad":"sum",
+    "Toneladas":"sum",
+    "ImporteVenta":"sum",
+    "PBxCantidad":"sum"
+
+    })
+
+
+    # =========================
+    # CÁLCULOS
+    # =========================
+
+    df["PrecioPromedio"] = df.apply(
+    lambda x:
+        x["ImporteVenta"] / x["Cantidad"]
+        if x["Cantidad"] != 0
+        else 0,
+    axis=1
+    )
+
+
+    df["DescEquivPL"] = df.apply(
+    lambda x:
+        1 - (x["PrecioPromedio"]/x["PrecioBase"])
+        if x["PrecioBase"] != 0
+        else 0,
+    axis=1
+    )
+
+
+    df = df.fillna(0)
+
+    df_excel = df[
+    [
+        "Calibre",
+        "PrecioBase",
+        "Cantidad",
+        "Toneladas",
+        "ImporteVenta",
+        "PrecioPromedio",
+        "DescEquivPL"
+    ]
+    ]
 
     archivo = BytesIO()
 
@@ -1037,7 +1775,7 @@ def descargar_thw():
         engine="openpyxl"
     ) as writer:
 
-        df.to_excel(
+        df_excel.to_excel(
             writer,
             index=False,
             sheet_name="THW"
@@ -1050,6 +1788,166 @@ def descargar_thw():
     return send_file(
         archivo,
         download_name="Reporte_THW.xlsx",
+        as_attachment=True
+    )
+
+@dashboard.route("/descargar_thw_articulos", methods=["POST"])
+def descargar_thw_articulos():
+
+    fecha_inicio = request.form.get("fecha_inicio")
+    fecha_fin = request.form.get("fecha_fin")
+
+    marca = request.form.get("marca") or None
+    almacen = request.form.get("almacen") or None
+    gerente = request.form.get("gerente") or None
+
+
+    parametros = {
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "marca": marca,
+        "almacen": almacen,
+        "gerente": gerente
+    }
+
+
+    BASE_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".."
+        )
+    )
+
+
+    ruta_sql = os.path.join(
+        BASE_DIR,
+        "sql",
+        "backup_sql",
+        "THW_ARTICULOS.sql"
+    )
+
+
+    df = ejecutar_sql_desde_archivo(
+        ruta_sql,
+        parametros
+    )
+
+    convertidores = cargar_convertidores()
+
+
+    df["Articulo"] = (
+    df["Articulo"]
+    .astype(str)
+    .str.strip()
+    )
+
+
+    df = df.merge(
+    convertidores,
+    left_on="Articulo",
+    right_on="ARTICULO",
+    how="left"
+    )
+
+
+    df["KG/M"] = (
+    pd.to_numeric(
+        df["KG/M"],
+        errors="coerce"
+    )
+    .fillna(0)
+    )
+
+
+    for col in [
+    "Cantidad",
+    "ImporteVenta",
+    "PBxCantidad",
+    "PrecioBase",
+    "KG/M"
+    ]:
+
+        df[col] = pd.to_numeric(
+        df[col],
+        errors="coerce"
+    ).fillna(0)
+
+
+
+    df["Toneladas"] = (
+        df["Cantidad"] *
+        df["KG/M"]
+    ) / 1000
+
+
+
+    df = df.groupby(
+    "Articulo",
+    as_index=False
+    ).agg({
+
+    "PrecioBase":"mean",
+    "Cantidad":"sum",
+    "Toneladas":"sum",
+    "ImporteVenta":"sum",
+    "PBxCantidad":"sum"
+
+    })
+
+
+    df["PrecioPromedio"] = df.apply(
+    lambda x:
+        x["ImporteVenta"] / x["Cantidad"]
+        if x["Cantidad"] != 0
+        else 0,
+    axis=1
+    )
+
+
+    df["DescEquivPL"] = df.apply(
+    lambda x:
+        1 - (x["PrecioPromedio"]/x["PrecioBase"])
+        if x["PrecioBase"] != 0
+        else 0,
+    axis=1
+    ) 
+
+
+    df = df.fillna(0)
+    
+    df_excel = df[
+    [
+        "Articulo",
+        "PrecioBase",
+        "Cantidad",
+        "Toneladas",
+        "ImporteVenta",
+        "PrecioPromedio",
+        "DescEquivPL"
+    ]
+    ]
+
+    archivo = BytesIO()
+    
+    with pd.ExcelWriter(
+        archivo,
+        engine="openpyxl"
+    ) as writer:
+
+        df_excel.to_excel(
+            writer,
+            index=False,
+            sheet_name="THW_ARTICULOS"
+        )
+
+
+    archivo.seek(0)
+
+
+    return send_file(
+        archivo,
+        download_name="Reporte_THW_Articulos.xlsx",
         as_attachment=True
     )
 
@@ -1088,11 +1986,61 @@ def descargar_desnudo():
     )
 
 
-    df = ejecutar_sql_desde_archivo(
-        ruta_sql,
-        parametros
+    df = ejecutar_sql_desde_archivo(ruta_sql,parametros)
+
+    # =========================
+    # PROCESAR REPORTE CALIBRE
+    # =========================
+
+    for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+
+    df = df.groupby("Calibre", as_index=False).agg({
+
+        "PrecioBase": "mean",
+        "Cantidad": "sum",
+        "ImporteVenta": "sum",
+        "PBxCantidad": "sum",
+        "Convertidor": "first",
+        "CantidadEntreConvertidor": "sum"
+
+    })
+
+
+    df["PrecioPromedio"] = df.apply(
+
+        lambda x:
+            x["ImporteVenta"] / x["Cantidad"]
+            if x["Cantidad"] != 0
+            else 0,
+
+        axis=1
+
     )
 
+
+    df["PrecioKg"] = df.apply(
+
+        lambda x:
+            x["ImporteVenta"] / x["CantidadEntreConvertidor"]
+            if x["CantidadEntreConvertidor"] != 0
+            else 0,
+
+        axis=1
+
+    )
+
+
+    # COLUMNAS QUE SE EXPORTARÁN
+
+    df = df[[
+        "Calibre",
+        "Cantidad",
+        "ImporteVenta",
+        "PrecioPromedio",
+        "PrecioKg"
+    ]]
 
     archivo = BytesIO()
 
@@ -1153,11 +2101,57 @@ def descargar_desnudo_articulos():
     )
 
 
-    df = ejecutar_sql_desde_archivo(
-        ruta_sql,
-        parametros
+    df = ejecutar_sql_desde_archivo(ruta_sql,parametros)
+
+    # =========================
+    # PROCESAR REPORTE ARTICULOS
+    # =========================
+
+    for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
+
+
+    df = df.groupby("Articulo", as_index=False).agg({
+
+        "PrecioBase": "mean",
+        "Cantidad": "sum",
+        "ImporteVenta": "sum",
+        "PBxCantidad": "sum",
+        "Convertidor": "first",
+        "CantidadEntreConvertidor": "sum"
+
+    })
+
+
+    df["PrecioPromedio"] = df.apply(
+
+        lambda x:
+            x["ImporteVenta"] / x["Cantidad"]
+            if x["Cantidad"] != 0
+            else 0,
+        axis=1
     )
 
+
+    df["PrecioKg"] = df.apply(
+
+        lambda x:
+            x["ImporteVenta"] / x["CantidadEntreConvertidor"]
+            if x["CantidadEntreConvertidor"] != 0
+            else 0,
+        axis=1
+    )
+
+
+    # COLUMNAS QUE SE EXPORTARÁN
+
+    df = df[[ 
+        "Articulo",
+        "Cantidad",
+        "ImporteVenta",
+        "PrecioPromedio",
+        "PrecioKg"
+    ]]
 
     archivo = BytesIO()
 
