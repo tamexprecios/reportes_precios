@@ -359,35 +359,29 @@ Dashboard Serie 8000
 
                     <tr class="{{ color_tabla }}">
 
-                        <th colspan="3"></th>
+                        <th></th>
+
+                        <th></th>
 
 
                         <th class="text-center">
-
                             {{ "{:,.0f}".format(cantidad_total) }}
-
                         </th>
 
 
                         <th class="text-center">
+                            {{ "{:,.3f}".format(toneladas_total) }}
+                        </th>
 
+
+                        <th class="text-center">
                             ${{ "{:,.2f}".format(importe_total) }}
-
                         </th>
 
 
                         <th></th>
 
-
-                        <th class="text-center">
-
-                            ${{ "{:,.2f}".format(pb_total) }}
-
-                        </th>
-
-
                         <th></th>
-
 
                     </tr>
 
@@ -397,23 +391,19 @@ Dashboard Serie 8000
 
                     <tr class="{{ color_tabla }}">
 
-
                         <th>Artículo</th>
 
                         <th>Tipo</th>
 
-                        <th>Precio Base</th>
-
                         <th>Cantidad</th>
+
+                        <th>Toneladas</th>
 
                         <th>Importe Venta</th>
 
                         <th>Precio Promedio</th>
 
-                        <th>PB x Cantidad</th>
-
                         <th>Desc. Equiv sobre PL</th>
-
 
                     </tr>
 
@@ -423,7 +413,6 @@ Dashboard Serie 8000
 
 
                 <tbody>
-
 
                 {% for fila in datos %}
 
@@ -436,19 +425,16 @@ Dashboard Serie 8000
                     <td>{{ fila['Tipo'] }}</td>
 
 
-                    <td>${{ "{:,.2f}".format(fila['PrecioBase'] or 0) }}</td>
-
-
                     <td>{{ "{:,.0f}".format(fila['Cantidad'] or 0) }}</td>
+
+                    
+                    <td>{{ "{:,.3f}".format(fila['Toneladas'] or 0) }}</td>
 
 
                     <td>${{ "{:,.2f}".format(fila['ImporteVenta'] or 0) }}</td>
 
 
                     <td>${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}</td>
-
-
-                    <td>${{ "{:,.2f}".format(fila['PBxCantidad'] or 0) }}</td>
 
 
                     <td>{{ "{:.2%}".format(fila['DescEquivPL'] or 0) }}</td>

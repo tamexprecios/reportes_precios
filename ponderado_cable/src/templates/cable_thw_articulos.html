@@ -272,7 +272,8 @@ Dashboard THW
 
                 <tr class="{{ color_tabla }}">
 
-                    <th colspan="2"></th>
+                    <th></th>
+
 
                     <th class="text-center">
 
@@ -280,11 +281,13 @@ Dashboard THW
 
                     </th>
 
+
                     <th class="text-center">
 
                         {{ "{:,.3f}".format(toneladas_total) }}
 
                     </th>
+
 
                     <th class="text-center">
 
@@ -292,18 +295,19 @@ Dashboard THW
 
                     </th>
 
+
                     <th></th>
+
 
                     <th></th>
 
                 </tr>
+
                 <!-- ENCABEZADOS -->
 
                 <tr class="{{ color_tabla }}">
 
                     <th>Articulo</th>
-
-                    <th>Precio de Lista</th>
 
                     <th>Cantidad</th>
 
@@ -324,8 +328,6 @@ Dashboard THW
             <tr>
 
                 <td>{{ fila['Articulo'] }}</td>
-
-                <td>${{ "{:,.2f}".format(fila['PrecioBase'] or 0) }}</td>
 
                 <td>{{ "{:,.0f}".format(fila['Cantidad'] or 0) }}</td>
 
