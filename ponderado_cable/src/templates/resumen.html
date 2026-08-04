@@ -21,7 +21,7 @@ Descuento Ponderado de Venta
 
 <h3 class="titulo-dashboard mt-4 mb-3">
 
-Ponderado Mes anterior
+Ponderado General Mes anterior
 
 </h3>
 
@@ -85,43 +85,43 @@ Serie 8000
 <tr>
 
 <td>
-Mes anterior
+{{ mes_anterior.fecha }}
 </td>
 
 <td>
-0%
+{{ "{:.2%}".format(mes_anterior.condumex) }}
 </td>
 
 <td>
-$0.00
+${{ "{:,.2f}".format(mes_anterior.cal12_condumex) }}
 </td>
 
 <td>
-0%
+{{ "{:.2%}".format(mes_anterior.condulac) }}
 </td>
 
 <td>
-$0.00
+${{ "{:,.2f}".format(mes_anterior.cal12_condulac) }}
 </td>
 
 <td>
-0%
+{{ "{:.2%}".format(mes_anterior.kobrex) }}
 </td>
 
 <td>
-$0.00
+${{ "{:,.2f}".format(mes_anterior.cal12_kobrex) }}
 </td>
 
 <td>
-$0.00
+${{ "{:,.2f}".format(mes_anterior.desnudo) }}
 </td>
 
 <td>
-$0.00
+${{ "{:,.2f}".format(mes_anterior.cal12_desnudo) }}
 </td>
 
 <td>
-0%
+{{ "{:.2%}".format(mes_anterior.serie8000) }}
 </td>
 
 </tr>

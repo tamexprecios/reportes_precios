@@ -1677,44 +1677,29 @@ def resumen():
 
         return 1 - (importe / pb)
 
+    def crear_fila_resumen(periodo):
 
+        return {
 
-    fecha_actual = date.fromisoformat(fecha_inicio)
+            "fecha": periodo,
 
-    fecha_final = date.fromisoformat(fecha_fin)
+            "condumex": 0,
+            "cal12_condumex": 0,
 
+            "condulac": 0,
+            "cal12_condulac": 0,
 
+            "kobrex": 0,
+            "cal12_kobrex": 0,
 
-    while fecha_actual <= fecha_final:
+            "desnudo": 0,
+            "cal12_desnudo": 0,
 
+            "serie8000": 0
 
-        fecha_dia = fecha_actual.isoformat()
-
-
-        fila = {
-
-            "fecha": fecha_dia,
-
-            "condumex":0,
-            "cal12_condumex":0,
-
-            "condulac":0,
-            "cal12_condulac":0,
-
-            "kobrex":0,
-            "cal12_kobrex":0,
-
-            "desnudo":0,
-            "cal12_desnudo":0,
-
-            "serie8000":0
         }
 
-
-
-        # ============================
-        # THW
-        # ============================
+    def procesar_thw(fila, fecha_inicio, fecha_fin):
 
         ruta_thw = os.path.join(
             BASE_DIR,
@@ -1723,69 +1708,50 @@ def resumen():
             "THW.sql"
         )
 
-
         df_thw = ejecutar_sql_desde_archivo(
             ruta_thw,
             {
-                "fecha_inicio": fecha_dia,
-                "fecha_fin": fecha_dia,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
                 "marca": None,
                 "almacen": None,
                 "gerente": None
             }
         )
 
-
-
         if df_thw is not None and not df_thw.empty:
 
-
             for marca, llave in [
-                ("CONDUMEX","condumex"),
-                ("CONDULAC","condulac"),
-                ("KOBREX","kobrex")
+                ("CONDUMEX", "condumex"),
+                ("CONDULAC", "condulac"),
+                ("KOBREX", "kobrex")
             ]:
-
 
                 df_marca = df_thw[
                     df_thw["Categoria"] == marca
                 ]
 
-
-                fila[llave] = calcular_descuento(
-                    df_marca
-                )
-
+                fila[llave] = calcular_descuento(df_marca)
 
                 calibre12 = df_marca[
                     df_marca["Calibre"] == "12"
                 ]
 
-
                 if not calibre12.empty:
-
 
                     precio_base_12 = (
                         calibre12["PrecioBase"]
                         .mean()
                     )
 
+                    descuento = calcular_descuento(df_marca)
 
-                    descuento = calcular_descuento(
-                        df_marca
+                    fila[f"cal12_{llave}"] = (
+                        precio_base_12 *
+                        (1 - descuento)
                     )
 
-
-                    fila[
-                        f"cal12_{llave}"
-                    ] = precio_base_12 * (1 - descuento)
-
-
-
-        # ============================
-        # DESNUDO
-        # ============================
-
+    def procesar_desnudo(fila, fecha_inicio, fecha_fin):
 
         ruta_desnudo = os.path.join(
             BASE_DIR,
@@ -1798,8 +1764,8 @@ def resumen():
         df_desnudo = ejecutar_sql_desde_archivo(
             ruta_desnudo,
             {
-                "fecha_inicio": fecha_dia,
-                "fecha_fin": fecha_dia,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
                 "almacen": None,
                 "gerente": None
             }
@@ -1825,14 +1791,9 @@ def resumen():
 
                 fila["cal12_desnudo"] = (
                     fila["desnudo"] / 33.33
-                )
+            )
 
-
-
-        # ============================
-        # SERIE 8000
-        # ============================
-
+    def procesar_serie8000(fila, fecha_inicio, fecha_fin):
 
         ruta_serie = os.path.join(
             BASE_DIR,
@@ -1845,8 +1806,8 @@ def resumen():
         df_serie = ejecutar_sql_desde_archivo(
             ruta_serie,
             {
-                "fecha_inicio": fecha_dia,
-                "fecha_fin": fecha_dia,
+                "fecha_inicio": fecha_inicio,
+                "fecha_fin": fecha_fin,
                 "almacen": None,
                 "tipo": None,
                 "extra_filters": ""
@@ -1858,8 +1819,127 @@ def resumen():
             df_serie
         )
 
+    fecha_actual = date.fromisoformat(fecha_inicio)
+
+    fecha_final = date.fromisoformat(fecha_fin)
+
+    # ============================
+    # FECHAS MES ANTERIOR
+    # ============================
+
+    hoy = date.today()
+
+    primer_dia_mes_actual = hoy.replace(day=1)
+
+    ultimo_dia_mes_anterior = (
+        primer_dia_mes_actual -
+        timedelta(days=1)
+    )
+
+    primer_dia_mes_anterior = (
+        ultimo_dia_mes_anterior.replace(day=1)
+    )
+
+    # ============================
+    # RESUMEN MES ANTERIOR
+    # ============================
+
+    mes_anterior = crear_fila_resumen(
+        "JULIO 2026"
+    )
+
+    # ============================
+    # THW
+    # ============================
+
+    procesar_thw(
+        mes_anterior,
+        primer_dia_mes_anterior.isoformat(),
+        ultimo_dia_mes_anterior.isoformat()
+    )
+    
+    # ============================
+    # DESNUDO
+    # ============================
+
+    procesar_desnudo(
+        mes_anterior,
+        primer_dia_mes_anterior.isoformat(),
+        ultimo_dia_mes_anterior.isoformat()
+    )
+
+    # ============================
+    # SERIE 8000
+    # ============================
+    
+    procesar_serie8000(
+        mes_anterior,
+        primer_dia_mes_anterior.isoformat(),
+        ultimo_dia_mes_anterior.isoformat()
+    )
+
+    while fecha_actual <= fecha_final:
+
+        # ============================
+        # OMITIR DOMINGOS
+        # ============================
+
+        if fecha_actual.weekday() == 6:
+                fecha_actual += timedelta(days=1)
+                continue
+
+        fecha_dia = fecha_actual.isoformat()
 
 
+        fila = {
+
+            "fecha": fecha_dia,
+
+            "condumex":0,
+            "cal12_condumex":0,
+
+            "condulac":0,
+            "cal12_condulac":0,
+
+            "kobrex":0,
+            "cal12_kobrex":0,
+
+            "desnudo":0,
+            "cal12_desnudo":0,
+
+            "serie8000":0
+        }
+
+        # ============================
+        # THW
+        # ============================
+
+        procesar_thw(
+            fila,
+            fecha_dia,
+            fecha_dia
+        )
+       
+        # ============================
+        # DESNUDO
+        # ============================
+
+        procesar_desnudo(
+            fila,
+            fecha_dia,
+            fecha_dia
+        )
+
+        # ============================
+        # SERIE 8000
+        # ============================
+
+        procesar_serie8000(
+            fila,
+            fecha_dia,
+            fecha_dia
+        )
+        
         # GUARDAR EL DÍA COMPLETO
 
         datos.append(fila)
@@ -1869,11 +1949,10 @@ def resumen():
 
         fecha_actual += timedelta(days=1)
 
-
-
     return render_template(
         "resumen.html",
-        datos=datos
+        datos=datos,
+        mes_anterior=mes_anterior
     )
 
 @dashboard.route("/descargar_thw", methods=["POST"])
