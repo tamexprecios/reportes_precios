@@ -191,8 +191,6 @@ Ventas por Artículo
 </div>
 
 
-
-
 <div class="col-lg-6 d-flex justify-content-end">
 
 
@@ -231,7 +229,20 @@ DESC. PONDERADO DE VENTA
 
 </form>
 
+{% if mensaje %}
+
+<div class="alert alert-warning text-center">
+
+    {{ mensaje }}
+
+</div>
+
+{% endif %}
+
 <!-- TABLA XLP -->
+ <h4>
+Mes en curso
+</h4>
 
 <div class="col-md-12">
 
@@ -247,7 +258,7 @@ DESC. PONDERADO DE VENTA
 
 <!-- FILA DE TOTALES -->
 
-<tr class="{{ color_tabla }}">
+<tr class="encabezado-xlp">
 
 
 <th></th>
@@ -276,7 +287,7 @@ ${{ "{:,.2f}".format(importe_venta_total) }}
 
 <!-- ENCABEZADOS -->
 
-<tr class="{{ color_tabla }}">
+<tr class="encabezado-xlp">
 
 
 <th>
@@ -285,17 +296,9 @@ Artículo
 
 </th>
 
-
 <th>
 
 Cantidad
-
-</th>
-
-
-<th>
-
-Importe Venta
 
 </th>
 
@@ -305,6 +308,11 @@ Precio Promedio
 
 </th>
 
+<th>
+
+Importe Venta
+
+</th>
 
 <th>
 
@@ -329,12 +337,9 @@ Desc. Equiv sobre PL
 <tr>
 
 
-<td>
-
-{{ fila['Articulo'] }}
-
+<td style="font-size: 11px; white-space: nowrap;">
+    {{ fila['Articulo'] }}
 </td>
-
 
 <td>
 
@@ -342,17 +347,15 @@ Desc. Equiv sobre PL
 
 </td>
 
+<td>
+
+${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}
+
+</td>
 
 <td>
 
 ${{ "{:,.2f}".format(fila['ImporteVenta'] or 0) }}
-
-</td>
-
-
-<td>
-
-${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}
 
 </td>
 
@@ -374,6 +377,206 @@ ${{ "{:,.2f}".format(fila['PrecioPromedio'] or 0) }}
 
 
 </table>
+
+
+</div>
+
+
+</div>
+
+<!-- HISTÓRICO XLP -->
+
+<div class="row mt-4">
+
+<div class="col-md-12">
+
+
+<div class="d-flex align-items-center gap-3 mb-2">
+
+
+<h4 class="mb-0">
+    Históricos XLP
+</h4>
+
+
+<div style="width: 220px;">
+
+
+<label class="form-label mb-1">
+    Histórico
+</label>
+
+
+<details class="historico-dropdown">
+
+
+<summary class="form-select">
+    Seleccione
+</summary>
+
+
+
+<div class="historico-opciones">
+
+
+{% for mes in meses_historico %}
+
+
+<label class="d-block">
+
+
+<input 
+type="checkbox"
+name="mes_historico"
+form="filtrosXLP"
+value="{{ mes }}"
+{% if mes in request.form.getlist('mes_historico') %}checked{% endif %}
+>
+
+
+{{ mes }}
+
+
+</label>
+
+
+{% endfor %}
+
+
+</div>
+
+
+</details>
+
+
+</div>
+
+
+</div>
+
+
+
+<div class="table-responsive">
+
+
+<table class="table table-bordered table-striped tabla-thw">
+
+
+<thead class="encabezado-xlp">
+
+
+<tr>
+
+
+<th rowspan="2">
+Artículo
+</th>
+
+
+{% for mes in meses_tabla_historico %}
+
+
+<th colspan="3" class="text-center">
+{{ mes }}
+</th>
+
+
+{% endfor %}
+
+
+</tr>
+
+
+
+<tr>
+
+
+{% for mes in meses_tabla_historico %}
+
+<th>
+Cantidad
+</th>
+
+
+<th>
+Precio Promedio
+</th>
+
+
+<th>
+Desc. Equiv sobre PL
+</th>
+
+
+{% endfor %}
+
+
+</tr>
+
+
+</thead>
+
+
+<tbody>
+
+{% for fila in historico_xlp %}
+
+<tr>
+
+<td style="font-size: 11px; white-space: nowrap;">
+    {{ fila['Articulo'] }}
+</td>
+
+{% for mes in meses_tabla_historico %}
+
+
+<td>
+
+{% if fila[mes + '_Cantidad'] is defined %}
+
+{{ "{:,.0f}".format(fila[mes + '_Cantidad']) }}
+
+{% endif %}
+
+</td>
+
+
+<td>
+
+{% if fila[mes + '_Precio'] is defined %}
+
+{{ "{:,.2f}".format(fila[mes + '_Precio']) }}
+
+{% endif %}
+
+</td>
+
+
+<td>
+
+{% if fila[mes + '_Desc'] is defined %}
+
+{{ "{:.2%}".format(fila[mes + '_Desc']) }}
+
+{% endif %}
+
+</td>
+
+
+{% endfor %}
+
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+
+</table>
+
+
+</div>
 
 
 </div>
@@ -409,33 +612,79 @@ document.getElementById("gerente")
 ];
 
 
+const mesesHistorico = document.querySelectorAll(
+    'input[name="mes_historico"]'
+);
+
 
 filtros.forEach(function(filtro){
 
 
-filtro.addEventListener("change", function(){
+    if (filtro instanceof NodeList) {
 
 
-if(
-fechaInicio.value &&
-fechaFin.value
-){
+        filtro.forEach(function(elemento){
 
 
-formulario.requestSubmit();
+            elemento.addEventListener("change", function(){
 
 
-}
+                if(
+                fechaInicio.value &&
+                fechaFin.value
+                ){
+
+                    formulario.requestSubmit();
+
+                }
+
+
+            });
+
+
+        });
+
+
+    } else {
+
+
+        filtro.addEventListener("change", function(){
+
+
+            if(
+            fechaInicio.value &&
+            fechaFin.value
+            ){
+
+                formulario.requestSubmit();
+
+            }
+
+
+        });
+
+
+    }
 
 
 });
 
+mesesHistorico.forEach(function(mes){
+
+    mes.addEventListener("change", function(){
+
+        if(
+        fechaInicio.value &&
+        fechaFin.value
+        ){
+
+            formulario.requestSubmit();
+
+        }
+
+    });
 
 });
-
-
-});
-
 
 </script>
 

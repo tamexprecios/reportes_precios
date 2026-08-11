@@ -256,7 +256,10 @@
 .tabla-resumen td {
 
     text-align:center;
+
     vertical-align:middle;
+
+    font-size:0.95rem;
 
 }
 
@@ -325,4 +328,121 @@
 
     width:50%;
 
+}
+
+/* ==========================
+AJUSTE DASHBOARD RESUMEN
+========================== */
+
+.resumen-card {
+
+    width: 140%;
+
+    max-width: 2000px;
+
+    margin-left: -20%;
+}
+
+
+    /* TABLA RESUMEN AMPLIADA */
+
+.tabla-resumen {
+
+    width:100%;
+    
+    min-width: 1600px;
+
+    font-size:0.95rem;
+
+}
+
+.tabla-resumen th {
+
+    white-space: normal;
+
+    padding: 10px 14px !important;
+
+    line-height: 1.15;
+
+    max-width: 150px;
+}
+
+
+.tabla-resumen td {
+
+    white-space: nowrap;
+
+    padding: 8px 12px !important;
+
+}
+
+.tabla-resumen-container {
+
+    overflow-x:visible;
+
+}
+
+/* ESPACIO INTERNO DE LA FICHA */
+
+.resumen-card .card-body {
+
+    padding:25px;
+
+}
+
+.historico-dropdown {
+    position: relative;
+}
+
+
+.historico-dropdown summary {
+    list-style: none;
+    cursor: pointer;
+    height: 38px;
+    padding: 8px 12px;
+}
+
+
+.historico-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+
+.historico-opciones {
+
+    position: absolute;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+    width: 220px;
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+
+}
+
+
+.historico-opciones label {
+
+    padding: 5px;
+    cursor: pointer;
+
+}
+
+
+.historico-opciones label:hover {
+
+    background-color: #f1f1f1;
+
+}
+.encabezado-xlp{
+    background-color:#0B3A6E !important;
+    color:white !important;
+}
+
+.encabezado-xlp th{
+    background-color:#0B3A6E !important;
+    color:white !important;
+    border-color:#0B3A6E !important;
 }

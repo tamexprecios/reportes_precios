@@ -8,24 +8,40 @@ Resumen
 {% block contenido %}
 
 
-<div class="card shadow">
+<div class="card shadow resumen-card">
 
 <div class="card-body">
 
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<h1 class="titulo-dashboard text-center mb-4">
+    <h1 class="titulo-dashboard mb-0">
 
-Descuento Ponderado de Venta
+        Resumen Descuento Ponderado
 
-</h1>
+    </h1>
 
-<h3 class="titulo-dashboard mt-4 mb-3">
+    <a href="{{ url_for('inicio') }}"
+       class="btn btn-outline-secondary">
 
-Ponderado General Mes anterior
+        ← Inicio
 
-</h3>
+    </a>
 
-<div class="table-responsive">
+</div>
+
+<div class="d-flex align-items-center mt-4 mb-3">
+
+    <h3 class="titulo-dashboard mb-0">
+
+        Históricos Descuento Ponderado
+
+    </h3>
+
+
+</div>
+
+
+<div class="table-responsive tabla-resumen-container">
 
 
 <table class="table table-bordered table-striped tabla-resumen">
@@ -40,27 +56,62 @@ Mes
 </th>
 
 <th class="resumen-condumex">
-Condumex
+Condumex<br>
+Desc. Pond. Compra
 </th>
 
 <th class="resumen-condumex">
-Cal. 12
+Condumex Desc. Pond. Venta
+</th>
+
+<th class="resumen-condumex">
+Cal. 12 Venta
+</th>
+
+<th class="resumen-condumex">
+Toneladas
 </th>
 
 <th class="resumen-condulac">
-Condulac
+Condulac <br> 
+Desc. Pond. Compra
 </th>
 
 <th class="resumen-condulac">
-Cal. 12
+Cal. 12 Compra   
+</th>
+
+<th class="resumen-condulac">
+Condulac Desc. Pond. Venta 
+</th>
+
+<th class="resumen-condulac">
+Cal. 12 Venta
+</th>
+
+<th class="resumen-condulac">
+Toneladas
 </th>
 
 <th class="resumen-kobrex">
-Kobrex
+Kobrex <br>
+Desc. Pond. Compra
 </th>
 
 <th class="resumen-kobrex">
-Cal. 12
+Cal. 12 Compra
+</th>
+
+<th class="resumen-kobrex">
+Kobrex Desc. Pond. Venta
+</th>
+
+<th class="resumen-kobrex">
+Cal. 12 Venta
+</th>
+
+<th class="resumen-kobrex">
+Toneladas
 </th>
 
 <th class="resumen-desnudo">
@@ -68,11 +119,20 @@ Desnudo
 </th>
 
 <th class="resumen-desnudo">
-Cal. 12
+Cal. 12 Venta
 </th>
 
 <th class="resumen-serie8000">
-Serie 8000
+Serie 8000 <br>
+Desc. Pond. Compra
+</th>
+
+<th class="resumen-serie8000">
+Serie 8000 Desc. Pond. Venta
+</th>
+
+<th class="resumen-serie8000">
+Toneladas
 </th>
 
 </tr>
@@ -82,52 +142,117 @@ Serie 8000
 
 <tbody>
 
+{% for fila in meses_resumen %}
+
 <tr>
 
-<td>
-{{ mes_anterior.fecha }}
-</td>
+    <td>
 
-<td>
-{{ "{:.2%}".format(mes_anterior.condumex) }}
-</td>
+        {{ fila.fecha }}
 
-<td>
-${{ "{:,.2f}".format(mes_anterior.cal12_condumex) }}
-</td>
+    </td>
 
-<td>
-{{ "{:.2%}".format(mes_anterior.condulac) }}
-</td>
+    <td>
+        {{ "{:.2%}".format(fila.condumex_costo) }}
+    </td>
 
-<td>
-${{ "{:,.2f}".format(mes_anterior.cal12_condulac) }}
-</td>
+    <td>
+        {{ "{:.2%}".format(fila.condumex) }}
+    </td>
 
-<td>
-{{ "{:.2%}".format(mes_anterior.kobrex) }}
-</td>
+    <td>
 
-<td>
-${{ "{:,.2f}".format(mes_anterior.cal12_kobrex) }}
-</td>
+        ${{ "{:,.2f}".format(fila.cal12_condumex) }}
 
-<td>
-${{ "{:,.2f}".format(mes_anterior.desnudo) }}
-</td>
+    </td>
 
-<td>
-${{ "{:,.2f}".format(mes_anterior.cal12_desnudo) }}
-</td>
+    <td>
 
-<td>
-{{ "{:.2%}".format(mes_anterior.serie8000) }}
-</td>
+        {{ "{:,.3f}".format(fila.ton_condumex) }}
+
+    </td>
+
+    <td>
+        {{ "{:.2%}".format(fila.condulac_costo) }}
+    </td>
+
+     <td>
+        {{ "{:.2f}".format(fila.cal12_condulac_costo) }}
+    </td>
+
+    <td>
+        {{ "{:.2%}".format(fila.condulac) }}
+    </td>
+
+    <td>
+        ${{ "{:,.2f}".format(fila.cal12_condulac) }}
+    </td>
+
+    <td>
+        {{ "{:,.3f}".format(fila.ton_condulac) }}
+    </td>
+
+    <td>
+        {{ "{:.2%}".format(fila.kobrex_costo) }}
+    </td>
+
+    <td>
+        {{ "{:.2f}".format(fila.cal12_kobrex_costo) }}
+    </td>
+
+    <td>
+
+        {{ "{:.2%}".format(fila.kobrex) }}
+
+    </td>
+
+    <td>
+
+        ${{ "{:,.2f}".format(fila.cal12_kobrex) }}
+
+    </td>
+
+    <td>
+
+        {{ "{:,.3f}".format(fila.ton_kobrex) }}
+
+    </td>
+
+    <td>
+
+        ${{ "{:,.2f}".format(fila.desnudo) }}
+
+    </td>
+
+    <td>
+
+        ${{ "{:,.2f}".format(fila.cal12_desnudo) }}
+
+    </td>
+
+    <td>
+        
+        {{ "{:.2%}".format(fila.serie8000_costo) }}
+    
+    </td>
+
+    <td>
+
+        {{ "{:.2%}".format(fila.serie8000) }}
+
+    </td>
+
+    <td>
+
+        {{ "{:,.3f}".format(fila.ton_serie8000) }}
+
+    </td>
 
 </tr>
 
-</tbody>
+{% endfor %}
 
+</tbody>
 
 </table>
 
@@ -140,7 +265,7 @@ Ponderado Actual
 
 </h3>
 
-<div class="table-responsive">
+<div class="table-responsive tabla-resumen-container">
 
 
 <table class="table table-bordered table-striped tabla-resumen">
@@ -155,27 +280,60 @@ Ponderado Actual
     </th>
 
     <th class="resumen-condumex">
-        Condumex
+    Condumex<br>
+    Desc. Pond. Compra
     </th>
 
     <th class="resumen-condumex">
-        Cal. 12
+        Condumex Desc.Pond. Venta
+    </th>
+
+    <th class="resumen-condumex">
+        Cal. 12 Venta
+    </th>
+
+    <th class="resumen-condumex">
+        Toneladas
     </th>
 
     <th class="resumen-condulac">
-        Condulac
+        Condulac Desc. Pond. Compra
+    </th>
+
+    <th  class="resumen-condulac">
+        Cal. 12 Compra     
     </th>
 
     <th class="resumen-condulac">
-        Cal. 12
+        Condulac Desc. Pond. Venta
+    </th>
+
+    <th class="resumen-condulac">
+        Cal. 12 Venta
+    </th>
+
+    <th class="resumen-condulac">
+        Toneladas
     </th>
 
     <th class="resumen-kobrex">
-        Kobrex
+        Kobrex Desc. Pond. Compra
     </th>
 
     <th class="resumen-kobrex">
-        Cal. 12
+        Cal. 12 Compra   
+    </th>
+
+    <th class="resumen-kobrex">
+        Kobrex Desc. Pond. Venta
+    </th>
+
+    <th class="resumen-kobrex">
+        Cal. 12 Venta
+    </th>
+
+    <th class="resumen-kobrex">
+        Toneladas
     </th>
 
     <th class="resumen-desnudo">
@@ -183,12 +341,21 @@ Ponderado Actual
     </th>
 
     <th class="resumen-desnudo">
-        Cal. 12
+        Cal. 12 Venta
+    </th>
+    
+    <th class="resumen-serie8000">
+        Serie 8000 Desc. Pond. Compra
     </th>
 
     <th class="resumen-serie8000">
-        Serie 8000
+        Serie 8000 Desc. Pond. Venta
     </th>
+
+    <th class="resumen-serie8000">
+        Toneladas
+    </th>
+    
 
 </tr>
 
@@ -205,24 +372,48 @@ Ponderado Actual
 {{ fila.fecha }}
 </td>
 
+<td>
+{{ "{:.2%}".format(fila.condumex_costo) }}
+</td>
 
 <td>
 {{ "{:.2%}".format(fila.condumex) }}
 </td>
 
-
 <td>
 ${{ "{:,.2f}".format(fila.cal12_condumex) }}
 </td>
 
+<td>
+{{ "{:,.3f}".format(fila.ton_condumex) }}
+</td>
+
+<td>
+{{ "{:.2%}".format(fila.condulac_costo) }}
+</td>
+
+<td>
+    {{ "{:.2f}".format(fila.cal12_condulac_costo) }}
+</td>
 
 <td>
 {{ "{:.2%}".format(fila.condulac) }}
 </td>
 
-
 <td>
 ${{ "{:,.2f}".format(fila.cal12_condulac) }}
+</td>
+
+<td>
+{{ "{:,.3f}".format(fila.ton_condulac) }}
+</td>
+
+<td>
+{{ "{:.2%}".format(fila.kobrex_costo) }}
+</td>
+
+<td>
+    {{ "{:.2f}".format(fila.cal12_kobrex_costo) }}
 </td>
 
 
@@ -230,24 +421,32 @@ ${{ "{:,.2f}".format(fila.cal12_condulac) }}
 {{ "{:.2%}".format(fila.kobrex) }}
 </td>
 
-
 <td>
 ${{ "{:,.2f}".format(fila.cal12_kobrex) }}
 </td>
 
+<td>
+{{ "{:,.3f}".format(fila.ton_kobrex) }}
+</td>
 
 <td>
 ${{ "{:,.2f}".format(fila.desnudo) }}
 </td>
 
-
 <td>
 ${{ "{:,.2f}".format(fila.cal12_desnudo) }}
 </td>
 
+<td>
+    {{ "{:.2%}".format(fila.serie8000_costo) }}
+</td>
 
 <td>
 {{ "{:.2%}".format(fila.serie8000) }}
+</td>
+
+<td>
+{{ "{:,.3f}".format(fila.ton_serie8000) }}
 </td>
 
 </tr>
