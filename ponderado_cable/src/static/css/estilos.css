@@ -1,448 +1,330 @@
-.titulo-dashboard {
-
-    color: #002B5B;
-
-    font-weight: 800;
-
-}
-
-
-.btn-cable {
-
-    background-color: #002B5B;
-
-    border-color: #002B5B;
-
-    color: white;
-
-}
-
-
-.btn-cable:hover {
-
-    background-color: #001F42;
-
-    border-color: #001F42;
-
-    color: white;
-
-}
-
-
-.btn-resumen {
-
-    background-color: #90C2E7;
-
-    border-color: #90C2E7;
-
-    color: black;
-
-}
-
-
-.btn-resumen:hover {
-
-    background-color: #90C2E7;
-
-    border-color: #90C2E7;
-
-    color: black;
-
-}
-
-/* ==========================
-   KPI DESCUENTO PONDERADO
-========================== */
-
-.kpi-card{
-
-    background-color:#0B3A6E;
-
-    color:white;
-
-    border:none;
-
-    border-radius:12px;
-
-}
-
-.kpi-card .titulo{
-
-    font-size:0.80rem;
-
-    opacity:.85;
-
-    margin-bottom:2px;
-
-}
-
-.kpi-card .subtitulo{
-
-    font-size:1rem;
-
-    font-weight:600;
-
-    margin-bottom:6px;
-
-}
-
-.kpi-card .valor{
-
-    font-size:1.6rem;
-
-    font-weight:700;
-
-    line-height:1.1;
-
-    margin-bottom:0;
-
-}
-
-.btn-excel{
-
-    background-color:#198754;
-
-    border-color:#198754;
-
-    color:white;
-
-    font-weight:600;
-
-    white-space: nowrap;
-
-}
-
-.btn-excel:hover{
-
-    background-color:#157347;
-
-    border-color:#146c43;
-
-    color:white;
-
-}
-
-.titulo-cable{
-
-    font-style: italic;
-
-    text-transform: uppercase;
-
-}
-
-/* ==========================
-   TABLA THW
-========================== */
-
-.tabla-thw th{
-
-    text-align: center;
-
-    vertical-align: middle;
-
-}
-
-.tabla-thw td{
-
-    text-align: center;
-
-    vertical-align: middle;
-
-}
-
-/* ==========================
-   COLORES POR MARCA
-========================== */
-
-.tabla-condumex {
-
-    background-color:#F77F00 !important;
-
-    color:white !important;
-
-}
-
-
-.tabla-condulac {
-
-    background-color:#168551 !important;
-
-    color:white !important;
-
-}
-
-
-.tabla-kobrex {
-
-    background-color:#E71D36 !important;
-
-    color:white !important;
-
-}
-
-/* COLORES DINÁMICOS POR MARCA */
-
-.tabla-condumex th,
-.tabla-condumex td {
-
-    background-color: #F77F00 !important;
+    .titulo-dashboard {
+        color: #002B5B;
+        font-weight: 800;
+    }
+
+
+    .btn-cable {
+        background-color: #0B3A6E;
+        border-color: #0B3A6E;
+        color: white;
+    }
+
+
+    .btn-cable:hover {
+        background-color: #0B3A6E;
+        border-color: #0B3A6E;
+        color: white;
+    }
+
+
+    .btn-resumen {
+        background-color: #90C2E7;
+        border-color: #90C2E7;
+        color: black;
+    }
+
+
+    .btn-resumen:hover {
+        background-color: #90C2E7;
+        border-color: #90C2E7;
+        color: black;
+    }
+
+    /* KPI DESCUENTO PONDERADO */
+    .kpi-card{
+        background-color:#0B3A6E;
+        color:white;
+        border:none;
+        border-radius:12px;
+    }
+
+    .kpi-tuberia {
+        width: 50%;
+        margin-left: auto;
+    }
+
+    .kpi-card .titulo{
+        font-size:0.80rem;
+        opacity:.85;
+        margin-bottom:2px;
+    }
+
+    .kpi-card .subtitulo{
+        font-size:1rem;
+        font-weight:600;
+        margin-bottom:6px;
+    }
+
+    .kpi-card .valor{
+        font-size:1.6rem;
+        font-weight:700;
+        line-height:1.1;
+        margin-bottom:0;
+    }
+
+    .btn-excel{
+        background-color:#198754;
+        border-color:#198754;
+        color:white;
+        font-weight:600;
+        white-space: nowrap;
+    }
+
+    .btn-excel:hover{
+        background-color:#157347;
+        border-color:#146c43;
+        color:white;
+    }
+
+    .titulo-cable{
+        font-style: italic;
+        text-transform: uppercase;
+    }
+
+    /*TABLA THW */
+    .tabla-thw th{
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .tabla-thw td{
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    /* TABLA THW - COLOR DEFAULT */
+    .tabla-thw-default {
+    background-color: #0B3A6E !important;
     color: white !important;
+    }
 
-}
 
-
-.tabla-condulac th,
-.tabla-condulac td {
-
-    background-color: #168551 !important;
+    .tabla-thw-default th,
+    .tabla-thw-default td {
+    background-color: #0B3A6E !important;
     color: white !important;
+    }
 
-}
-
-
-.tabla-kobrex th,
-.tabla-kobrex td {
-
-    background-color: #E71D36 !important;
-    color: white !important;
-
-}
-
-.kpi-serie8000 {
-    min-height: 80px;
-}
+    /* COLORES POR MARCA */
+    .tabla-condumex {
+        background-color:#F77F00 !important;
+        color:white !important;
+    }
 
 
-.kpi-body-serie8000 {
-    padding: 8px !important;
-}
+    .tabla-condulac {
+        background-color:#168551 !important;
+        color:white !important;
+    }
 
 
-.kpi-serie8000 .titulo {
-    font-size: 0.75rem;
-}
+    .tabla-kobrex {
+        background-color:#E71D36 !important;
+        color:white !important;
+    }
+
+    /* COLORES DINÁMICOS POR MARCA */
+    .tabla-condumex th,
+    .tabla-condumex td {
+        background-color: #F77F00 !important;
+        color: white !important;
+    }
 
 
-.kpi-serie8000 .valor {
-    font-size: 1.2rem;
-}
-
-.kpi-serie8000-mini {
-    min-height: 40px !important;
-}
+    .tabla-condulac th,
+    .tabla-condulac td {
+        background-color: #168551 !important;
+        color: white !important;
+    }
 
 
-.kpi-serie8000-mini .card-body {
-    padding: 4px !important;
-}
+    .tabla-kobrex th,
+    .tabla-kobrex td {
+        background-color: #E71D36 !important;
+        color: white !important;
+    }
 
 
-.kpi-serie8000-mini .titulo {
-    font-size: 0.55rem;
-    margin-bottom: 2px;
-}
+    .kpi-serie8000 {
+        min-height: 80px;
+    }
 
 
-.kpi-serie8000-mini .valor {
-    font-size: 0.9rem;
-}
-
-/* ==========================
-   TABLA RESUMEN
-========================== */
+    .kpi-body-serie8000 {
+        padding: 8px !important;
+    }
 
 
-.tabla-resumen th,
-.tabla-resumen td {
-
-    text-align:center;
-
-    vertical-align:middle;
-
-    font-size:0.95rem;
-
-}
+    .kpi-serie8000 .titulo {
+        font-size: 0.75rem;
+    }
 
 
-/* CONDUMEX */
+    .kpi-serie8000 .valor {
+        font-size: 1.2rem;
+    }
 
-.resumen-condumex {
-
-    background-color:#F77F00 !important;
-    color:white !important;
-
-}
-
-
-/* CONDULAC */
-
-.resumen-condulac {
-
-    background-color:#168551 !important;
-    color:white !important;
-
-}
+    .kpi-serie8000-mini {
+        min-height: 40px !important;
+    }
 
 
-/* KOBREX */
-
-.resumen-kobrex {
-
-    background-color:#E71D36 !important;
-    color:white !important;
-
-}
+    .kpi-serie8000-mini .card-body {
+        padding: 4px !important;
+    }
 
 
-/* DESNUDO */
-
-.resumen-desnudo {
-
-    background-color:#B87333 !important;
-    color:white !important;
-
-}
+    .kpi-serie8000-mini .titulo {
+        font-size: 0.55rem;
+        margin-bottom: 2px;
+    }
 
 
-/* SERIE 8000 */
+    .kpi-serie8000-mini .valor {
+        font-size: 0.9rem;
+    }
 
-.resumen-serie8000 {
+    /* TABLA RESUMEN */
+    .tabla-resumen th,
+    .tabla-resumen td {
+        text-align:center;
+        vertical-align:middle;
+        font-size:0.95rem;
+    }
 
-    background-color:black !important;
-    color:white !important;
 
-}
+    /* CONDUMEX */
+    .resumen-condumex {
+        background-color:#F77F00 !important;
+        color:white !important;
+    }
 
-.resumen-fecha{
 
-    background-color:#002B5B !important;
-    color:white !important;
+    /* CONDULAC */
+    .resumen-condulac {
+        background-color:#168551 !important;
+        color:white !important;
+    }
 
-}
 
-/* ==========================
-   KPI XLP
-========================== */
+    /* KOBREX */
+    .resumen-kobrex {
+        background-color:#E71D36 !important;
+        color:white !important;
+    }
 
-.kpi-xlp {
 
-    width:50%;
+    /* DESNUDO */
+    .resumen-desnudo {
+        background-color:#B87333 !important;
+        color:white !important;
+    }
 
-}
 
-/* ==========================
-AJUSTE DASHBOARD RESUMEN
-========================== */
+    /* SERIE 8000 */
+    .resumen-serie8000 {
+        background-color:black !important;
+        color:white !important;
+    }
 
-.resumen-card {
+    .resumen-fecha{
+        background-color:#002B5B !important;
+        color:white !important;
+    }
 
-    width: 140%;
+    /* KPI XLP */
+    .kpi-xlp {
+        width:50%;
+    }
 
-    max-width: 2000px;
-
-    margin-left: -20%;
-}
+    /* AJUSTE DASHBOARD RESUMEN */
+    .resumen-card {
+        width: 140%;
+        max-width: 2000px;
+        margin-left: -20%;
+    }
 
 
     /* TABLA RESUMEN AMPLIADA */
+    .tabla-resumen {
+        width:100%;
+        min-width: 1600px;
+        font-size:0.95rem;
+    }
 
-.tabla-resumen {
-
-    width:100%;
-    
-    min-width: 1600px;
-
-    font-size:0.95rem;
-
-}
-
-.tabla-resumen th {
-
-    white-space: normal;
-
-    padding: 10px 14px !important;
-
-    line-height: 1.15;
-
-    max-width: 150px;
-}
+    .tabla-resumen th {
+        white-space: normal;
+        padding: 10px 14px !important;
+        line-height: 1.15;
+        max-width: 150px;
+    }
 
 
-.tabla-resumen td {
+    .tabla-resumen td {
+        white-space: nowrap;
+        padding: 8px 12px !important;
+    }
 
-    white-space: nowrap;
+    .tabla-resumen-container {
+        overflow-x:visible;
+    }
 
-    padding: 8px 12px !important;
+    /* ESPACIO INTERNO DE LA FICHA */
+    .resumen-card .card-body {
+        padding:25px;
+    }
 
-}
-
-.tabla-resumen-container {
-
-    overflow-x:visible;
-
-}
-
-/* ESPACIO INTERNO DE LA FICHA */
-
-.resumen-card .card-body {
-
-    padding:25px;
-
-}
-
-.historico-dropdown {
-    position: relative;
-}
+    .historico-dropdown {
+        position: relative;
+    }
 
 
-.historico-dropdown summary {
-    list-style: none;
-    cursor: pointer;
-    height: 38px;
-    padding: 8px 12px;
-}
+    .historico-dropdown summary {
+        list-style: none;
+        cursor: pointer;
+        height: 38px;
+        padding: 8px 12px;
+    }
 
 
-.historico-dropdown summary::-webkit-details-marker {
-    display: none;
-}
+    .historico-dropdown summary::-webkit-details-marker {
+        display: none;
+    }
 
 
-.historico-opciones {
+    .historico-opciones {
+        position: absolute;
+        background: white;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        padding: 10px;
+        width: 220px;
+        z-index: 1000;
+        max-height: 250px;
+        overflow-y: auto;
 
-    position: absolute;
-    background: white;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    padding: 10px;
-    width: 220px;
-    z-index: 1000;
-    max-height: 250px;
-    overflow-y: auto;
-
-}
-
-
-.historico-opciones label {
-
-    padding: 5px;
-    cursor: pointer;
-
-}
+    }
 
 
-.historico-opciones label:hover {
+    .historico-opciones label {
+        padding: 5px;
+        cursor: pointer;
 
-    background-color: #f1f1f1;
+    }
 
-}
-.encabezado-xlp{
-    background-color:#0B3A6E !important;
-    color:white !important;
-}
 
-.encabezado-xlp th{
-    background-color:#0B3A6E !important;
-    color:white !important;
-    border-color:#0B3A6E !important;
-}
+    .historico-opciones label:hover {
+        background-color: #f1f1f1;
+
+    }
+    .encabezado-xlp{
+        background-color:#0B3A6E !important;
+        color:white !important;
+    }
+
+    .encabezado-xlp th{
+        background-color:#0B3A6E !important;
+        color:white !important;
+        border-color:#0B3A6E !important;
+    }

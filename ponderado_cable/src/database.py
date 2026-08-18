@@ -56,8 +56,6 @@ def ejecutar_sql_desde_archivo(ruta_sql, parametros=None):
       query = file.read().format(
     extra_filters=parametros.get("extra_filters", "")
     )
-
-    print(query)
     
     with engine.connect() as conexion:
 

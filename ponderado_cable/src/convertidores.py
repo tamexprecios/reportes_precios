@@ -11,20 +11,17 @@ def cargar_convertidores():
         "CONVERTIDORES REPORTE PYTHON.xlsx"
     )
 
-
     df = pd.read_excel(
         ruta_excel,
         sheet_name="CONVERTIDORES",
         engine="openpyxl"
     )
 
-
     df["ARTICULO"] = (
         df["ARTICULO"]
         .astype(str)
         .str.strip()
     )
-
 
     return df[["ARTICULO", "KG/M"]]
 

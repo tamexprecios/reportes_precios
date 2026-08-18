@@ -270,7 +270,7 @@ Dashboard THW
 
                 <!-- FILA DE TOTALES -->
 
-                <tr class="{{ color_tabla }}">
+                <tr class="{{ color_tabla or 'tabla-thw-default' }}">
 
                     <th></th>
 
@@ -305,7 +305,8 @@ Dashboard THW
 
                 <!-- ENCABEZADOS -->
 
-                <tr class="{{ color_tabla }}">
+                
+                <tr class="{{ color_tabla or 'tabla-thw-default' }}">
 
                     <th>Articulo</th>
 

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, send_file
+from flask import Blueprint, render_template, request, send_file, jsonify
 from database import ejecutar_sql_desde_archivo
 from convertidores import cargar_convertidores
 import os
@@ -7,11 +7,9 @@ import pandas as pd
 from io import BytesIO
 from datetime import date
 
-ORDEN_CALIBRES = [
-    "2","4","6","8","10","12","14","16","18","20",
-    "250","300","350","400","500","600","750","1000",
-    "1/0","2/0","3/0","4/0"
-]
+ORDEN_CALIBRES = ["2","4","6","8","10","12","14","16","18","20","250","300","350",
+                  "400","500","600","750","1000","1/0","2/0","3/0","4/0"
+                ]
 
 dashboard = Blueprint("dashboard", __name__)
 
@@ -29,7 +27,7 @@ def thw():
     descuento_ponderado = 0
     precio_calibre_12 = 0
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     toneladas_total = 0
@@ -54,23 +52,16 @@ def thw():
         gerente = request.form.get("gerente") or None
 
         if marca == "CONDUMEX":
-
             color_tabla = "tabla-condumex"
 
         elif marca == "CONDULAC":
-
             color_tabla = "tabla-condulac"
 
         elif marca == "KOBREX":
-
             color_tabla = "tabla-kobrex"
 
         else:
-
-            color_tabla = "table-dark"
-
-        print("MARCA:", marca)
-        print("COLOR TABLA:", color_tabla)
+            color_tabla = "tabla-thw-default"
 
         parametros = {
             "fecha_inicio": fecha_inicio,
@@ -80,7 +71,7 @@ def thw():
             "gerente": gerente
         }
 
-        # limpiar vacíos
+        # limpiar vacíos #
         for k, v in parametros.items():
             if v == "":
                 parametros[k] = None
@@ -110,7 +101,6 @@ def thw():
             "{:,.2f}".format(importe_sql))
 
         else:
-
                 print("LA CONSULTA NO DEVOLVIÓ DATOS")
 
         print("==============================")
@@ -119,10 +109,7 @@ def thw():
         df["Categoria"].dropna().unique().tolist()
         )
 
-        print("PARAMETROS ENVIADOS:", parametros)
-        # =========================
-        # AGREGAR CONVERTIDOR KG/M
-        # =========================
+        # AGREGAR CONVERTIDOR KG/M #
         convertidores = cargar_convertidores()
 
         duplicados = convertidores[
@@ -185,16 +172,12 @@ def thw():
                 pb_total=0
             )
 
-        # =========================
-        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
-        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR) #
         marcas =  ["CONDUMEX","CONDULAC","KOBREX"]
         almacenes = sorted(df["Almacen"].dropna().unique().tolist())
         gerentes = sorted(df["GerenteRegional"].dropna().unique().tolist())
 
-        # =========================
-        # NUMÉRICOS
-        # =========================
+        # NUMÉRICOS #
         for col in [
             "Cantidad",
             "ImporteVenta",
@@ -207,17 +190,13 @@ def thw():
                 errors="coerce"
             ).fillna(0)
 
-        # =========================
-        # TONELADAS
-        # =========================
+        # TONELADAS # 
         df["Toneladas"] = (
             df["Cantidad"] *
             df["KG/M"]
         ) / 1000
         
-        # =========================
-        # KPI 1 - DESCUENTO PONDERADO DE VENTA
-        # =========================
+        # KPI 1 - DESCUENTO PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -226,16 +205,12 @@ def thw():
         else:
             descuento_ponderado = 0 
 
-        # =========================
-        # TOTALES
-        # =========================
+        # TOTALES #
         cantidad_total = df["Cantidad"].sum()
         toneladas_total = df["Toneladas"].sum()
         importe_total = df["ImporteVenta"].sum()
        
-        # =========================
-        # AGRUPACIÓN
-        # =========================
+        # AGRUPACIÓN #
         df = df.groupby("Calibre", as_index=False).agg({
             "PrecioBase": "mean",
             "Cantidad": "sum",
@@ -244,9 +219,7 @@ def thw():
             "PBxCantidad": "sum"
         })
 
-        # =========================
-        # CÁLCULOS
-        # =========================
+        # CÁLCULOS #
         df["PrecioPromedio"] = df.apply(
             lambda x: x["ImporteVenta"] / x["Cantidad"] if x["Cantidad"] != 0 else 0,
             axis=1
@@ -259,9 +232,8 @@ def thw():
 
         df = df.fillna(0)
 
-        # =========================
-        # DESC. PONDERADO DE VENTA
-        # =========================
+        
+        # DESC. PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -270,23 +242,14 @@ def thw():
         else:
             descuento_ponderado = 0
 
-        print("TOTAL IMPORTE:", total_importe)
-        print("TOTAL PB:", total_pb)
-        print("DESC PONDERADO:", descuento_ponderado)
-
-        # =========================
-        # PRECIO CAL. 12
-        # =========================
+        # PRECIO CAL. 12 #
         calibre_12 = df[df["Calibre"] == "12"]
 
         if not calibre_12.empty:
-
             precio_base_12 = calibre_12.iloc[0]["PrecioBase"]
-
             precio_calibre_12 = precio_base_12 * (1 - descuento_ponderado)
 
         else:
-
             precio_calibre_12 = 0
 
         df["Calibre"] = pd.Categorical(df["Calibre"], categories=ORDEN_CALIBRES, ordered=True)
@@ -331,7 +294,7 @@ def thw_articulos():
     descuento_ponderado = 0 
     precio_calibre_12 = 0
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     toneladas_total = 0
@@ -341,7 +304,7 @@ def thw_articulos():
     almacenes = []
     gerentes = []
 
-    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal #
 
     if request.method == "POST":
 
@@ -356,25 +319,18 @@ def thw_articulos():
         gerente = request.form.get("gerente") or None
 
         if marca == "CONDUMEX":
-
             color_tabla = "tabla-condumex"
 
 
         elif marca == "CONDULAC":
-
             color_tabla = "tabla-condulac"
 
 
         elif marca == "KOBREX":
-
             color_tabla = "tabla-kobrex"
 
         else:
-
-            color_tabla = "table-dark"
-
-        print("MARCA:", marca)
-        print("COLOR TABLA:", color_tabla)
+            color_tabla = "tabla-thw-default"
 
         parametros = {
             "fecha_inicio": fecha_inicio,
@@ -384,7 +340,7 @@ def thw_articulos():
             "gerente": gerente
         }
 
-        # limpiar vacíos
+        # limpiar vacíos #
         for k, v in parametros.items():
             if v == "":
                 parametros[k] = None
@@ -394,9 +350,7 @@ def thw_articulos():
 
         df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
-        # =========================
-        # AGREGAR CONVERTIDOR KG/M
-        # =========================
+        # AGREGAR CONVERTIDOR KG/M #
         convertidores = cargar_convertidores()
 
         df["Articulo"] = (
@@ -442,31 +396,23 @@ def thw_articulos():
                 pb_total=0
             )
 
-        # =========================
-        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
-        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR) #
         marcas =  ["CONDUMEX","CONDULAC","KOBREX"]
         almacenes = sorted(df["Almacen"].dropna().unique().tolist())
         gerentes = sorted(df["GerenteRegional"].dropna().unique().tolist())
 
-        # =========================
-        # NUMÉRICOS
-        # =========================
+        # NUMÉRICOS #
         for col in ["Cantidad","ImporteVenta","PBxCantidad","PrecioBase"]:
             df[col] = pd.to_numeric(df[col],errors="coerce").fillna(0)
 
-        # =========================
-        # TONELADAS
-        # =========================        
+        # TONELADAS #         
         df["Toneladas"] = (
             df["Cantidad"]
             *
             df["KG/M"]
             ) / 1000
                 
-        # =========================
-        # KPI 1 - DESCUENTO PONDERADO DE VENTA
-        # =========================
+        # KPI 1 - DESCUENTO PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -475,10 +421,7 @@ def thw_articulos():
         else:
             descuento_ponderado = 0 
 
-        # =========================
-        # PRECIO CAL. 12
-        # ANTES DE AGRUPAR ARTICULOS
-        # =========================
+        # PRECIO CAL. 12 ANTES DE AGRUPAR ARTICULOS #
         df_calibre_12 = df[df["Calibre"] == "12"]
 
         if not df_calibre_12.empty:
@@ -501,15 +444,11 @@ def thw_articulos():
 
             precio_calibre_12 = 0
 
-        # =========================
-        # TOTALES
-        # =========================
+        # TOTALES #
         cantidad_total = df["Cantidad"].sum()
         importe_total = df["ImporteVenta"].sum()
        
-        # =========================
-        # AGRUPACIÓN
-        # =========================
+        # AGRUPACIÓN #
         df = df.groupby("Articulo",as_index=False).agg({
 
         "PrecioBase": "mean",
@@ -522,9 +461,7 @@ def thw_articulos():
 
         toneladas_total = df["Toneladas"].sum()
         
-        # =========================
-        # CÁLCULOS
-        # =========================
+        # CÁLCULOS #
         df["PrecioPromedio"] = df.apply(
             lambda x: x["ImporteVenta"] / x["Cantidad"] if x["Cantidad"] != 0 else 0,
             axis=1
@@ -537,9 +474,7 @@ def thw_articulos():
 
         df = df.fillna(0)
 
-        # =========================
-        # DESC. PONDERADO DE VENTA
-        # =========================
+        # DESC. PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -547,10 +482,6 @@ def thw_articulos():
             descuento_ponderado = -((total_importe / total_pb) - 1)
         else:
             descuento_ponderado = 0
-
-        print("TOTAL IMPORTE:", total_importe)
-        print("TOTAL PB:", total_pb)
-        print("DESC PONDERADO:", descuento_ponderado)
 
         df = df.sort_values("ImporteVenta",ascending=False)
         
@@ -586,7 +517,7 @@ def desnudo():
     precio_por_kg = 0
     precio_calibre_12 = 0
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     importe_total = 0
@@ -595,7 +526,7 @@ def desnudo():
     almacenes = []
     gerentes = []
 
-    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal #
 
     if request.method == "POST":
 
@@ -616,16 +547,13 @@ def desnudo():
             "gerente": gerente
         }
 
-        # limpiar vacíos
+        # limpiar vacíos #
         for k, v in parametros.items():
             if v == "":
                 parametros[k] = None
 
         BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         ruta_sql = os.path.join(BASE_DIR, "sql", "backup_sql", "DESNUDO.sql")
-
-        print("ARCHIVO SQL UTILIZADO:")
-        print(ruta_sql)
 
         df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
@@ -636,17 +564,10 @@ def desnudo():
         "gerente": None
         }
 
-
         df_filtros = ejecutar_sql_desde_archivo(
         ruta_sql,
         parametros_filtros
         )
-
-        print("PARAMETROS ENVIADOS:")
-        print(parametros)
-        print("TOTAL REGISTROS:", len(df))
-        print(df["Linea"].value_counts())
-        print(df["Calibre"].value_counts())
 
         if df is None or df.empty:
             return render_template(
@@ -663,15 +584,11 @@ def desnudo():
             pb_total=0
             )
 
-        # =========================
-        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
-        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)#
         almacenes = sorted(df_filtros["Almacen"].dropna().unique().tolist())
         gerentes = sorted(df_filtros["GerenteRegional"].dropna().unique().tolist())
 
-        # =========================
-        # FILTROS DINÁMICOS
-        # =========================
+        # FILTROS DINÁMICOS #
         gerentes = sorted(
             df_filtros["GerenteRegional"]
             .dropna()
@@ -680,7 +597,6 @@ def desnudo():
         )
 
         if gerente:
-
             almacenes = sorted(
                 df_filtros[
                 df_filtros["GerenteRegional"] == gerente
@@ -691,7 +607,6 @@ def desnudo():
             )
 
         else:
-
             almacenes = sorted(
                 df_filtros["Almacen"]
                 .dropna()
@@ -699,22 +614,16 @@ def desnudo():
                 .tolist()
             )
 
-        # =========================
-        # NUMÉRICOS
-        # =========================
+        # NUMÉRICOS #
         for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # =========================
-        # TOTALES
-        # =========================
+        # TOTALES #
         cantidad_total = df["Cantidad"].sum()
         importe_total = df["ImporteVenta"].sum()
         pb_total = df["PBxCantidad"].sum() 
 
-        # =========================
-        # AGRUPACIÓN CABLE DESNUDO
-        # =========================
+        # AGRUPACIÓN CABLE DESNUDO #   
         df = df.groupby("Calibre", as_index=False).agg({
 
             "PrecioBase": "mean",
@@ -726,18 +635,14 @@ def desnudo():
 
         })
         
-        # =========================
-        # CÁLCULOS CABLE DESNUDO
-        # =========================
+        # CÁLCULOS CABLE DESNUDO #
         df["PrecioPromedio"] = df.apply(
 
             lambda x:
                 x["ImporteVenta"] / x["Cantidad"]
                 if x["Cantidad"] != 0
                 else 0,
-
             axis=1
-
         )
 
         df["PrecioKg"] = df.apply(
@@ -746,16 +651,12 @@ def desnudo():
                 x["ImporteVenta"] / x["CantidadEntreConvertidor"]
                 if x["CantidadEntreConvertidor"] != 0
                 else 0,
-
             axis=1
-
         )
 
         df = df.fillna(0)
 
-        # =========================
-        # KPI 1 - PRECIO POR KG
-        # =========================
+        # KPI 1 - PRECIO POR KG # 
         cantidad_kg_total = df["CantidadEntreConvertidor"].sum()
         importe_total = df["ImporteVenta"].sum()
 
@@ -764,23 +665,11 @@ def desnudo():
         else:
             precio_por_kg = 0
             
-        print("==============================")
-        print("TOTAL IMPORTE VENTA:", importe_total)
-        print("TOTAL KG:", cantidad_kg_total)
-        print("PRECIO KG:", precio_por_kg)
-        print("==============================")
-
-        # =========================
-        # KPI 2 - PRECIO CAL. 12
-        # =========================
+        # KPI 2 - PRECIO CAL. 12 #
         if precio_por_kg != 0:
             precio_calibre_12 = precio_por_kg / 33.33
         else:
             precio_calibre_12 = 0
-
-        print("TOTAL KG:", cantidad_kg_total)
-        print("PRECIO POR KG:", precio_por_kg)
-        print("PRECIO CAL.12:", precio_calibre_12)
 
         df["Calibre"] = pd.Categorical(df["Calibre"],categories=ORDEN_CALIBRES,ordered=True)
 
@@ -815,7 +704,7 @@ def desnudo_articulos():
     precio_por_kg = 0
     precio_calibre_12 = 0
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     importe_total = 0
@@ -824,7 +713,7 @@ def desnudo_articulos():
     almacenes = []
     gerentes = []
 
-    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal #
 
     if request.method == "POST":
 
@@ -844,7 +733,7 @@ def desnudo_articulos():
             "gerente": gerente
         }
 
-        # limpiar vacíos
+        # limpiar vacíos #
         for k, v in parametros.items():
             if v == "":
                 parametros[k] = None
@@ -869,11 +758,6 @@ def desnudo_articulos():
         parametros_filtros
         )
 
-        print("PARAMETROS ENVIADOS:")
-        print(parametros)
-        print("TOTAL REGISTROS:", len(df))
-        print(df["Linea"].value_counts())
-
         if df is None or df.empty:
             return render_template(
             "cable_desnudo_articulos.html",
@@ -889,15 +773,11 @@ def desnudo_articulos():
             pb_total=0
             )
 
-        # =========================
-        # FILTROS DINÁMICOS (ANTES DE AGRUPAR)
-        # =========================
+        # FILTROS DINÁMICOS (ANTES DE AGRUPAR) #
         almacenes = sorted(df_filtros["Almacen"].dropna().unique().tolist())
         gerentes = sorted(df_filtros["GerenteRegional"].dropna().unique().tolist())
 
-        # =========================
-        # FILTROS DINÁMICOS
-        # =========================
+        # FILTROS DINÁMICOS #
         gerentes = sorted(
             df_filtros["GerenteRegional"]
             .dropna()
@@ -905,9 +785,7 @@ def desnudo_articulos():
             .tolist()
         )
 
-        # Si hay gerente seleccionado,
-        # mostrar solamente sus almacenes
-
+        # Si hay gerente seleccionado, mostrar solamente sus almacenes #
         if gerente:
 
             almacenes = sorted(
@@ -928,22 +806,16 @@ def desnudo_articulos():
                 .tolist()
             )
 
-        # =========================
-        # NUMÉRICOS
-        # =========================
+        # NUMÉRICOS #
         for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # =========================
-        # TOTALES
-        # =========================
+        # TOTALES #
         cantidad_total = df["Cantidad"].sum()
         importe_total = df["ImporteVenta"].sum()
         pb_total = df["PBxCantidad"].sum() 
 
-        # =========================
-        # AGRUPACIÓN CABLE DESNUDO
-        # =========================
+        # AGRUPACIÓN CABLE DESNUDO #
         df = df.groupby("Articulo", as_index=False).agg({
 
             "PrecioBase": "mean",
@@ -955,18 +827,14 @@ def desnudo_articulos():
 
         })
         
-        # =========================
-        # CÁLCULOS CABLE DESNUDO
-        # =========================
+        # CÁLCULOS CABLE DESNUDO #
         df["PrecioPromedio"] = df.apply(
 
             lambda x:
                 x["ImporteVenta"] / x["Cantidad"]
                 if x["Cantidad"] != 0
                 else 0,
-
             axis=1
-
         )
 
         df["PrecioKg"] = df.apply(
@@ -975,16 +843,12 @@ def desnudo_articulos():
                 x["ImporteVenta"] / x["CantidadEntreConvertidor"]
                 if x["CantidadEntreConvertidor"] != 0
                 else 0,
-
             axis=1
-
         )
 
         df = df.fillna(0)
 
-        # =========================
-        # KPI 1 - PRECIO POR KG
-        # =========================
+        # KPI 1 - PRECIO POR KG #
         cantidad_kg_total = df["CantidadEntreConvertidor"].sum()
         importe_total = df["ImporteVenta"].sum()
 
@@ -992,16 +856,8 @@ def desnudo_articulos():
             precio_por_kg = importe_total / cantidad_kg_total
         else:
             precio_por_kg = 0
-            
-        print("==============================")
-        print("TOTAL IMPORTE VENTA:", importe_total)
-        print("TOTAL KG:", cantidad_kg_total)
-        print("PRECIO KG:", precio_por_kg)
-        print("==============================")
-
-        # =========================
-        # KPI 2 - PRECIO CAL. 12
-        # =========================
+        
+        # KPI 2 - PRECIO CAL. 12 #
         if precio_por_kg != 0:
             precio_calibre_12 = precio_por_kg / 33.33
         else:
@@ -1044,7 +900,7 @@ def serie8000():
     descuento_mc = 0
     descuento_xhhw = 0
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     toneladas_total = 0
@@ -1055,7 +911,7 @@ def serie8000():
     almacenes = []
     gerentes = []
 
-    df = None  # 👈 IMPORTANTE evitar error UnboundLocal
+    df = None  # 👈 IMPORTANTE evitar error UnboundLocal #
 
     if request.method == "POST":
 
@@ -1069,7 +925,7 @@ def serie8000():
         gerente = request.form.get("gerente") or None
         tipo = request.form.get("tipo") or None
 
-        color_tabla = "table-dark"
+        color_tabla = "tabla-thw-default"
 
         parametros = {
             "fecha_inicio": fecha_inicio,
@@ -1078,7 +934,7 @@ def serie8000():
             "tipo": tipo
         }
 
-        # limpiar vacíos
+        # limpiar vacíos #
         for k, v in parametros.items():
             if v == "":
                 parametros[k] = None
@@ -1095,15 +951,10 @@ def serie8000():
             extra_filters += " AND Almacen = :almacen"
 
         parametros["extra_filters"] = extra_filters
-               
-        print("PARAMETROS ENVIADOS:") 
-        print(parametros)
 
         df = ejecutar_sql_desde_archivo(ruta_sql, parametros)
 
-        # =========================
-        # AGREGAR CONVERTIDOR KG/M
-        # =========================
+        # AGREGAR CONVERTIDOR KG/M #
         convertidores = cargar_convertidores()
 
         df["Articulo"] = (
@@ -1127,15 +978,10 @@ def serie8000():
             .fillna(0)
         )
 
-        # =========================
-        # FILTRO GERENTE EN PANDAS
-        # =========================
+        # FILTRO GERENTE EN PANDAS #
         if gerente:df = df[df["GerenteRegional"] == gerente]
 
-        # =========================
-        # DATA PARA LISTAS DE FILTROS
-        # SIN FILTROS SELECCIONADOS
-        # =========================
+        # DATA PARA LISTAS DE FILTROS SIN FILTROS SELECCIONADOS #
         parametros_filtros = {
             "fecha_inicio": fecha_inicio,
             "fecha_fin": fecha_fin,
@@ -1163,40 +1009,29 @@ def serie8000():
                 pb_total=0
             )
    
-        # =========================
-        # FILTROS DINÁMICOS
-        # =========================
+        # FILTROS DINÁMICOS #
         tipos = sorted(df_filtros["Tipo"].dropna().unique().tolist())
 
         gerentes = sorted(df_filtros["GerenteRegional"].dropna().unique().tolist())
 
         if gerente:
-
             almacenes = sorted(df_filtros[df_filtros["GerenteRegional"] == gerente]["Almacen"].dropna().unique().tolist())
 
         else:
+            almacenes = sorted(df_filtros["Almacen"].dropna().unique().tolist())
 
-            almacenes = sorted(df_filtros["Almacen"].dropna().unique().tolist()
-            )
-
-        # =========================
-        # NUMÉRICOS
-        # =========================
+        # NUMÉRICOS #
         for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-        # =========================
-        # TONELADAS
-        # =========================
+        # TONELADAS #
         df["Toneladas"] = (
             df["Cantidad"]
             *
             df["KG/M"]
         ) / 1000
     
-        # =========================
-        # KPI 1 - DESCUENTO PONDERADO DE VENTA
-        # =========================
+        # KPI 1 - DESCUENTO PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -1205,24 +1040,18 @@ def serie8000():
         else:
             descuento_ponderado = 0 
 
-        # =========================
-        # TOTALES
-        # =========================
+        # TOTALES # 
         cantidad_total = df["Cantidad"].sum()
         toneladas_total = df["Toneladas"].sum()
         importe_total = df["ImporteVenta"].sum()
         pb_total = df["PBxCantidad"].sum() 
 
-        # =========================
-        # LIMPIEZA ARTICULO ANTES DE AGRUPAR
-        # =========================
+        # LIMPIEZA ARTICULO ANTES DE AGRUPAR #
         df["Articulo"] = df["Articulo"].astype(str).str.strip()
 
         df["Tipo"] = df["Tipo"].astype(str).str.strip()
 
-        # =========================
-        # AGRUPACIÓN
-        # =========================
+        # AGRUPACIÓN #
         df = df.groupby(["Articulo", "Tipo"],as_index=False,dropna=False).agg({
             "PrecioBase": "mean",
             "Cantidad": "sum",
@@ -1233,9 +1062,7 @@ def serie8000():
 
         toneladas_total = df["Toneladas"].sum()
 
-        # =========================
-        # CÁLCULOS
-        # =========================
+        # CÁLCULOS #
         df["PrecioPromedio"] = df.apply(
             lambda x: x["ImporteVenta"] / x["Cantidad"] if x["Cantidad"] != 0 else 0,
             axis=1
@@ -1248,9 +1075,7 @@ def serie8000():
 
         df = df.fillna(0)
 
-        # =========================
-        # DESC. PONDERADO DE VENTA
-        # =========================
+        # DESC. PONDERADO DE VENTA #
         total_importe = df["ImporteVenta"].sum()
         total_pb = df["PBxCantidad"].sum()
 
@@ -1259,13 +1084,7 @@ def serie8000():
         else:
             descuento_ponderado = 0
 
-        print("TOTAL IMPORTE:", total_importe)
-        print("TOTAL PB:", total_pb)
-        print("DESC PONDERADO:", descuento_ponderado)
-
-        # ==========================
-        # KPIs POR TIPO
-        # ==========================
+        # KPIs POR TIPO #
         df_mc = df[df["Tipo"] == "MC"]
         df_xhhw = df[df["Tipo"] == "XHHW"]
 
@@ -1273,13 +1092,9 @@ def serie8000():
         def calcular_descuento(df_tipo):
 
             if df_tipo.empty: return 0
-
             importe = df_tipo["ImporteVenta"].sum()
-
             pb = df_tipo["PBxCantidad"].sum()
-
             if pb == 0: return 0
-
             return 1 - (importe / pb)
 
 
@@ -1287,13 +1102,8 @@ def serie8000():
 
         descuento_xhhw = calcular_descuento(df_xhhw)
 
-        # =========================
-        # ORDENAR POR ARTÍCULO
-        # =========================
+        # ORDENAR POR ARTÍCULO # 
         df = df.sort_values(by="ImporteVenta",ascending=False)
-
-        print(df.columns.tolist())
-        print(df.head(3).to_dict())
 
         datos = df.to_dict(orient="records")
 
@@ -1329,10 +1139,7 @@ def xlp():
 
     mensaje = ""
 
-    # =========================
-    # HISTÓRICO XLP
-    # =========================
-
+    # HISTÓRICO XLP #
     historico_xlp = []
     mes_historico = []
     meses_tabla_historico = []
@@ -1341,7 +1148,7 @@ def xlp():
 
     meses_historico = ["TODOS"] + meses_disponibles[:hoy.month - 1]
 
-    color_tabla = "table-dark"
+    color_tabla = "tabla-thw-default"
 
     cantidad_total = 0
     importe_venta_total = 0
@@ -1413,9 +1220,7 @@ def xlp():
             parametros
         )
 
-        # =========================
-        # CARGAR DATOS HISTÓRICOS XLP
-        # =========================
+        # CARGAR DATOS HISTÓRICOS XLP #
         parametros_historico = parametros.copy()
 
         parametros_historico["fecha_inicio"] = fecha_inicio_historico
@@ -1429,9 +1234,7 @@ def xlp():
 
             df_xlp_historico = df_xlp_historico.iloc[0:0]
        
-        # =========================
-        # PREPARAR HISTÓRICO XLP
-        # =========================
+        # PREPARAR HISTÓRICO XLP #
         if not df_xlp_historico.empty:
             df_xlp_historico["FechaEmision"] = pd.to_datetime(
                 df_xlp_historico["FechaEmision"]
@@ -1449,12 +1252,8 @@ def xlp():
                 ]
     
         df_xlp_historico["FechaEmision"] = df_xlp_historico["FechaEmision"].dt.date
-        print("MES FILTRADO:", mes_historico)
-        print("REGISTROS HISTORICO:", len(df_xlp_historico))
-
-        # =========================
-        # TABLA HISTÓRICO XLP
-        # =========================
+    
+        # TABLA HISTÓRICO XLP #
 
         if not df_xlp_historico.empty:
 
@@ -1491,7 +1290,6 @@ def xlp():
             [float("inf"), -float("inf")],
             0
         )
-
 
             historico_xlp_df["DescEquivPL"] = (
                 1 -
@@ -1531,9 +1329,7 @@ def xlp():
             historico_xlp = list(
                 historico_tabla.values()
             )
-            print(historico_xlp[:2])
-            print(historico_xlp_df[["Articulo","Cantidad","ImporteVenta","PrecioBase","DescEquivPL"]])
-        
+         
         if gerente:
 
             df = df[
@@ -1564,9 +1360,7 @@ def xlp():
                 meses_historico=meses_historico
             )
 
-        # =========================
-        # FILTROS DINÁMICOS
-        # =========================
+        # FILTROS DINÁMICOS #
         almacenes = sorted(
             df["Almacen"]
             .dropna()
@@ -1580,9 +1374,8 @@ def xlp():
             .unique()
             .tolist()
         )
-        # =========================
-        # NUMÉRICOS
-        # =========================
+
+        # NUMÉRICOS #
         for col in [
             "Cantidad",
             "ImporteVenta",
@@ -1594,9 +1387,7 @@ def xlp():
             errors="coerce"
         ).fillna(0)
             
-        # =========================
-        # DESC. PONDERADO
-        # =========================
+        # DESC. PONDERADO #
         total_venta = df["ImporteVenta"].sum()
         total_pb = (
             df["PrecioBase"] *
@@ -1604,19 +1395,16 @@ def xlp():
         ).sum()
 
         if total_pb != 0:
-
             descuento_ponderado = (
                 1 -
                 (total_venta / total_pb)
             )
 
         else:
-
             descuento_ponderado = 0
 
-        # =========================
-        # TOTALES
-        # =========================
+
+        # TOTALES #
         cantidad_total = (
             df["Cantidad"]
             .sum()
@@ -1627,20 +1415,14 @@ def xlp():
             .sum()
         )
 
-        # =========================
-        # AGRUPACIÓN
-        # =========================
+        # AGRUPACIÓN #
         df = df.groupby(
             "Articulo",
             as_index=False
         ).agg({
-
             "Cantidad":"sum",
-
             "ImporteVenta":"sum",
-
             "PrecioBase":"mean"
-
         })
 
         df["PrecioPromedio"] = df.apply(
@@ -1651,9 +1433,7 @@ def xlp():
             axis=1
         )
 
-        # =========================
-        # DESC. EQUIV SOBRE PL
-        # =========================
+        # DESC. EQUIV SOBRE PL #
         df["DescEquivPL"] = df.apply(
 
             lambda x:
@@ -1666,7 +1446,6 @@ def xlp():
             else 0,
 
             axis=1
-
         )
 
         df = df.fillna(0)
@@ -1681,7 +1460,7 @@ def xlp():
             orient="records"
         )
 
-        # Meses que se mostrarán en la tabla histórica
+        # Meses que se mostrarán en la tabla histórica #
         if "TODOS" in mes_historico:
             meses_tabla_historico = meses_historico[1:]
         else:
@@ -1706,6 +1485,467 @@ def xlp():
         historico_xlp=historico_xlp
     )
 
+@dashboard.route("/tuberia", methods=["GET", "POST"])
+def tuberia():
+
+    print("ENTRANDO A TUBERIA")
+
+    datos = []
+
+    fecha_inicio_sel = ""
+    fecha_fin_sel = ""
+
+    descuento_ponderado = 0
+
+    # HISTÓRICO TUBERÍA #
+    historico_tuberia = []
+    mes_historico = []
+    meses_tabla_historico = []
+
+    meses_disponibles = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
+
+    hoy = date.today()
+
+    meses_historico = [
+        "TODOS"
+    ] + meses_disponibles[:hoy.month - 1]
+
+    color_tabla = "tabla-thw-default"
+
+    cantidad_total = 0
+    importe_total = 0
+
+    marcas = []
+    lineas = []
+    almacenes = []
+    gerentes = []
+
+    df = None
+
+    if request.method == "POST":
+
+        fecha_inicio = request.form.get("fecha_inicio")
+        fecha_fin = request.form.get("fecha_fin")
+
+        mes_historico = request.form.getlist("mes_historico")
+        print("MESES HISTÓRICO SELECCIONADOS:", mes_historico)
+        
+        fecha_inicio_sel = fecha_inicio
+        fecha_fin_sel = fecha_fin
+
+        hoy = date.today()
+
+        fecha_inicio_historico = date(
+            hoy.year,
+            1,
+            1
+            ).isoformat()
+
+        marca = request.form.get("marca") or None
+        linea = request.form.get("linea") or None
+        almacen = request.form.get("almacen") or None
+        gerente = request.form.get("gerente") or None
+
+        print("MARCA SELECCIONADA:", marca)
+        print("LINEA SELECCIONADA:", linea)
+
+
+        parametros = {
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "marca": marca,
+            "linea": linea,
+            "almacen": almacen,
+            "gerente": gerente
+        }
+
+        for k, v in parametros.items():
+            if v == "":
+                parametros[k] = None
+
+        BASE_DIR = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                ".."
+            )
+        )
+
+        ruta_sql = os.path.join(
+            BASE_DIR,
+            "sql",
+            "backup_sql",
+            "TUBERIA.sql"
+        )
+
+        df = ejecutar_sql_desde_archivo(
+            ruta_sql,
+            parametros
+        )
+
+        # CARGAR DATOS HISTÓRICOS TUBERÍA #
+        parametros_historico = parametros.copy()
+
+        parametros_historico["fecha_inicio"] = fecha_inicio_historico
+        parametros_historico["fecha_fin"] = fecha_fin
+
+        # La marca SÍ debe afectar el histórico. La línea seleccionada NO debe limitar el histórico #
+        parametros_historico["linea"] = None
+
+        df_tuberia_historico = ejecutar_sql_desde_archivo(
+            ruta_sql,
+            parametros_historico
+        )
+
+        # Si no se seleccionaron meses, no mostrar información histórica #
+        if not mes_historico:
+            df_tuberia_historico = df_tuberia_historico.iloc[0:0]
+
+        # PREPARAR HISTÓRICO TUBERÍA #
+        if not df_tuberia_historico.empty:
+
+            df_tuberia_historico["FechaEmision"] = pd.to_datetime(
+                df_tuberia_historico["FechaEmision"]
+            )
+
+            # Filtrar meses seleccionados #
+            if "TODOS" not in mes_historico:
+                numeros_mes = [
+                    meses_disponibles.index(mes) + 1
+                    for mes in mes_historico
+                ]
+
+                df_tuberia_historico = df_tuberia_historico[
+                    df_tuberia_historico["FechaEmision"].dt.month.isin(
+                        numeros_mes
+                    )
+                ]
+
+
+            # Convertir columnas numéricas #
+            for col in [
+                "Cantidad",
+                "ImporteVenta",
+                "PrecioBase"
+            ]:
+
+                df_tuberia_historico[col] = pd.to_numeric(
+                    df_tuberia_historico[col],
+                    errors="coerce"
+                ).fillna(0)
+
+            # Obtener nombre del mes #
+            df_tuberia_historico["Mes"] = (
+                df_tuberia_historico["FechaEmision"].apply(
+                    lambda x:
+                    meses_disponibles[x.month - 1]
+                )
+            )
+
+            # AGRUPAR POR LÍNEA Y MES #
+            historico_tuberia_df = (
+                df_tuberia_historico
+                .groupby(
+                    ["Linea", "Mes"],
+                    as_index=False
+                )
+                .agg({
+
+                    "Cantidad": "sum",
+                    "ImporteVenta": "sum",
+                    "PrecioBase": "mean"
+                })
+            )
+
+            # PRECIO PROMEDIO #
+            historico_tuberia_df["PrecioPromedio"] = (
+
+                historico_tuberia_df["ImporteVenta"] /
+                historico_tuberia_df["Cantidad"]
+
+            ).replace(
+                [float("inf"), -float("inf")],
+                0
+            )
+
+            # DESCUENTO EQUIVALENTE SOBRE PL #
+            historico_tuberia_df["DescEquivPL"] = (
+
+                1 -
+                (
+                    historico_tuberia_df["PrecioPromedio"] /
+                    historico_tuberia_df["PrecioBase"]
+                )
+
+            ).replace(
+                [float("inf"), -float("inf")],
+                0
+            )
+
+            # CREAR ESTRUCTURA PARA LA TABLA #
+            historico_tabla = {}
+
+            for _, fila in historico_tuberia_df.iterrows():
+                linea_historica = fila["Linea"]
+                mes = fila["Mes"]
+
+                if linea_historica not in historico_tabla:
+                    historico_tabla[linea_historica] = {
+                        "Linea": linea_historica
+                    }
+
+                historico_tabla[linea_historica][
+                    f"{mes}_Cantidad"
+                ] = fila["Cantidad"]
+
+                historico_tabla[linea_historica][
+                    f"{mes}_Precio"
+                ] = fila["PrecioPromedio"]
+
+                historico_tabla[linea_historica][
+                    f"{mes}_Desc"
+                ] = fila["DescEquivPL"]
+
+            historico_tuberia = list(
+                historico_tabla.values()
+            )
+
+        print("PARAMETROS ENVIADOS:", parametros)
+        print("REGISTROS OBTENIDOS:", len(df))
+
+        if df is None or df.empty:
+
+            return render_template(
+                "tuberia.html",
+                datos=[],
+                descuento_ponderado=0,
+                fecha_inicio=fecha_inicio_sel,
+                fecha_fin=fecha_fin_sel,
+                marcas=[],
+                lineas=[],
+                almacenes=[],
+                gerentes=[],
+                cantidad_total=0,
+                importe_total=0,
+                color_tabla=color_tabla,
+
+                meses_historico=meses_historico,
+                mes_historico=mes_historico,
+                meses_tabla_historico=[],
+
+                historico_tuberia=[]
+            )
+        
+        marcas = [
+            "KOBREX",
+            "RYMCO",
+            "JUPITER"
+        ]
+
+        # OBTENER TODAS LAS LÍNEAS DISPONIBLES SEGÚN LA MARCA SELECCIONADA #
+        parametros_lineas = {
+            "fecha_inicio": fecha_inicio,
+            "fecha_fin": fecha_fin,
+            "marca": marca,
+            "linea": None,
+            "almacen": None,
+            "gerente": None
+        }
+
+        df_lineas = ejecutar_sql_desde_archivo(
+            ruta_sql,
+            parametros_lineas
+        )
+
+        if df_lineas is not None and not df_lineas.empty:
+
+            lineas = sorted(
+                df_lineas["Linea"]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .unique()
+                .tolist()
+        )
+
+        else:
+
+            lineas = []
+
+        almacenes = sorted(
+            df["Almacen"]
+            .dropna()
+            .unique()
+            .tolist()
+        )
+
+        gerentes = sorted(
+            df["GerenteRegional"]
+            .dropna()
+            .unique()
+            .tolist()
+        )
+
+        for col in [
+            "Cantidad",
+            "ImporteVenta",
+            "PBxCantidad",
+            "PrecioBase"
+        ]:
+
+            df[col] = pd.to_numeric(
+                df[col],
+                errors="coerce"
+            ).fillna(0)
+
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
+
+        if total_pb != 0:
+
+            descuento_ponderado = (
+                1 - (total_importe / total_pb)
+            )
+
+        else:
+
+            descuento_ponderado = 0
+
+        cantidad_total = df["Cantidad"].sum()
+        importe_total = df["ImporteVenta"].sum()
+
+        df = df.groupby(
+            "Articulo",
+            as_index=False
+        ).agg({
+
+            "PrecioBase": "mean",
+            "Cantidad": "sum",
+            "ImporteVenta": "sum",
+            "PBxCantidad": "sum"
+
+        })
+
+        df["PrecioPromedio"] = df.apply(
+            lambda x:
+                x["ImporteVenta"] / x["Cantidad"]
+                if x["Cantidad"] != 0
+                else 0,
+            axis=1
+        )
+
+        df["DescEquivPL"] = df.apply(
+            lambda x:
+                1 - (
+                    x["PrecioPromedio"] /
+                    x["PrecioBase"]
+                )
+                if x["PrecioBase"] != 0
+                else 0,
+            axis=1
+        )
+
+        df = df.fillna(0)
+
+        total_importe = df["ImporteVenta"].sum()
+        total_pb = df["PBxCantidad"].sum()
+
+        if total_pb != 0:
+
+            descuento_ponderado = -(
+                (total_importe / total_pb) - 1
+            )
+
+        else:
+
+            descuento_ponderado = 0
+
+        df = df.sort_values(
+            "ImporteVenta",
+            ascending=False
+        )
+
+        datos = df.to_dict(
+            orient="records"
+        )
+
+        # Meses que se mostrarán en la tabla histórica
+        if "TODOS" in mes_historico:
+            meses_tabla_historico = meses_historico[1:]
+        else:
+            meses_tabla_historico = mes_historico
+
+    return render_template(
+        "tuberia.html",
+        datos=datos,
+        descuento_ponderado=descuento_ponderado,
+        fecha_inicio=fecha_inicio_sel,
+        fecha_fin=fecha_fin_sel,
+        marcas=marcas,
+        lineas=lineas,
+        almacenes=almacenes,
+        gerentes=gerentes,
+        cantidad_total=cantidad_total,
+        importe_total=importe_total,
+        color_tabla=color_tabla,
+        meses_historico=meses_historico,
+        mes_historico=mes_historico,
+        meses_tabla_historico=meses_tabla_historico,
+        historico_tuberia=historico_tuberia
+
+    )
+
+@dashboard.route("/tuberia_lineas", methods=["POST"])
+def tuberia_lineas():
+
+    marca = request.form.get("marca") or None
+
+    parametros = {
+        "fecha_inicio": request.form.get("fecha_inicio"),
+        "fecha_fin": request.form.get("fecha_fin"),
+        "marca": marca,
+        "linea": None,
+        "almacen": None,
+        "gerente": None
+    }
+
+    BASE_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".."
+        )
+    )
+
+    ruta_sql = os.path.join(
+        BASE_DIR,
+        "sql",
+        "backup_sql",
+        "TUBERIA.sql"
+    )
+
+    df = ejecutar_sql_desde_archivo(
+        ruta_sql,
+        parametros
+    )
+
+    if df is None or df.empty:
+        return jsonify([])
+
+    lineas = sorted(
+        df["Linea"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+        .tolist()
+    )
+
+    print("MARCA PARA LINEAS:", marca)
+    print("LINEAS ENCONTRADAS:", lineas)
+
+    return jsonify(lineas)
+
 def cargar_ponderados_compra():
 
     BASE_DIR = os.path.abspath(
@@ -1727,11 +1967,7 @@ def cargar_ponderados_compra():
         sheet_name="Hoja1"
     )
 
-    # ============================
     # NORMALIZAR COLUMNAS EXCEL
-    # ============================
-
-    
     df.columns = [
         "Mes",
         "Condumex Desc. Pond. Compra",
@@ -1771,25 +2007,18 @@ def aplicar_ponderado_compra_excel(
 
     registro = ponderado_mes.iloc[0]
 
-    # ============================
-    # DESCUENTOS PONDERADOS COMPRA
-    # ============================
+    # DESCUENTOS PONDERADOS COMPRA #
 
     fila["condumex_costo"] = registro.iloc[1]
-
     fila["condulac_costo"] = registro.iloc[2]
-
     fila["kobrex_costo"] = registro.iloc[4]
-
     fila["serie8000_costo"] = registro.iloc[6]
 
-    # ============================
-    # CAL. 12 COMPRA
-    # ============================
+    # CAL. 12 COMPRA # 
 
     fila["cal12_condulac_costo"] = registro.iloc[3]
-
     fila["cal12_kobrex_costo"] = registro.iloc[5]
+    
 
 @dashboard.route("/resumen", methods=["GET", "POST"])
 def resumen():
@@ -1799,12 +2028,10 @@ def resumen():
     datos = []
 
     if request.method == "POST":
-
         fecha_inicio = request.form.get("fecha_inicio")
         fecha_fin = request.form.get("fecha_fin")
 
     else:
-
         fecha_inicio = date.today().replace(day=1).isoformat()
         fecha_fin = date.today().isoformat()
 
@@ -1816,19 +2043,13 @@ def resumen():
         )
     )
 
-    # ============================
-    # CONVERTIDORES 
-    # ============================
+    # CONVERTIDORES #
     convertidores = cargar_convertidores()
 
-    # ============================
-    # PONDERADOS COMPRA EXCEL
-    # ============================
+    # PONDERADOS COMPRA EXCEL #
     ponderados_compra = cargar_ponderados_compra()
     
-    # ============================
-    # RUTAS SQL
-    # ============================
+    # RUTAS SQL #
 
     ruta_thw = os.path.join(
         BASE_DIR,
@@ -1919,6 +2140,51 @@ def resumen():
             importe_neto /
             importe_bruto
         )
+
+    def calcular_cal12_costo(df, descuento_ponderado, aplicar_pp=False):
+
+        if df is None or df.empty:
+            return 0
+
+        calibre12 = df[
+            df["Calibre"]
+            .astype(str)
+            .str.strip()
+            .eq("12")
+        ]
+
+        if calibre12.empty:
+            return 0
+
+        costo = pd.to_numeric(
+            calibre12["Costo MXN"],
+            errors="coerce"
+        ).fillna(0)
+
+        cantidad = pd.to_numeric(
+            calibre12["Cantidad"],
+            errors="coerce"
+        ).fillna(0)
+
+        cantidad_total = cantidad.sum()
+
+        if cantidad_total == 0:
+            return 0
+
+        costo_ponderado = (
+            (costo * cantidad).sum()
+            / cantidad_total
+        )
+
+        resultado = (
+            costo_ponderado *
+            (1 - descuento_ponderado)
+        )
+
+        if aplicar_pp:
+            resultado *= 0.94
+
+        return resultado
     
     def crear_fila_resumen(periodo):
 
@@ -1993,26 +2259,17 @@ def resumen():
                     df_thw["Categoria"] == marca
                 ]
 
-                # ============================
-                # DESCUENTO PONDERADO VENTA
-                # ============================
-
+                # DESCUENTO PONDERADO VENTA #
                 fila[llave] = calcular_descuento(
                     df_marca
                 )
 
-                # ============================
-                # TONELADAS
-                # ============================
-
+                # TONELADAS #
                 fila[f"ton_{llave}"] = (
                     df_marca["Toneladas"].sum()
                 )
 
-                # ============================
-                # CALIBRE 12
-                # ============================
-
+                # CALIBRE 12 #
                 calibre12 = df_marca[
                     df_marca["Calibre"] == "12"
                 ]
@@ -2038,10 +2295,7 @@ def resumen():
         if df_thw_compra is None or df_thw_compra.empty:
             return
 
-        # ============================
-        # NUMÉRICOS
-        # ============================
-
+        # NUMÉRICOS #
         for col in [
             "Costo MXN",
             "Cantidad",
@@ -2053,10 +2307,7 @@ def resumen():
                 errors="coerce"
             ).fillna(0)
 
-        # ============================
-        # DESCUENTO PONDERADO COMPRA
-        # POR MARCA
-        # ============================
+        # DESCUENTO PONDERADO COMPRA POR MARCA #
 
         for marca, llave in [
            ("CONDUMEX", "condumex"),
@@ -2144,10 +2395,7 @@ def resumen():
         if df_serie_compra is None or df_serie_compra.empty:
             return
 
-        # ============================
-        # NUMÉRICOS
-        # ============================
-
+        # NUMÉRICOS #
         for col in [
             "Costo MXN",
             "Cantidad",
@@ -2159,9 +2407,7 @@ def resumen():
                 errors="coerce"
             ).fillna(0)
 
-        # ============================
-        # DESCUENTO PONDERADO COMPRA
-        # ============================
+        # DESCUENTO PONDERADO COMPRA #
 
         fila["serie8000_costo"] = calcular_descuento_costo(
             df_serie_compra
@@ -2249,12 +2495,9 @@ def resumen():
         return df
     
     fecha_actual = date.fromisoformat(fecha_inicio)
-
     fecha_final = date.fromisoformat(fecha_fin)
 
-    # ============================
-    # CARGA ÚNICA DEL PERIODO
-    # ============================
+    # CARGA ÚNICA DEL PERIODO #
     hoy = date.today()
     anio_actual = hoy.year
 
@@ -2308,9 +2551,8 @@ def resumen():
     df_serie_compra_rango = preparar_fecha(
         df_serie_compra_rango
     )
-    # ============================
-    # FECHAS MES ANTERIOR
-    # ============================
+
+    # FECHAS MES ANTERIOR # 
     
     meses_disponibles = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
@@ -2325,9 +2567,7 @@ def resumen():
         ultimo_dia_mes_anterior.replace(day=1)
     )
 
-    # ============================
-    # RESUMEN MESES DEL AÑO
-    # ============================
+    # RESUMEN MESES DEL AÑO #
     meses_resumen = []
     for mes in range(1, hoy.month):
     
@@ -2357,9 +2597,7 @@ def resumen():
                 meses_disponibles[mes - 1]
             )
 
-            # ============================
-            # PONDERADO COMPRA DESDE EXCEL
-            # ============================
+            # PONDERADO COMPRA DESDE EXCEL #
 
             aplicar_ponderado_compra_excel(
                 fila_mes,
@@ -2402,15 +2640,12 @@ def resumen():
     
     while fecha_actual <= fecha_final:
 
-        # ============================
-        # OMITIR DOMINGOS
-        # ============================
+        # OMITIR DOMINGOS #
         if fecha_actual.weekday() == 6:
                 fecha_actual += timedelta(days=1)
                 continue
 
         fecha_dia = fecha_actual.isoformat()
-
 
         fila = {
 
@@ -2446,9 +2681,7 @@ def resumen():
             fecha_actual.month,
             ponderados_compra
         )
-        # ============================
-        # FILTRAR DATOS DEL DÍA
-        # ============================
+        # FILTRAR DATOS DEL DÍA #
 
         fecha_comparacion = fecha_actual
 
@@ -2470,10 +2703,9 @@ def resumen():
 
         serie_compra_dia = df_serie_compra_rango[
             df_serie_compra_rango["FechaEmision"] == fecha_comparacion
-        ]
-        # ============================
-        # THW
-        # ============================
+        ] 
+
+        # THW #
         procesar_thw(
             fila,
             thw_dia
@@ -2483,19 +2715,43 @@ def resumen():
             fila,
             thw_compra_dia
         )
-       
-        # ============================
-        # DESNUDO
-        # ============================
-        procesar_desnudo(
-            fila,
-            desnudo_dia
-            
+
+        # CAL. 12 COSTO - PONDERADO ACTUAL #
+
+        condulac_12 = thw_compra_dia[
+            thw_compra_dia["Categoria"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            .eq("CONDULAC")
+        ]
+
+        kobrex_12 = thw_compra_dia[
+            thw_compra_dia["Categoria"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            .eq("KOBREX")
+        ]
+
+        fila["cal12_condulac_costo"] = calcular_cal12_costo(
+            condulac_12,
+            fila["condulac_costo"],
+            aplicar_pp=True
         )
 
-        # ============================
-        # SERIE 8000
-        # ============================
+        fila["cal12_kobrex_costo"] = calcular_cal12_costo(
+            kobrex_12,
+            fila["kobrex_costo"]
+        )
+       
+        # DESNUDO #
+        procesar_desnudo(
+            fila,
+            desnudo_dia 
+        )
+
+        # SERIE 8000 #
         procesar_serie8000(
             fila,
             serie_dia
@@ -2506,17 +2762,13 @@ def resumen():
             serie_compra_dia
         )
         
-        # GUARDAR EL DÍA COMPLETO
-
+        # GUARDAR EL DÍA COMPLETO #
         datos.append(fila)
 
-        # SIGUIENTE DÍA
-
+        # SIGUIENTE DÍA #
         fecha_actual += timedelta(days=1)
 
-    # ============================
-    # FILA GENERAL DEL MES ACTUAL
-    # ============================
+    # FILA GENERAL DEL MES ACTUAL #
 
     primer_dia_mes_actual = hoy.replace(day=1)
 
@@ -2555,9 +2807,7 @@ def resumen():
         ponderados_compra
     )
 
-    # ============================
-    # DATOS DEL MES ACTUAL
-    # ============================
+    # DATOS DEL MES ACTUAL #
 
     thw_mes_actual = df_thw_rango[
         (df_thw_rango["FechaEmision"] >= primer_dia_mes_actual) &
@@ -2583,10 +2833,8 @@ def resumen():
         (df_serie_compra_rango["FechaEmision"] >= primer_dia_mes_actual) &
         (df_serie_compra_rango["FechaEmision"] <= hoy)
     ]
-    # ============================
-    # CALCULAR GENERAL
-    # ============================
-
+    
+    # CALCULAR GENERAL #
     procesar_thw(
         fila_general,
         thw_mes_actual
@@ -2597,6 +2845,34 @@ def resumen():
         thw_compra_mes_actual
     )
 
+    # CAL. 12 COSTO - PONDERADO ACTUAL #
+    condulac_12 = thw_compra_mes_actual[
+        thw_compra_mes_actual["Categoria"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .eq("CONDULAC")
+    ]
+
+    kobrex_12 = thw_compra_mes_actual[
+        thw_compra_mes_actual["Categoria"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .eq("KOBREX")
+    ]
+   
+    fila_general["cal12_condulac_costo"] = calcular_cal12_costo(
+        condulac_12,
+        fila_general["condulac_costo"],
+        aplicar_pp=True
+    )
+
+    fila_general["cal12_kobrex_costo"] = calcular_cal12_costo(
+        kobrex_12,
+        fila_general["kobrex_costo"]
+    )
+ 
     procesar_desnudo(
         fila_general,
         desnudo_mes_actual
@@ -2612,10 +2888,7 @@ def resumen():
         serie_compra_mes_actual
     )
 
-    # ============================
-    # AGREGAR AL FINAL DE PONDERADO ACTUAL
-    # ============================
-
+    # AGREGAR AL FINAL DE PONDERADO ACTUAL #
     datos.append(fila_general)
 
     return render_template(
@@ -2633,7 +2906,6 @@ def descargar_thw():
     marca = request.form.get("marca") or None
     almacen = request.form.get("almacen") or None
     gerente = request.form.get("gerente") or None
-
 
     parametros = {
         "fecha_inicio": fecha_inicio,
@@ -2663,9 +2935,7 @@ def descargar_thw():
         parametros
     )
 
-    # =========================
-    # AGREGAR CONVERTIDOR KG/M
-    # =========================
+    # AGREGAR CONVERTIDOR KG/M #
     convertidores = cargar_convertidores()
 
     df["Articulo"] = (
@@ -2689,9 +2959,7 @@ def descargar_thw():
     .fillna(0)
     )
 
-    # =========================
-    # NUMÉRICOS
-    # =========================
+    # NUMÉRICOS #
     for col in [
     "Cantidad",
     "ImporteVenta",
@@ -2705,17 +2973,13 @@ def descargar_thw():
         errors="coerce"
     ).fillna(0)
 
-    # =========================
-    # TONELADAS
-    # =========================
+    # TONELADAS #
     df["Toneladas"] = (
     df["Cantidad"] *
     df["KG/M"]
     ) / 1000
 
-    # =========================
-    # AGRUPACIÓN
-    # =========================
+    # AGRUPACIÓN #
     df = df.groupby(
     "Calibre",
     as_index=False
@@ -2729,9 +2993,7 @@ def descargar_thw():
 
     })
 
-    # =========================
-    # CÁLCULOS
-    # =========================
+    # CÁLCULOS #
     df["PrecioPromedio"] = df.apply(
     lambda x:
         x["ImporteVenta"] / x["Cantidad"]
@@ -2739,7 +3001,6 @@ def descargar_thw():
         else 0,
     axis=1
     )
-
 
     df["DescEquivPL"] = df.apply(
     lambda x:
@@ -2964,9 +3225,7 @@ def descargar_desnudo():
 
     df = ejecutar_sql_desde_archivo(ruta_sql,parametros)
 
-    # =========================
-    # PROCESAR REPORTE CALIBRE
-    # =========================
+    # PROCESAR REPORTE CALIBRE #
     for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
@@ -2979,33 +3238,26 @@ def descargar_desnudo():
         "PBxCantidad": "sum",
         "Convertidor": "first",
         "CantidadEntreConvertidor": "sum"
-
     })
 
     df["PrecioPromedio"] = df.apply(
-
         lambda x:
             x["ImporteVenta"] / x["Cantidad"]
             if x["Cantidad"] != 0
             else 0,
-
         axis=1
-
     )
 
     df["PrecioKg"] = df.apply(
-
         lambda x:
             x["ImporteVenta"] / x["CantidadEntreConvertidor"]
             if x["CantidadEntreConvertidor"] != 0
             else 0,
 
         axis=1
-
     )
 
-    # COLUMNAS QUE SE EXPORTARÁN
-
+    # COLUMNAS QUE SE EXPORTARÁN #
     df = df[[
         "Calibre",
         "Cantidad",
@@ -3068,9 +3320,7 @@ def descargar_desnudo_articulos():
 
     df = ejecutar_sql_desde_archivo(ruta_sql,parametros)
 
-    # =========================
-    # PROCESAR REPORTE ARTICULOS
-    # =========================
+    # PROCESAR REPORTE ARTICULOS #
     for col in ["Cantidad", "ImporteVenta", "PBxCantidad", "PrecioBase"]:
         df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
@@ -3083,7 +3333,6 @@ def descargar_desnudo_articulos():
         "PBxCantidad": "sum",
         "Convertidor": "first",
         "CantidadEntreConvertidor": "sum"
-
     })
 
     df["PrecioPromedio"] = df.apply(
@@ -3105,8 +3354,7 @@ def descargar_desnudo_articulos():
         axis=1
     )
 
-    # COLUMNAS QUE SE EXPORTARÁN
-
+    # COLUMNAS QUE SE EXPORTARÁN #
     df = df[[ 
         "Articulo",
         "Cantidad",
@@ -3116,7 +3364,6 @@ def descargar_desnudo_articulos():
     ]]
 
     archivo = BytesIO()
-
 
     with pd.ExcelWriter(
         archivo,
@@ -3130,7 +3377,6 @@ def descargar_desnudo_articulos():
         )
 
     archivo.seek(0)
-
 
     return send_file(
         archivo,
@@ -3148,7 +3394,6 @@ def descargar_serie8000():
     gerente = request.form.get("gerente") or None
     tipo = request.form.get("tipo") or None
 
-    
     extra_filters = ""
 
     if tipo:
@@ -3193,9 +3438,7 @@ def descargar_serie8000():
             as_attachment=True
         )
 
-    # =========================
-    # AGREGAR KG/M
-    # =========================
+    # AGREGAR KG/M #
     convertidores = cargar_convertidores()
 
     df["Articulo"] = (
@@ -3219,18 +3462,14 @@ def descargar_serie8000():
         .fillna(0)
     )
 
-    # =========================
-    # FILTRO GERENTE
-    # =========================
+    # FILTRO GERENTE #
     if gerente:
 
         df = df[
             df["GerenteRegional"] == gerente
         ]
 
-    # =========================
-    # NUMÉRICOS
-    # =========================
+    # NUMÉRICOS #
     for col in [
         "Cantidad",
         "ImporteVenta",
@@ -3248,9 +3487,7 @@ def descargar_serie8000():
         df["KG/M"]
     ) / 1000
 
-    # =========================
-    # AGRUPACIÓN IGUAL A TABLA
-    # =========================
+    # AGRUPACIÓN IGUAL A TABLA #
     df["Articulo"] = (
         df["Articulo"]
         .astype(str)
@@ -3272,13 +3509,9 @@ def descargar_serie8000():
     ).agg({
 
         "Cantidad":"sum",
-
         "Toneladas":"sum",
-
         "ImporteVenta":"sum",
-
         "PrecioBase":"mean",
-
         "PBxCantidad":"sum"
 
     })
@@ -3391,18 +3624,14 @@ def descargar_xlp():
     )
 
     if gerente:
-
         df = df[
             df["GerenteRegional"] == gerente
         ]
 
     if df is None or df.empty:
-
         return "Sin datos para exportar"
 
-    # =========================
-    # NUMÉRICOS
-    # =========================
+    # NUMÉRICOS #
     for col in [
         "Cantidad",
         "ImporteVenta",
@@ -3414,46 +3643,31 @@ def descargar_xlp():
             errors="coerce"
         ).fillna(0)
 
-    # =========================
-    # AGRUPACIÓN IGUAL QUE TABLA
-    # =========================
+    # AGRUPACIÓN IGUAL QUE TABLA #
     df = df.groupby(
         "Articulo",
         as_index=False
     ).agg({
 
         "Cantidad":"sum",
-
         "ImporteVenta":"sum",
-
         "PrecioBase":"mean"
-
     })
 
-    # =========================
-    # PRECIO PROMEDIO
-    # =========================
+    # PRECIO PROMEDIO #
     df["PrecioPromedio"] = df.apply(
 
         lambda x:
-
         x["ImporteVenta"] / x["Cantidad"]
-
         if x["Cantidad"] != 0
-
         else 0,
-
         axis=1
-
     )
 
-    # =========================
-    # DESC. EQUIV SOBRE PL
-    # =========================
+    # DESC. EQUIV SOBRE PL #
     df["DescEquivPL"] = df.apply(
 
         lambda x:
-
         1 -
         (
             x["PrecioPromedio"]
@@ -3468,10 +3682,7 @@ def descargar_xlp():
 
     df = df.fillna(0)
 
-    # =========================
-    # COLUMNAS DEL EXCEL
-    # IGUALES A LA TABLA
-    # =========================
+    # TABLA RÉPLICA EXCEL #
     df_excel = df[
         [
             "Articulo",
@@ -3490,13 +3701,9 @@ def descargar_xlp():
     ) as writer:
 
         df_excel.to_excel(
-
             writer,
-
             index=False,
-
             sheet_name="XLP"
-
         )
 
     archivo.seek(0)
@@ -3507,6 +3714,150 @@ def descargar_xlp():
         as_attachment=True
 
     )
+
+@dashboard.route("/descargar_tuberia", methods=["POST"])
+def descargar_tuberia():
+
+    fecha_inicio = request.form.get("fecha_inicio")
+    fecha_fin = request.form.get("fecha_fin")
+
+    marca = request.form.get("marca") or None
+    linea = request.form.get("linea") or None
+    almacen = request.form.get("almacen") or None
+    gerente = request.form.get("gerente") or None
+
+    parametros = {
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "marca": marca,
+        "linea": linea,
+        "almacen": almacen,
+        "gerente": gerente
+    }
+
+    BASE_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".."
+        )
+    )
+
+    ruta_sql = os.path.join(
+        BASE_DIR,
+        "sql",
+        "backup_sql",
+        "TUBERIA.sql"
+    )
+
+    df = ejecutar_sql_desde_archivo(
+        ruta_sql,
+        parametros
+    )
+
+    if df is None or df.empty:
+
+        return render_template(
+            "tuberia.html",
+            datos=[],
+            descuento_ponderado=0,
+            fecha_inicio=fecha_inicio,
+            fecha_fin=fecha_fin,
+            marcas=["KOBREX", "RYMCO", "JUPITER"],
+            lineas=[],
+            almacenes=[],
+            gerentes=[],
+            cantidad_total=0,
+            importe_total=0,
+            color_tabla="tabla-thw-default"
+        )
+
+    # CONVERTIR CAMPOS NUMÉRICOS
+
+    for col in [
+        "Cantidad",
+        "ImporteVenta",
+        "PBxCantidad",
+        "PrecioBase"
+    ]:
+
+        df[col] = pd.to_numeric(
+            df[col],
+            errors="coerce"
+        ).fillna(0)
+
+    # AGRUPAR POR ARTÍCULO
+
+    df = df.groupby(
+        "Articulo",
+        as_index=False
+    ).agg({
+
+        "PrecioBase": "mean",
+        "Cantidad": "sum",
+        "ImporteVenta": "sum",
+        "PBxCantidad": "sum"
+
+    })
+
+    # PRECIO PROMEDIO
+
+    df["PrecioPromedio"] = df.apply(
+        lambda x:
+            x["ImporteVenta"] / x["Cantidad"]
+            if x["Cantidad"] != 0
+            else 0,
+        axis=1
+    )
+
+    # DESCUENTO EQUIVALENTE SOBRE PL
+
+    df["DescEquivPL"] = df.apply(
+        lambda x:
+            1 - (
+                x["PrecioPromedio"] /
+                x["PrecioBase"]
+            )
+            if x["PrecioBase"] != 0
+            else 0,
+        axis=1
+    )
+
+    df = df.fillna(0)
+
+    # COLUMNAS DEL EXCEL
+
+    df_excel = df[
+        [
+            "Articulo",
+            "Cantidad",
+            "ImporteVenta",
+            "PrecioPromedio",
+            "DescEquivPL"
+        ]
+    ]
+
+    archivo = BytesIO()
+
+    with pd.ExcelWriter(
+        archivo,
+        engine="openpyxl"
+    ) as writer:
+
+        df_excel.to_excel(
+            writer,
+            index=False,
+            sheet_name="TUBERIA"
+        )
+
+    archivo.seek(0)
+
+    return send_file(
+        archivo,
+        download_name="Reporte_Tuberia.xlsx",
+        as_attachment=True
+    )
+
 
 
 
