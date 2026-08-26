@@ -1,0 +1,1412 @@
+/* ============================================================
+   CONFIGURACIÓN GENERAL
+============================================================ */
+* {
+    box-sizing: border-box;
+}
+
+:root {
+
+    --blue-dark: #00216D;
+    --blue: #051650;
+    --blue-light: #eaf3fb;
+
+    --green: #1465BB;
+    --green-light: #BCEEFF;
+
+    --background: #f2f5f8;
+    --white: #ffffff;
+
+    --text: #202a3a;
+    --text-light: #718096;
+    --border: #dfe5eb;
+
+    --shadow:
+        0 1px 3px rgba(20, 40, 70, 0.05);
+
+}
+
+body {
+
+    margin: 0;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+
+}
+
+
+/* ============================================================
+   CONTENEDOR PRINCIPAL
+============================================================ */
+
+.dashboard {
+
+    width: 100%;
+
+    min-height: 100vh;
+
+}
+
+
+/* ============================================================
+   HEADER
+============================================================ */
+
+.header {
+
+    height: 100px;
+
+    background: var(--blue-dark);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 18px;
+
+}
+
+
+.header-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+}
+
+
+.company-logo {
+
+    width: 150px;
+
+    height: 100px;
+
+    object-fit: contain;
+
+    display: block;
+
+}
+
+
+.header-text {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+}
+
+
+
+.eyebrow {
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+
+    color: #c7d7e8;
+
+    margin-bottom: 3px;
+    
+    font-style: italic;
+    
+    text-transform: uppercase;
+
+}
+
+
+.header h1 {
+
+    margin: 0;
+
+    font-size: 28px;
+
+    line-height: 1;
+
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+ 
+    font-style: italic;
+
+    text-transform: uppercase;
+
+}
+
+.header-right {
+
+    text-align: right;
+
+}
+
+.header-title {
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+.header-subtitle {
+
+    font-size: 11px;
+
+    color: #aebfd2;
+
+    margin-top: 4px;
+
+}
+
+/* ============================================================
+   FILTROS
+============================================================ */
+
+.filters {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr
+        1fr
+        1.1fr
+        1.1fr;
+
+    gap: 14px;
+
+    padding: 21px 17px 15px;
+
+}
+
+.filter-group {
+
+    min-width: 0;
+
+}
+
+.filter-group label {
+
+    display: block;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    color: #6d7785;
+
+    margin-bottom: 5px;
+
+    letter-spacing: 0.3px;
+
+}
+
+.filter-group select {
+
+    width: 100%;
+
+    height: 37px;
+
+    padding: 0 14px;
+
+    border-radius: 7px;
+
+    border: 1px solid #dce2e8;
+
+    background: white;
+
+    color: #303b4c;
+
+    font-size: 13px;
+
+    outline: none;
+
+    cursor: pointer;
+
+}
+
+.filter-group select:focus {
+
+    border-color: var(--blue);
+
+}
+
+.filter-group .select-active {
+
+    border: 1.5px solid var(--blue);
+
+    box-shadow:
+        0 0 0 1px rgba(57, 125, 180, 0.08);
+
+    font-weight: 600;
+
+    color: var(--blue-dark);
+
+}
+
+/* ============================================================
+   KPIs
+============================================================ */
+
+.kpi-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr
+        1fr
+        1.12fr;
+
+    gap: 10px;
+
+    padding: 8px 17px 19px;
+
+}
+
+.kpi-card {
+
+    height: 91px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    position: relative;
+
+    overflow: hidden;
+
+    display: flex;
+
+    box-shadow: var(--shadow);
+
+}
+
+.kpi-accent {
+
+    width: 6px;
+
+    height: 61px;
+
+    border-radius: 0 4px 4px 0;
+
+    margin-top: 15px;
+
+    margin-right: 12px;
+
+}
+
+.kpi-accent.blue {
+
+    background: var(--blue);
+
+}
+
+.kpi-accent.green {
+
+    background: var(--green);
+
+}
+
+.kpi-content {
+
+    position: relative;
+
+    flex: 1;
+
+    padding-top: 14px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+.kpi-label {
+
+    color: #6f7a88;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.3px;
+
+    white-space: nowrap;
+
+}
+
+.kpi-value {
+
+    font-size: 29px;
+
+    line-height: 1;
+
+    font-weight: 700;
+
+    color: #202a3a;
+
+    margin-top: 9px;
+
+}
+
+.kpi-value small {
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+.kpi-badge {
+
+    position: absolute;
+
+    right: 12px;
+
+    bottom: 15px;
+
+    padding: 5px 9px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+}
+
+.blue-badge {
+
+    background: var(--blue-light);
+
+    color: var(--blue);
+
+}
+
+.green-badge {
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+}
+
+/* ============================================================
+   TARJETA MARCA
+============================================================ */
+
+.brand-card {
+
+    height: 91px;
+
+    background: var(--blue-dark);
+
+    color: white;
+
+    border-radius: 14px;
+
+    padding: 17px 19px;
+
+    box-shadow: var(--shadow);
+
+}
+
+.brand-label {
+
+    font-size: 11px;
+
+    color: #b7c9dd;
+
+    font-weight: 700;
+
+    letter-spacing: 0.4px;
+
+}
+
+.brand-name {
+
+    font-size: 23px;
+
+    font-weight: 700;
+
+    margin-top: 7px;
+
+    line-height: 1;
+
+}
+
+.brand-lines {
+
+    color: #b7c9dd;
+
+    font-size: 11px;
+
+    margin-top: 2px;
+
+}
+
+/* ============================================================
+   PANELES
+============================================================ */
+
+.charts-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 16px;
+
+    padding: 0 17px 20px;
+
+    align-items: start;
+
+}
+
+.charts-grid > .panel {
+    min-width: 0;
+}
+
+.panel {
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    box-shadow: var(--shadow);
+
+}
+
+.panel-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    padding: 17px 19px 8px;
+
+}
+
+.panel-header h2 {
+
+    margin: 0;
+
+    font-size: 19px;
+
+    font-weight: 700;
+
+    color: #202a3a;
+
+}
+
+.panel-header p {
+
+    margin: 3px 0 0;
+
+    font-size: 11px;
+
+    color: #7b8795;
+
+}
+
+/* ============================================================
+   LEYENDA
+============================================================ */
+
+.legend {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    padding-top: 5px;
+
+}
+
+.legend-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    color: #6f7a88;
+
+    font-size: 10px;
+
+    white-space: nowrap;
+
+}
+
+.legend-line {
+
+    width: 24px;
+
+    height: 4px;
+
+    display: inline-block;
+
+}
+
+.blue-line {
+
+    background: var(--blue);
+
+}
+
+.green-line {
+
+    background: var(--green);
+
+}
+
+/* ============================================================
+   EVOLUCIÓN MENSUAL
+============================================================ */
+
+.evolution-panel {
+
+    height: 250px;
+
+}
+
+.line-chart {
+
+    height: 180px;
+
+    margin: 0 22px;
+
+    position: relative;
+
+    overflow: hidden;
+
+}
+
+.chart-grid-line {
+
+    position: absolute;
+
+    left: 30px;
+
+    right: 5px;
+
+    height: 1px;
+
+    background: #e3e8ed;
+
+}
+
+.line32 {
+    top: 20px;
+}
+
+.line28 {
+    top: 60px;
+}
+
+.line24 {
+    top: 100px;
+}
+
+.line20 {
+    top: 140px;
+}
+
+.y-label {
+
+    position: absolute;
+
+    left: 0;
+
+    color: #7b8795;
+
+    font-size: 9px;
+
+}
+
+.y32 {
+    top: 14px;
+}
+
+.y28 {
+    top: 54px;
+}
+
+.y24 {
+    top: 94px;
+}
+
+.y20 {
+    top: 134px;
+}
+
+.chart-svg {
+
+    position: absolute;
+
+    left: 30px;
+
+    top: 0;
+
+    width: calc(100% - 36px);
+
+    height: 150px;
+
+    overflow: visible;
+
+}
+
+.chart-svg polyline {
+
+    fill: none;
+
+    stroke-width: 3;
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+
+}
+
+.chart-blue {
+
+    stroke: var(--blue);
+
+}
+
+.chart-green {
+
+    stroke: var(--green);
+
+}
+
+.chart-svg circle {
+
+    fill: white;
+
+    stroke: var(--blue);
+
+    stroke-width: 2;
+
+}
+
+.chart-svg .green-point {
+
+    stroke: var(--green);
+
+}
+
+.chart-value {
+
+    position: absolute;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+}
+
+.blue-value {
+
+    right: 5px;
+
+    top: 81px;
+
+    color: var(--blue);
+
+}
+
+.green-value {
+
+    right: 5px;
+
+    top: 53px;
+
+    color: var(--green);
+
+}
+
+.x-labels {
+
+    position: absolute;
+
+    left: 31px;
+
+    right: 5px;
+
+    bottom: 2px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #7b8795;
+
+    font-size: 9px;
+
+}
+
+/* ============================================================
+   MARGEN POR LÍNEA
+============================================================ */
+
+.line-panel {
+
+    min-height: 250px;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+}
+
+
+.brand-pill {
+
+    display: inline-block;
+
+    margin-top: 5px;
+
+    background: var(--blue-dark);
+
+    color: white;
+
+    border-radius: 20px;
+
+    padding: 7px 13px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+}
+
+.bar-chart {
+
+    padding: 3px 20px 10px;
+
+}
+
+.bar-row {
+
+    display: grid;
+
+    grid-template-columns: 135px 1fr;
+
+    align-items: center;
+
+    margin-bottom: 8px;
+
+}
+
+.bar-name {
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    color: #30394a;
+
+}
+
+.bars {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+}
+
+.bar-track {
+
+    height: 8px;
+
+    background: #edf2f6;
+
+    border-radius: 10px;
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+}
+
+.bar {
+
+    height: 6px;
+
+    border-radius: 10px;
+
+}
+
+.blue-bar {
+
+    background: var(--blue);
+
+}
+
+.green-bar {
+
+    background: var(--green);
+
+}
+
+.bar-track span {
+
+    position: absolute;
+
+    right: 6px;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    z-index: 2;
+}
+
+.bar-track {
+    overflow: hidden;
+}
+
+.bar-track:first-child span {
+
+    color: var(--blue);
+
+}
+
+.bar-track:last-child span {
+
+    color: var(--green);
+
+}
+
+/* ============================================================
+   TABLAS
+============================================================ */
+
+.tables-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+
+    padding: 0 17px 20px;
+
+    align-items: start;
+}
+
+
+.table-panel {
+
+    min-height: 320px;
+
+}
+
+.table-container {
+
+    padding: 0 15px 15px;
+
+}
+
+table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+}
+
+thead tr {
+
+    background: #f1f5f8;
+
+}
+
+th {
+
+    padding: 9px 10px;
+
+    text-align: right;
+
+    font-size: 9px;
+
+    color: #718096;
+
+    font-weight: 700;
+
+}
+
+th:first-child {
+
+    text-align: left;
+
+}
+
+td {
+
+    padding: 11px 10px;
+
+    border-bottom: 1px solid #edf0f3;
+
+    text-align: right;
+
+    font-size: 12px;
+
+    color: #3c4655;
+
+}
+
+td:first-child {
+
+    text-align: left;
+
+}
+
+td.strong {
+
+    font-weight: 700;
+
+}
+
+.blue-text {
+
+    color: var(--blue);
+
+    font-weight: 700;
+
+}
+
+.green-text {
+
+    color: var(--green);
+
+    font-weight: 700;
+
+}
+
+tbody tr:last-child td {
+
+    border-bottom: none;
+
+}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+
+.footer {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 0 20px 20px;
+
+    color: #8a95a3;
+
+    font-size: 10px;
+
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1100px) {
+
+    .filters {
+
+        grid-template-columns:
+            repeat(3, 1fr);
+
+    }
+
+    .kpi-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+    .charts-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .evolution-panel,
+    .line-panel {
+
+        height: auto;
+
+        min-height: 250px;
+
+    }
+
+}
+
+@media (max-width: 750px) {
+
+    .header {
+
+        height: auto;
+
+        padding: 15px;
+
+        gap: 15px;
+
+    }
+
+    .header h1 {
+
+        font-size: 23px;
+
+    }
+
+    .header-right {
+
+        display: none;
+
+    }
+
+    .filters {
+
+        grid-template-columns: 1fr;
+
+        padding: 15px;
+
+    }
+
+    .kpi-grid {
+
+        grid-template-columns: 1fr;
+
+        padding: 0 15px 15px;
+
+    }
+
+    .charts-grid {
+
+        padding: 0 15px 15px;
+
+    }
+
+    .tables-grid {
+
+        grid-template-columns: 1fr;
+
+        padding: 0 15px 15px;
+
+    }
+
+    .panel-header {
+
+        flex-direction: column;
+
+        gap: 10px;
+
+    }
+
+    .legend {
+
+        padding-top: 0;
+
+    }
+
+    .bar-row {
+
+        grid-template-columns: 95px 1fr;
+
+    }
+
+    .footer {
+
+        flex-direction: column;
+
+        gap: 5px;
+
+    }
+
+}
+
+
+/* ============================================================
+   CONTRIBUCIÓN A LA UTILIDAD
+============================================================ */
+
+.contribution-panel {
+    height: 250px;
+    overflow: hidden;
+}
+
+
+.donut-container {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 35px;
+
+    padding: 25px 10px;
+
+}
+
+/* ============================================================
+   GRÁFICO DE ANILLO
+============================================================ */
+
+.donut-chart {
+
+    width: 145px;
+
+    height: 145px;
+
+    border-radius: 50%;
+
+    background: conic-gradient(
+
+        #0d5cab 0deg 116.64deg,
+
+        #30638E 116.64deg 214.2deg,
+
+        #4c8fd1 214.2deg 292.68deg,
+
+        #08415C 292.68deg 334.44deg,
+
+        #92BCEA 334.44deg 360deg
+
+    );
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+}
+
+/* Agujero central */
+
+.donut-chart::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 88px;
+
+    height: 88px;
+
+    background: #ffffff;
+
+    border-radius: 50%;
+
+}
+
+/* Texto central */
+
+.donut-center {
+
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+}
+
+
+.donut-center strong {
+
+    font-size: 25px;
+
+    line-height: 1.1;
+
+    color: #123b5d;
+
+}
+
+.donut-center span {
+
+    margin-top: 5px;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    color: #718096;
+
+    letter-spacing: .5px;
+
+}
+
+/* ============================================================
+   LEYENDA DEL ANILLO
+============================================================ */
+
+.donut-legend {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 13px;
+
+    min-width: 170px;
+
+}
+
+.donut-legend-item {
+
+    display: grid;
+
+    grid-template-columns: 10px 1fr auto;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 12px;
+
+}
+
+.legend-dot {
+
+    width: 9px;
+
+    height: 9px;
+
+    border-radius: 50%;
+
+    display: block;
+
+}
+
+.legend-name {
+
+    color: #4a5568;
+
+    font-weight: 500;
+
+}
+
+.donut-legend-item strong {
+
+    color: #123b5d;
+
+    font-size: 12px;
+
+}
+
+/* Colores */
+
+.brand-1 {
+    background: #0d5cab;
+}
+
+.brand-2 {
+    background: #30638E;
+}
+
+.brand-3 {
+    background: #4c8fd1;
+}
+
+.brand-4 {
+    background: #08415C;
+}
+
+.brand-5 {
+    background: #92BCEA;
+}
+
+/* ============================================================
+   PIE DEL PANEL
+============================================================ */
+
+.contribution-footer {
+
+    border-top: 1px solid #edf1f5;
+
+    margin-top: 5px;
+
+    padding: 15px 5px 0;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    font-size: 12px;
+
+    color: #718096;
+
+}
+
+.contribution-footer strong {
+
+    color: #123b5d;
+
+    font-size: 16px;
+
+}

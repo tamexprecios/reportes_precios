@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Margen de utilidad</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dashboard.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="dashboard">
+
+        <header class="header">
+
+            <div class="header-left">
+
+                <img
+                    src="{{ url_for('static', filename='img/TAMEX_LOGO_REPORTES.png') }}"
+                    alt="Logo de TAMEX"
+                    class="company-logo"
+                >
+
+                <div class="header-text">
+
+                    <div class="eyebrow">
+                    DASHBOARD
+                    </div>
+
+                    <h1>
+                        Margen de utilidad
+                    </h1>
+
+                </div>
+
+            </div>
+
+
+        </header>
+
+        <section class="filters">
+
+            <div class="filter-group">
+
+                <label>PERIODO</label>
+
+                <select>
+                    <option>Enero - Agosto 2026</option>
+                    <option>Enero - Julio 2026</option>
+                    <option>Enero - Junio 2026</option>
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>MARCA</label>
+
+                <select class="select-active">
+                    <option>CONDUMEX</option>
+                    <option>KOBREX</option>
+                    <option>CONDULAC</option>
+                    <option>SCHNEIDER</option>
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>LÍNEA</label>
+
+                <select>
+                    <option>Todas las líneas</option>
+                    <option>THW</option>
+                    <option>S8000</option>
+                    <option>ENERGIA AL</option>
+                    <option>ENERGIA CU</option>
+                    <option>NYLON</option>
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>SUCURSAL</label>
+
+                <select>
+                    <option>Todas las sucursales</option>
+                    <option>MATRIZ</option>
+                    <option>MONTERREY</option>
+                    <option>GUADAL</option>
+                    <option>PUEBLA</option>
+                    <option>MARINA</option>
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>ALMACÉN</label>
+
+                <select>
+                    <option>Todos los almacenes</option>
+                    <option>CEDISMX</option>
+                    <option>GUADAL</option>
+                    <option>MONTERREY</option>
+                    <option>MONTERREYB</option>
+                    <option>CEDISVILLA</option>
+                </select>
+
+            </div>
+
+        </section>
+
+        <section class="kpi-grid">
+
+            <!-- KPI 1 · VENTAS -->
+
+            <article class="kpi-card">
+
+                <div class="kpi-accent blue"></div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                    IMP. VENTA
+                    </div>
+
+                    <div class="kpi-value">
+                    $12.8 <small>M</small>
+                    </div>
+
+                    <span class="kpi-badge blue-badge">
+                    +8.2%
+                </span>
+
+                </div>
+
+            </article>
+
+    <!-- KPI 2 · COSTO PROM -->
+
+            <article class="kpi-card">
+
+                <div class="kpi-accent green"></div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        IMP. COSTO PROMEDIO
+                    </div>
+
+                    <div class="kpi-value">
+                        $3.4 <small>M</small>
+                    </div>
+
+                    <span class="kpi-badge green-badge">
+                        +5.4%
+                    </span>
+
+                </div>
+
+            </article>
+
+    <!-- KPI 3 · MARGEN -->
+
+            <article class="kpi-card">
+
+                <div class="kpi-accent blue"></div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                        MARGEN DE UTILIDAD
+                    </div>
+
+                    <div class="kpi-value">
+                        26.5<small>%</small>
+                    </div>
+
+                    <span class="kpi-badge blue-badge">
+                        +1.2 pp
+                    </span>
+
+                </div>
+
+            </article>
+
+
+    <!-- KPI 4 · CONTRIBUCIÓN -->
+
+            <article class="kpi-card">
+
+                <div class="kpi-accent green"></div>
+
+                <div class="kpi-content">
+
+                    <div class="kpi-label">
+                         CONTRIBUCIÓN A LA UTILIDAD
+                    </div>
+
+                    <div class="kpi-value">
+                        32.4<small>%</small>
+                    </div>
+
+                    <span class="kpi-badge green-badge">
+                        CONDUMEX
+                    </span>
+
+                </div>
+
+            </article>
+
+        </section>
+
+        <section class="charts-grid">
+
+
+            <article class="panel evolution-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Evolución mensual
+                        </h2>
+
+                        <p>
+                            CONDUMEX · consolidado de todas sus líneas
+                        </p>
+
+                    </div>
+
+
+                    <div class="legend">
+
+                        <div class="legend-item">
+                            <span class="legend-line blue-line"></span>
+                            Promedio
+                        </div>
+
+                        <div class="legend-item">
+                            <span class="legend-line green-line"></span>
+                            Recuperación
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Gráfica SVG de demostración -->
+
+                <div class="line-chart">
+
+                    <div class="y-label y32">
+                        32%
+                    </div>
+
+                    <div class="y-label y28">
+                        28%
+                    </div>
+
+                    <div class="y-label y24">
+                        24%
+                    </div>
+
+                    <div class="y-label y20">
+                        20%
+                    </div>
+
+                    <div class="chart-grid-line line32"></div>
+                    <div class="chart-grid-line line28"></div>
+                    <div class="chart-grid-line line24"></div>
+                    <div class="chart-grid-line line20"></div>
+
+                    <svg
+                        class="chart-svg"
+                        viewBox="0 0 700 230"
+                        preserveAspectRatio="none"
+                    >
+
+                        <!-- Línea promedio -->
+
+                        <polyline
+                            class="chart-blue"
+                            points="
+                                25,160
+                                115,145
+                                205,150
+                                295,125
+                                385,115
+                                475,105
+                                565,108
+                                655,90
+                            "
+                        />
+
+                        <!-- Línea recuperación -->
+
+                        <polyline
+                            class="chart-green"
+                            points="
+                                25,95
+                                115,93
+                                205,94
+                                295,88
+                                385,75
+                                475,70
+                                565,68
+                                655,62
+                            "
+                        />
+
+                        <!-- Puntos azules -->
+
+                        <circle cx="25" cy="160" r="4"/>
+                        <circle cx="115" cy="145" r="4"/>
+                        <circle cx="205" cy="150" r="4"/>
+                        <circle cx="295" cy="125" r="4"/>
+                        <circle cx="385" cy="115" r="4"/>
+                        <circle cx="475" cy="105" r="4"/>
+                        <circle cx="565" cy="108" r="4"/>
+                        <circle cx="655" cy="90" r="4"/>
+
+
+                        <!-- Puntos verdes -->
+
+                        <circle
+                            class="green-point"
+                            cx="25"
+                            cy="95"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="115"
+                            cy="93"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="205"
+                            cy="94"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="295"
+                            cy="88"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="385"
+                            cy="75"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="475"
+                            cy="70"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="565"
+                            cy="68"
+                            r="4"
+                        />
+
+                        <circle
+                            class="green-point"
+                            cx="655"
+                            cy="62"
+                            r="4"
+                        />
+
+                    </svg>
+
+
+                    <div class="chart-value blue-value">
+                        26.5%
+                    </div>
+
+                    <div class="chart-value green-value">
+                        28.4%
+                    </div>
+
+
+                    <div class="x-labels">
+
+                        <span>Ene</span>
+                        <span>Feb</span>
+                        <span>Mar</span>
+                        <span>Abr</span>
+                        <span>May</span>
+                        <span>Jun</span>
+                        <span>Jul</span>
+                        <span>Ago</span>
+
+                    </div>
+
+                </div>
+
+            </article>
+     
+            <article class="panel contribution-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Contribución a la utilidad
+                        </h2>
+
+                        <p>
+                            Distribución de la utilidad por marca
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="donut-container">
+
+                    <!-- GRÁFICO DE ANILLO -->
+
+                    <div class="donut-chart">
+
+                        <div class="donut-center">
+
+                            <strong>
+                                32.4%
+                            </strong>
+
+                            <span>
+                                CONDUMEX
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <!-- LEYENDA -->
+
+                    <div class="donut-legend">
+
+                        <div class="donut-legend-item">
+
+                            <span class="legend-dot brand-1"></span>
+
+                            <span class="legend-name">
+                                CONDUMEX
+                            </span>
+
+                            <strong>
+                                32.4%
+                            </strong>
+
+                        </div>
+
+                        <div class="donut-legend-item">
+
+                            <span class="legend-dot brand-2"></span>
+
+                            <span class="legend-name">
+                                CONDULAC
+                            </span>
+
+                            <strong>
+                                27.1%
+                            </strong>
+
+                        </div>
+
+
+                        <div class="donut-legend-item">
+
+                            <span class="legend-dot brand-3"></span>
+
+                            <span class="legend-name">
+                                KOBREX
+                            </span>
+
+                            <strong>
+                                21.8%
+                            </strong>
+
+                        </div>
+
+                        <div class="donut-legend-item">
+
+                            <span class="legend-dot brand-4"></span>
+
+                            <span class="legend-name">
+                                SCHNEIDER
+                            </span>
+
+                            <strong>
+                                11.6%
+                            </strong>
+
+                        </div>
+
+
+                        <div class="donut-legend-item">
+
+                            <span class="legend-dot brand-5"></span>
+
+                            <span class="legend-name">
+                                Otras
+                            </span>
+
+                            <strong>
+                                7.1%
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="contribution-footer">
+
+                    <span>
+                        Utilidad total del periodo
+                    </span>
+
+                    <strong>
+                        $10.5 M
+                    </strong>
+
+                </div>
+
+            </article>          
+
+            <article class="panel line-panel">
+
+    <div class="panel-header">
+
+        <div>
+
+            <h2>
+                Margen por línea
+            </h2>
+
+            <div class="brand-pill">
+                MARCA: CONDUMEX
+            </div>
+
+        </div>
+
+        <div class="legend">
+
+            <div class="legend-item">
+                <span class="legend-line blue-line"></span>
+                Costo promedio
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-line green-line"></span>
+                Costo recuperación
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bar-chart">
+
+
+        <!-- AFUMEL -->
+
+        <div class="bar-row">
+
+            <div class="bar-name">
+                THW
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: 82%;"
+                    ></div>
+
+                    <span>
+                        28.3%
+                    </span>
+
+                </div>
+
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar green-bar"
+                        style="width: 87%;"
+                    ></div>
+
+                    <span>
+                        30.1%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- POLANEL -->
+
+        <div class="bar-row">
+
+            <div class="bar-name">
+                S8000
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: 78%;"
+                    ></div>
+
+                    <span>
+                        27.1%
+                    </span>
+
+                </div>
+
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar green-bar"
+                        style="width: 85%;"
+                    ></div>
+
+                    <span>
+                        29.4%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ENERGIA CU -->
+
+        <div class="bar-row">
+
+            <div class="bar-name">
+                ENERGIA/CU
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: 76%;"
+                    ></div>
+
+                    <span>
+                        26.5%
+                    </span>
+
+                </div>
+
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar green-bar"
+                        style="width: 82%;"
+                    ></div>
+
+                    <span>
+                        28.4%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CONTROL -->
+
+        <div class="bar-row">
+
+            <div class="bar-name">
+                ENERGIA/AL
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: 74%;"
+                    ></div>
+
+                    <span>
+                        25.9%
+                    </span>
+
+                </div>
+
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar green-bar"
+                        style="width: 80%;"
+                    ></div>
+
+                    <span>
+                        27.6%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- NYLON -->
+
+        <div class="bar-row">
+
+            <div class="bar-name">
+                NYLON
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: 70%;"
+                    ></div>
+
+                    <span>
+                        24.8%
+                    </span>
+
+                </div>
+
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar green-bar"
+                        style="width: 77%;"
+                    ></div>
+
+                    <span>
+                        26.7%
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</article>
+
+        </section>
+
+        <section class="tables-grid">
+
+            <article class="panel table-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Margen por sucursal
+                        </h2>
+
+                        <p>
+                            Vista independiente del almacén
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>SUCURSAL</th>
+                                <th>PROM.</th>
+                                <th>RECUP.</th>
+                                <th>BRECHA</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td class="strong">MATRIZ</td>
+                                <td class="blue-text">27.1%</td>
+                                <td class="green-text">29.0%</td>
+                                <td class="green-text">+1.9</td>
+                            </tr>
+
+                            <tr>
+                                <td>Guadalajara</td>
+                                <td class="blue-text">26.4%</td>
+                                <td class="green-text">28.1%</td>
+                                <td class="green-text">+1.7</td>
+                            </tr>
+
+                            <tr>
+                                <td>Querétaro</td>
+                                <td class="blue-text">25.9%</td>
+                                <td class="green-text">27.7%</td>
+                                <td class="green-text">+1.8</td>
+                            </tr>
+
+                            <tr>
+                                <td>León</td>
+                                <td class="blue-text">24.8%</td>
+                                <td class="green-text">27.2%</td>
+                                <td class="green-text">+2.4</td>
+                            </tr>
+
+                            <tr>
+                                <td>Monterrey</td>
+                                <td class="blue-text">23.6%</td>
+                                <td class="green-text">26.1%</td>
+                                <td class="green-text">+2.5</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </article>
+
+            <article class="panel table-panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Margen por almacén
+                        </h2>
+
+                        <p>
+                            Vista independiente de la sucursal
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>ALMACÉN</th>
+                                <th>PROM.</th>
+                                <th>RECUP.</th>
+                                <th>BRECHA</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td class="strong">CEDISMX</td>
+                                <td class="blue-text">28.0%</td>
+                                <td class="green-text">29.6%</td>
+                                <td class="green-text">+1.6</td>
+                            </tr>
+
+                            <tr>
+                                <td>GDL-01</td>
+                                <td class="blue-text">26.2%</td>
+                                <td class="green-text">28.0%</td>
+                                <td class="green-text">+1.8</td>
+                            </tr>
+
+                            <tr>
+                                <td>LEO-01</td>
+                                <td class="blue-text">25.5%</td>
+                                <td class="green-text">27.5%</td>
+                                <td class="green-text">+2.0</td>
+                            </tr>
+
+                            <tr>
+                                <td>QRO-01</td>
+                                <td class="blue-text">24.9%</td>
+                                <td class="green-text">27.0%</td>
+                                <td class="green-text">+2.1</td>
+                            </tr>
+
+                            <tr>
+                                <td>MTY-01</td>
+                                <td class="blue-text">23.9%</td>
+                                <td class="green-text">26.4%</td>
+                                <td class="green-text">+2.5</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </article>
+
+            
+    
+
+        </section>
+
+    </div>
+
+</body>
+
+</html>
