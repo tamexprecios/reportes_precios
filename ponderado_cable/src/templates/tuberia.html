@@ -145,28 +145,28 @@ Dashboard Tubería
                 </div>
 
 
-                <!-- ALMACEN -->
+                <!-- Sucursal -->
 
                 <div class="col-md">
 
                     <label class="form-label">
-                        Almacén
+                        Sucursal
                     </label>
 
                     <select
-                        name="almacen"
-                        id="almacen"
+                        name="sucursal"
+                        id="sucursal"
                         class="form-select">
 
                         <option value="">
-                            TODOS
+                            TODAS
                         </option>
 
-                        {% for a in almacenes %}
+                        {% for a in sucursales %}
 
                             <option
                                 value="{{ a }}"
-                                {% if request.form.get('almacen') == a %}
+                                {% if request.form.get('sucursal') == a %}
                                 selected
                                 {% endif %}>
 
@@ -590,7 +590,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const filtros = [
 
         linea,
-        document.getElementById("almacen"),
+        document.getElementById("sucursal"),
         document.getElementById("gerente")
 
     ];

@@ -103,18 +103,18 @@ Dashboard THW
                 <div class="col-md">
 
                     <label class="form-label">
-                        Almacén
+                        Sucursal
                     </label>
 
-                    <select name="almacen"
-                            id="almacen"
+                    <select name="sucursal"
+                            id="sucursal"
                             class="form-select">
 
-                        <option value="">TODOS</option>
+                        <option value="">TODAS</option>
 
-                        {% for a in almacenes %}
+                        {% for a in sucursales %}
                             <option value="{{ a }}"
-                                {% if request.form.get('almacen') == a %}selected{% endif %}>
+                                {% if request.form.get('sucursal') == a %}selected{% endif %}>
                                 {{ a }}
                             </option>
                         {% endfor %}
@@ -369,7 +369,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     const filtros = [
         document.getElementById("marca"),
-        document.getElementById("almacen"),
+        document.getElementById("sucursal"),
         document.getElementById("gerente")
     ];
 
