@@ -57,18 +57,44 @@
                 </select>
 
             </div>
-
-
+            
             <div class="filter-group">
 
                 <label>MARCA</label>
 
-                <select class="select-active">
-                    <option>CONDUMEX</option>
-                    <option>KOBREX</option>
-                    <option>CONDULAC</option>
-                    <option>SCHNEIDER</option>
-                </select>
+                <form method="GET">
+
+                    <select
+                        class="select-active"
+                        name="marca"
+                        onchange="this.form.submit()"
+                    >
+
+                        <option
+                            value="TODAS"
+                            {% if marca_seleccionada == "TODAS" %}
+                                selected
+                            {% endif %}
+                        >
+                            Todas las marcas
+                            </option>
+
+                            {% for marca in marcas %}
+
+                            <option
+                                value="{{ marca }}"
+                                {% if marca == marca_seleccionada %}
+                                    selected
+                                {% endif %}
+                        >
+                                {{ marca }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </form>
 
             </div>
 
@@ -137,12 +163,8 @@
                     </div>
 
                     <div class="kpi-value">
-                    $12.8 <small>M</small>
+                        {{ venta }}
                     </div>
-
-                    <span class="kpi-badge blue-badge">
-                    +8.2%
-                </span>
 
                 </div>
 
@@ -161,12 +183,8 @@
                     </div>
 
                     <div class="kpi-value">
-                        $3.4 <small>M</small>
+                        {{ costo_promedio }}
                     </div>
-
-                    <span class="kpi-badge green-badge">
-                        +5.4%
-                    </span>
 
                 </div>
 
@@ -185,12 +203,8 @@
                     </div>
 
                     <div class="kpi-value">
-                        26.5<small>%</small>
+                        {{ margen_promedio }} 
                     </div>
-
-                    <span class="kpi-badge blue-badge">
-                        +1.2 pp
-                    </span>
 
                 </div>
 
@@ -206,16 +220,12 @@
                 <div class="kpi-content">
 
                     <div class="kpi-label">
-                         CONTRIBUCIÓN A LA UTILIDAD
+                        MARGEN DE UTILIDAD C/PPP
                     </div>
 
                     <div class="kpi-value">
-                        32.4<small>%</small>
+                        {{ margen_ppp }}
                     </div>
-
-                    <span class="kpi-badge green-badge">
-                        CONDUMEX
-                    </span>
 
                 </div>
 
