@@ -1165,13 +1165,13 @@ tbody tr:last-child td {
 
     display: flex;
 
-    align-items: center;
+    align-items: flex-start;
 
     justify-content: center;
 
-    gap: 35px;
+    gap: 15px;
 
-    padding: 25px 10px;
+    padding: 10px 10px;
 
 }
 
@@ -1281,7 +1281,7 @@ tbody tr:last-child td {
 
     flex-direction: column;
 
-    gap: 13px;
+    gap: 1px;
 
     min-width: 170px;
 

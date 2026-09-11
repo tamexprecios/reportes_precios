@@ -270,165 +270,134 @@
                 </div>
 
 
-                <!-- Gráfica SVG de demostración -->
-
                 <div class="line-chart">
 
-                    <div class="y-label y32">
-                        32%
-                    </div>
+                    {% if evolucion_mensual %}
 
-                    <div class="y-label y28">
-                        28%
-                    </div>
+                        {% set max_margen = namespace(valor=0) %}
 
-                    <div class="y-label y24">
-                        24%
-                    </div>
+                        {% for dato in evolucion_mensual %}
 
-                    <div class="y-label y20">
-                        20%
-                    </div>
+                            {% if dato.margen_promedio > max_margen.valor %}
+                                {% set max_margen.valor = dato.margen_promedio %}
+                            {% endif %}
 
-                    <div class="chart-grid-line line32"></div>
-                    <div class="chart-grid-line line28"></div>
-                    <div class="chart-grid-line line24"></div>
-                    <div class="chart-grid-line line20"></div>
+                            {% if dato.margen_ppp > max_margen.valor %}
+                                {% set max_margen.valor = dato.margen_ppp %}
+                            {% endif %}
 
-                    <svg
-                        class="chart-svg"
-                        viewBox="0 0 700 230"
-                        preserveAspectRatio="none"
-                    >
-
-                        <!-- Línea promedio -->
-
-                        <polyline
-                            class="chart-blue"
-                            points="
-                                25,160
-                                115,145
-                                205,150
-                                295,125
-                                385,115
-                                475,105
-                                565,108
-                                655,90
-                            "
-                        />
-
-                        <!-- Línea recuperación -->
-
-                        <polyline
-                            class="chart-green"
-                            points="
-                                25,95
-                                115,93
-                                205,94
-                                295,88
-                                385,75
-                                475,70
-                                565,68
-                                655,62
-                            "
-                        />
-
-                        <!-- Puntos azules -->
-
-                        <circle cx="25" cy="160" r="4"/>
-                        <circle cx="115" cy="145" r="4"/>
-                        <circle cx="205" cy="150" r="4"/>
-                        <circle cx="295" cy="125" r="4"/>
-                        <circle cx="385" cy="115" r="4"/>
-                        <circle cx="475" cy="105" r="4"/>
-                        <circle cx="565" cy="108" r="4"/>
-                        <circle cx="655" cy="90" r="4"/>
+                        {% endfor %}
 
 
-                        <!-- Puntos verdes -->
+                        {% set escala_max = ((max_margen.valor * 100) // 5 + 1) * 5 %}
 
-                        <circle
-                            class="green-point"
-                            cx="25"
-                            cy="95"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="115"
-                            cy="93"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="205"
-                            cy="94"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="295"
-                            cy="88"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="385"
-                            cy="75"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="475"
-                            cy="70"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="565"
-                            cy="68"
-                            r="4"
-                        />
-
-                        <circle
-                            class="green-point"
-                            cx="655"
-                            cy="62"
-                            r="4"
-                        />
-
-                    </svg>
+                        {% if escala_max < 10 %}
+                            {% set escala_max = 10 %}
+                        {% endif %}
 
 
-                    <div class="chart-value blue-value">
-                        26.5%
-                    </div>
+                        <div class="y-label y32">
+                            {{ escala_max }}%
+                        </div>
 
-                    <div class="chart-value green-value">
-                        28.4%
-                    </div>
+                        <div class="y-label y28">
+                            {{ (escala_max * 0.75)|round(0)|int }}%
+                        </div>
+
+                        <div class="y-label y24">
+                            {{ (escala_max * 0.50)|round(0)|int }}%
+                        </div>
+
+                        <div class="y-label y20">
+                            {{ (escala_max * 0.25)|round(0)|int }}%
+                        </div>
+
+                        <div class="chart-grid-line line32"></div>
+                        <div class="chart-grid-line line28"></div>
+                        <div class="chart-grid-line line24"></div>
+                        <div class="chart-grid-line line20"></div>
 
 
-                    <div class="x-labels">
+                         <svg
+                            class="chart-svg"
+                            viewBox="0 0 700 230"
+                            preserveAspectRatio="none"
+                        >
 
-                        <span>Ene</span>
-                        <span>Feb</span>
-                        <span>Mar</span>
-                        <span>Abr</span>
-                        <span>May</span>
-                        <span>Jun</span>
-                        <span>Jul</span>
-                        <span>Ago</span>
+                            <polyline
+                                class="chart-blue"
+                                points="
+                                {% for dato in evolucion_mensual %}
+                                    {{ loop.index0 * 90 + 25 }},
+                                    {{ 180 - ((dato.margen_promedio * 100 / escala_max) * 160) }}
+                                {% endfor %}
+                                "
+                            />
 
-                    </div>
+                            <polyline
+                                class="chart-green"
+                                points="
+                                {% for dato in evolucion_mensual %}
+                                    {{ loop.index0 * 90 + 25 }},
+                                    {{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}
+                                {% endfor %}
+                                "
+                            />
+
+
+                            {% for dato in evolucion_mensual %}
+
+                                <circle
+                                    cx="{{ loop.index0 * 90 + 25 }}"
+                                    cy="{{ 180 - ((dato.margen_promedio * 100 / escala_max) * 160) }}"
+                                    r="4"
+                                />
+
+                                <circle
+                                    class="green-point"
+                                    cx="{{ loop.index0 * 90 + 25 }}"
+                                    cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
+                                    r="4"
+                                />
+
+                            {% endfor %}
+
+                        </svg>
+
+
+                        {% set ultimo = evolucion_mensual[-1] %}
+
+                        <div class="chart-value blue-value">
+                            {{ "%.1f"|format(ultimo.margen_promedio * 100) }}%
+                        </div>
+
+                        <div class="chart-value green-value">
+                            {{ "%.1f"|format(ultimo.margen_ppp * 100) }}%
+                        </div>
+
+
+                        <div class="x-labels">
+
+                            {% for dato in evolucion_mensual %}
+
+                                <span>
+                                    {{ dato.mes }}
+                                </span>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <p>
+                            No hay información disponible para mostrar la evolución mensual.
+                        </p>
+
+                    {% endif %}
 
                 </div>
+
 
             </article>
      
@@ -450,121 +419,162 @@
 
                 </div>
 
-
                 <div class="donut-container">
 
                     <!-- GRÁFICO DE ANILLO -->
 
-                    <div class="donut-chart">
+                    <div
+                        class="donut-chart"
+                        
+                        style="
+                            {% if contribucion_utilidad %}
+
+                                {% set ns = namespace(acumulado=0) %}
+
+                                background: conic-gradient(
+
+                                    {% for dato in contribucion_utilidad %}
+
+                                        {% if loop.index == 1 %}
+                                            #1e3a8a
+                                        {% elif loop.index == 2 %}
+                                            #1d4ed8
+                                        {% elif loop.index == 3 %}
+                                            #2563eb
+                                        {% elif loop.index == 4 %}
+                                            #3b82f6
+                                        {% elif loop.index == 5 %}
+                                            #60a5fa
+                                        {% elif loop.index == 6 %}
+                                            #93c5fd
+                                        {% elif loop.index == 7 %}
+                                            #bfdbfe  
+                                        {% elif loop.index == 8 %}
+                                            #dbeafe
+                                        {% elif loop.index == 9 %}
+                                            #e0f2fe
+                                        {% else %}
+                                            #eff6ff 
+                                        {% endif %}
+
+                                        {{ ns.acumulado * 100 }}%
+
+                                        {% set ns.acumulado = ns.acumulado + dato.contribucion %}
+
+                                        {{ ns.acumulado * 100 }}%
+
+                                        {% if not loop.last %},{% endif %}
+
+                                    {% endfor %}
+
+                                );
+
+                            {% endif %}
+                        "
+
+                    >
 
                         <div class="donut-center">
 
-                            <strong>
-                                32.4%
-                            </strong>
+                            {% if contribucion_utilidad %}
 
-                            <span>
-                                CONDUMEX
-                            </span>
+                                <strong>
+                                    {{ "%.1f"|format(
+                                        contribucion_utilidad[0].contribucion * 100
+                                    ) }}%
+                                </strong>
+
+                                <span>
+                                    {{ contribucion_utilidad[0].marca }}
+                                </span>
+
+                            {% else %}
+
+                                <strong>
+                                    0.0%
+                                </strong>
+
+                                <span>
+                                    SIN DATOS
+                                </span>
+
+                            {% endif %}
 
                         </div>
 
                     </div>
-
+                    
                     <!-- LEYENDA -->
 
                     <div class="donut-legend">
 
-                        <div class="donut-legend-item">
+                        {% for dato in contribucion_utilidad %}
 
-                            <span class="legend-dot brand-1"></span>
+                            <div class="donut-legend-item">
 
-                            <span class="legend-name">
-                                CONDUMEX
-                            </span>
+                                <span
+                                    class="legend-dot
+                                    {% if loop.index == 1 %}
+                                        brand-1
+                                    {% elif loop.index == 2 %}
+                                        brand-2
+                                    {% elif loop.index == 3 %}
+                                        brand-3
+                                    {% elif loop.index == 4 %}
+                                        brand-4
+                                    {% else %}
+                                        brand-5
+                                    {% endif %}
+                                    "
+                                ></span>
 
-                            <strong>
-                                32.4%
-                            </strong>
+                                <span class="legend-name">
+                                    {{ dato.marca }}
+                                </span>
 
-                        </div>
+                                <strong>
+                                    {{ "%.1f"|format(
+                                        dato.contribucion * 100
+                                    ) }}%
+                                </strong>
 
-                        <div class="donut-legend-item">
+                            </div>
 
-                            <span class="legend-dot brand-2"></span>
-
-                            <span class="legend-name">
-                                CONDULAC
-                            </span>
-
-                            <strong>
-                                27.1%
-                            </strong>
-
-                        </div>
-
-
-                        <div class="donut-legend-item">
-
-                            <span class="legend-dot brand-3"></span>
-
-                            <span class="legend-name">
-                                KOBREX
-                            </span>
-
-                            <strong>
-                                21.8%
-                            </strong>
-
-                        </div>
-
-                        <div class="donut-legend-item">
-
-                            <span class="legend-dot brand-4"></span>
-
-                            <span class="legend-name">
-                                SCHNEIDER
-                            </span>
-
-                            <strong>
-                                11.6%
-                            </strong>
-
-                        </div>
-
-
-                        <div class="donut-legend-item">
-
-                            <span class="legend-dot brand-5"></span>
-
-                            <span class="legend-name">
-                                Otras
-                            </span>
-
-                            <strong>
-                                7.1%
-                            </strong>
-
-                        </div>
+                        {% endfor %}
 
                     </div>
 
                 </div>
 
 
-                <div class="contribution-footer">
+                 <div class="contribution-footer">
 
                     <span>
                         Utilidad total del periodo
                     </span>
 
                     <strong>
-                        $10.5 M
+
+                        {% if contribucion_utilidad %}
+
+                            ${{ "{:,.2f}".format(
+                                contribucion_utilidad
+                                | map(attribute="utilidad")
+                                | sum
+                            ) }}
+
+                        {% else %}
+
+                            $0.00
+
+                        {% endif %}
+
                     </strong>
 
                 </div>
 
-            </article>          
+            </article>
+       
 
             <article class="panel line-panel">
 
