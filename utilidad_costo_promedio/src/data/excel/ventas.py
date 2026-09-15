@@ -50,16 +50,18 @@ def leer_archivo_ventas(ruta_archivo):
     """
 
     columnas_necesarias = [
-        "Estatus",
-        "FechaEmision",
-        "Almacen",
-        "Articulo",
-        "Categoria",
-        "Linea",
-        "Sucursal",
-        "SubTotalMN",
-        "ImporteCosto",
+    "Estatus",
+    "FechaEmision",
+    "Almacen",
+    "Articulo",
+    "Categoria",
+    "Linea",
+    "Sucursal",
+    "Sucursal Agente",
+    "SubTotalMN",
+    "ImporteCosto",
     ]
+
 
     return pd.read_excel(
         ruta_archivo,
@@ -146,11 +148,16 @@ def cargar_ventas_2026():
 
     archivos = obtener_archivos_ventas()
 
-    hay_cambios, estado_actual = archivos_ventas_cambiaron(
-        archivos,
-        archivo_control
+    archivo_sucursales = (
+        RUTA_VENTAS / "SUCURSALES REPORTES PYTHON.xlsx"
     )
 
+    archivos_control = archivos + [archivo_sucursales]
+
+    hay_cambios, estado_actual = archivos_ventas_cambiaron(
+        archivos_control,
+        archivo_control
+    )
 
     if archivo_cache.exists() and not hay_cambios:
 
@@ -164,10 +171,103 @@ def cargar_ventas_2026():
             archivo_cache
         )
 
+        # ========================================================
+        # RELACIONAR CATÁLOGO DE SUCURSALES
+        # ========================================================
+
+        sucursales = cargar_sucursales()
+
+        ventas["Sucursal Agente"] = (
+            ventas["Sucursal Agente"]
+            .astype(str)
+            .str.strip()
+        )
+
+        # Si la caché ya contiene columnas del catálogo,
+        # las eliminamos antes de volver a relacionarlas.
+        columnas_catalogo = [
+            "SUCURSAL AGENTE",
+            "NOMBRE",
+            "GERENTE"
+        ]
+
+        ventas = ventas.drop(
+            columns=[
+                columna
+                for columna in columnas_catalogo
+                if columna in ventas.columns
+            ],
+            errors="ignore"
+        )
+
+        ventas["Sucursal Agente"] = (
+            pd.to_numeric(
+                ventas["Sucursal Agente"],
+                errors="coerce"
+            )
+            .astype("Int64")
+            .astype("string")
+            .str.strip()
+        )
+
+        sucursales["SUCURSAL AGENTE"] = (
+            pd.to_numeric(
+                sucursales["SUCURSAL AGENTE"],
+                errors="coerce"
+            )
+            .astype("Int64")
+            .astype("string")
+            .str.strip()
+        )
+
+        ventas = ventas.merge(
+            sucursales[
+                [
+                    "SUCURSAL AGENTE",
+                    "NOMBRE",
+                    "GERENTE"
+                ]
+            ],
+            left_on="Sucursal Agente",
+            right_on="SUCURSAL AGENTE",
+            how="left"
+        )
+
+
+        print("\n" + "=" * 60)
+        print("VALIDACIÓN DE RELACIÓN SUCURSAL")
+        print("=" * 60)
+
+        print("\nCOLUMNAS DESPUÉS DEL MERGE:")
+        print(ventas.columns.tolist())
+
+        print("\nNOMBRES DE SUCURSAL:")
+        print(
+            sorted(
+                ventas["NOMBRE"]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .unique()
+            )
+        )
+
+        print("=" * 60)
+
+
+        # ========================================================
+        # ACTUALIZAR CACHÉ CON LA RELACIÓN DE SUCURSALES
+        # ========================================================
+
+        ventas.to_parquet(
+            archivo_cache,
+            index=False
+        )
+
         fin_cache = time.perf_counter()
 
         print(
-            f"[OK] Caché cargada: "
+            f"[OK] Caché cargada y actualizada: "
             f"{fin_cache - inicio_cache:.2f} segundos"
         )
 
@@ -176,7 +276,8 @@ def cargar_ventas_2026():
         )
 
         return ventas
-   
+
+
     dataframes = []
 
     import time
@@ -261,6 +362,66 @@ def cargar_ventas_2026():
     ventas["ImporteCostoPPP"] = (
     ventas["ImporteCosto"] * (1 - ventas["PPP"])
     )
+    
+    # ============================================================
+    # RELACIONAR CATÁLOGO DE SUCURSALES
+    # ============================================================
+    
+    sucursales = cargar_sucursales()
+
+    ventas["Sucursal Agente"] = (
+        pd.to_numeric(
+            ventas["Sucursal Agente"],
+            errors="coerce"
+        )
+        .astype("Int64")
+        .astype("string")
+        .str.strip()
+    )
+
+    sucursales["SUCURSAL AGENTE"] = (
+        pd.to_numeric(
+            sucursales["SUCURSAL AGENTE"],
+            errors="coerce"
+        )
+        .astype("Int64")
+        .astype("string")
+        .str.strip()
+    )
+
+ 
+    ventas = ventas.merge(
+        sucursales,
+        left_on="Sucursal Agente",
+        right_on="SUCURSAL AGENTE",
+        how="left"
+    )
+
+    print("\nCOLUMNAS DESPUÉS DE RELACIONAR SUCURSALES:")
+    print(ventas.columns.tolist())
+
+    print("\nVALORES DE SUCURSAL AGENTE:")
+    print(
+        ventas["Sucursal Agente"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+    )
+
+
+    print("\nMUESTRA DE RELACIÓN SUCURSAL:")
+    print(
+        ventas[
+            [
+                "Sucursal Agente",
+                "SUCURSAL AGENTE",
+                "NOMBRE",
+                "GERENTE"
+            ]
+        ].head(10).to_string(index=False)
+    )
+
 
     print("\nGuardando caché de ventas...")
 
@@ -303,6 +464,101 @@ def cargar_ventas_2026():
     print("[OK] Control de archivos actualizado")
 
     return ventas
+
+def cargar_sucursales():
+    """
+    Lee el catálogo de sucursales utilizado por el dashboard.
+
+    Relaciona:
+        Ventas["Sucursal Agente"]
+        con
+        Sucursales["SUCURSAL AGENTE"]
+
+    El nombre visible de la sucursal será:
+        Sucursales["NOMBRE"]
+    """
+
+    archivo = RUTA_VENTAS / "SUCURSALES REPORTES PYTHON.xlsx"
+
+    sucursales = pd.read_excel(
+        archivo,
+        sheet_name="Hoja1",
+        usecols=[
+            "SUCURSAL AGENTE",
+            "NOMBRE",
+            "GERENTE"
+        ]
+    )
+
+    # ========================================================
+    # LIMPIEZA DE CAMPOS
+    # ========================================================
+
+    sucursales["SUCURSAL AGENTE"] = (
+        sucursales["SUCURSAL AGENTE"]
+        .astype("string")
+        .str.strip()
+    )
+
+    sucursales["NOMBRE"] = (
+        sucursales["NOMBRE"]
+        .astype("string")
+        .str.strip()
+    )
+
+    sucursales["GERENTE"] = (
+        sucursales["GERENTE"]
+        .astype("string")
+        .str.strip()
+    )
+
+    # ========================================================
+    # ELIMINAR REGISTROS SIN CLAVE DE SUCURSAL
+    # ========================================================
+
+    sucursales = sucursales[
+        sucursales["SUCURSAL AGENTE"].notna()
+        & (sucursales["SUCURSAL AGENTE"] != "")
+    ].copy()
+
+    # ========================================================
+    # EVITAR DUPLICADOS EN LA CLAVE DE RELACIÓN
+    # ========================================================
+
+    sucursales = sucursales.drop_duplicates(
+        subset=["SUCURSAL AGENTE"],
+        keep="first"
+    ).copy()
+
+    # ========================================================
+    # DIAGNÓSTICO
+    # ========================================================
+
+    print("\n" + "=" * 60)
+    print("CATÁLOGO DE SUCURSALES")
+    print("=" * 60)
+
+    print(
+        sucursales[
+            [
+                "SUCURSAL AGENTE",
+                "NOMBRE",
+                "GERENTE"
+            ]
+        ].to_string(index=False)
+    )
+
+    print("\nTOTAL DE SUCURSALES:")
+    print(len(sucursales))
+
+    print("\nTIPO DE CLAVE:")
+    print(sucursales["SUCURSAL AGENTE"].dtype)
+
+    print("=" * 60)
+
+    return sucursales
+
+
 
 def cargar_ppp():
     """

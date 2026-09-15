@@ -13,6 +13,314 @@
     >
 </head>
 
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const donut = document.querySelector(".donut-chart");
+
+    if (!donut) {
+        return;
+    }
+
+    donut.addEventListener("click", function (event) {
+
+        const rect = donut.getBoundingClientRect();
+
+        const centroX = rect.left + rect.width / 2;
+        const centroY = rect.top + rect.height / 2;
+
+        const x = event.clientX - centroX;
+        const y = event.clientY - centroY;
+
+        const distancia = Math.sqrt(
+            x * x + y * y
+        );
+
+        const radioExterior = rect.width / 2;
+        const radioInterior = 44;
+
+        /*
+         * Si el clic está fuera del anillo
+         * o dentro del agujero central,
+         * no hacemos nada.
+         */
+        if (
+            distancia > radioExterior ||
+            distancia < radioInterior
+        ) {
+            return;
+        }
+
+        /*
+         * Convertimos la posición del clic
+         * a grados.
+         *
+         * CSS conic-gradient comienza
+         * en la posición superior.
+         */
+        let grados = Math.atan2(y, x) * 180 / Math.PI;
+
+        grados += 90;
+
+        if (grados < 0) {
+            grados += 360;
+        }
+
+        /*
+         * Las contribuciones vienen desde Flask.
+         */
+        const contribuciones = [
+            {% for dato in contribucion_utilidad %}
+                {
+                    marca: {{ dato.marca|tojson }},
+                    porcentaje: {{ dato.contribucion }}
+                }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        let acumulado = 0;
+
+        for (const dato of contribuciones) {
+
+            acumulado += dato.porcentaje * 360;
+
+            if (grados <= acumulado) {
+
+                window.location.href =
+                    "{{ url_for('dashboard') }}?marca="
+                    + encodeURIComponent(dato.marca);
+
+                return;
+            }
+        }
+
+    });
+
+});
+
+function togglePeriodoMenu() {
+
+    const menu = document.getElementById("periodo-menu");
+
+    if (!menu) {
+        return;
+    }
+
+    menu.classList.toggle("show");
+
+}
+
+function seleccionarTodos(checkbox) {
+
+    const meses = document.querySelectorAll(
+        '#periodo-menu input[name="mes"]'
+    );
+
+    if (checkbox.checked) {
+
+        meses.forEach(function (mes) {
+            mes.checked = false;
+        });
+
+    }
+
+}
+
+function actualizarPeriodo() {
+
+    const todos = document.querySelector(
+        '#periodo-menu input[value="TODOS"]'
+    );
+
+    const meses = document.querySelectorAll(
+        '#periodo-menu input[name="mes"]'
+    );
+
+    const mesesSeleccionados = Array.from(meses)
+        .filter(function (mes) {
+            return mes.checked;
+        });
+
+    if (mesesSeleccionados.length > 0) {
+
+        todos.checked = false;
+
+    } else {
+
+        todos.checked = true;
+
+    }
+
+}
+
+function aplicarPeriodo() {
+
+    const formulario = document.getElementById("periodo-form");
+
+    if (!formulario) {
+        return;
+    }
+
+    const todos = document.querySelector(
+        '#periodo-menu input[value="TODOS"]'
+    );
+
+    const meses = document.querySelectorAll(
+        '#periodo-menu input[name="mes"]'
+    );
+
+    /*
+     * Si está seleccionado "Todos los meses",
+     * enviamos TODOS.
+     */
+    if (todos.checked) {
+
+        const inputTodos = document.createElement("input");
+
+        inputTodos.type = "hidden";
+        inputTodos.name = "mes";
+        inputTodos.value = "TODOS";
+
+        formulario.appendChild(inputTodos);
+
+    }
+
+    /*
+     * En caso contrario, los meses seleccionados
+     * ya pertenecen al formulario porque tienen
+     * name="mes".
+     */
+
+    formulario.submit();
+
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const puntos = document.querySelectorAll(".chart-point");
+    const tooltip = document.getElementById("chart-tooltip");
+
+    if (puntos.length === 0 || !tooltip) {
+        return;
+    }
+
+    const tooltipLabel =
+        tooltip.querySelector(".tooltip-label");
+
+    const tooltipValue =
+        tooltip.querySelector(".tooltip-value");
+
+
+    puntos.forEach(function (punto) {
+
+        punto.addEventListener("mouseenter", function () {
+
+            tooltipLabel.textContent =
+                punto.dataset.label;
+
+            tooltipValue.textContent =
+                "Margen con PP: "
+                + punto.dataset.value
+                + "%";
+
+            tooltip.style.display = "block";
+
+        });
+
+
+        punto.addEventListener("mousemove", function (event) {
+
+            const contenedor =
+                tooltip.parentElement;
+
+            const rect =
+                contenedor.getBoundingClientRect();
+
+            const x =
+                event.clientX - rect.left;
+
+            const y =
+                event.clientY - rect.top;
+
+            let posicionX = x;
+
+            const tooltipWidth = tooltip.offsetWidth;
+
+            if (posicionX < tooltipWidth / 2) {
+
+                posicionX = tooltipWidth / 2;
+
+            }
+
+            if (posicionX > rect.width - tooltipWidth / 2) {
+
+                posicionX = rect.width - tooltipWidth / 2;
+
+            }
+
+            /* =====================================================
+            POSICIÓN VERTICAL
+            ===================================================== */
+
+            const tooltipHeight = tooltip.offsetHeight;
+
+            const espacioArriba = y;
+
+            const espacioAbajo = rect.height - y;
+
+            /*
+            * Si hay espacio suficiente arriba,
+            * mostramos el tooltip arriba del punto.
+            */
+
+            if (
+                espacioArriba >=
+                tooltipHeight + 10
+            ) {
+
+                posicionY =
+                    y - tooltipHeight - 10;
+
+            }
+
+            /*
+            * Si no hay espacio arriba,
+            * lo mostramos debajo.
+            */
+
+            else {
+
+                posicionY =
+                    y + 15;
+
+            }
+
+
+            tooltip.style.left =
+                posicionX + "px";
+
+            tooltip.style.top =
+                posicionY + "px";
+
+       
+        });
+
+
+        punto.addEventListener("mouseleave", function () {
+
+            tooltip.style.display = "none";
+
+        });
+
+    });
+
+});
+
+
+</script>
+
+
 <body>
 
     <div class="dashboard">
@@ -50,13 +358,109 @@
 
                 <label>PERIODO</label>
 
-                <select>
-                    <option>Enero - Agosto 2026</option>
-                    <option>Enero - Julio 2026</option>
-                    <option>Enero - Junio 2026</option>
-                </select>
+                <form method="GET" id="periodo-form">
+
+                    {% if marca_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="marca"
+                            value="{{ marca_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <div class="multi-select">
+
+                        <button
+                            type="button"
+                            class="multi-select-button"
+                            onclick="togglePeriodoMenu()"
+                            id="periodo-button"
+                        >
+                            <span id="periodo-text">
+                                {% if "TODOS" in meses_seleccionados %}
+                                    Todos los meses
+                                {% elif meses_seleccionados|length == 1 %}
+                                    {% for numero, nombre in meses %}
+                                        {% if numero|string == meses_seleccionados[0] %}
+                                            {{ nombre }} 2026
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    {{ meses_seleccionados|length }} meses seleccionados
+                                {% endif %}
+                            </span>
+
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+
+
+                        <div
+                            class="multi-select-menu"
+                            id="periodo-menu"
+                        >
+
+                            <label class="multi-option todos-option">
+
+                                <input
+                                    type="checkbox"
+                                    value="TODOS"
+                                    {% if "TODOS" in meses_seleccionados %}
+                                        checked
+                                    {% endif %}
+                                    onchange="seleccionarTodos(this)"
+                                >
+
+                                <span>Todos los meses</span>
+
+                            </label>
+
+
+                            <div class="multi-divider"></div>
+
+
+                            {% for numero, nombre in meses %}
+
+                                <label class="multi-option">
+
+                                    <input
+                                        type="checkbox"
+                                        name="mes"
+                                        value="{{ numero }}"
+                                        {% if numero|string in meses_seleccionados %}
+                                            checked
+                                        {% endif %}
+                                        onchange="actualizarPeriodo()"
+                                    >
+
+                                    <span>
+                                        {{ nombre }} 2026
+                                    </span>
+
+                                </label>
+
+                            {% endfor %}
+
+
+                            <div class="multi-select-footer">
+
+                                <button
+                                    type="button"
+                                    onclick="aplicarPeriodo()"
+                                    class="apply-filter-button"
+                                >
+                                    Aplicar
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </form>
 
             </div>
+
             
             <div class="filter-group">
 
@@ -103,30 +507,126 @@
 
                 <label>LÍNEA</label>
 
-                <select>
-                    <option>Todas las líneas</option>
-                    <option>THW</option>
-                    <option>S8000</option>
-                    <option>ENERGIA AL</option>
-                    <option>ENERGIA CU</option>
-                    <option>NYLON</option>
-                </select>
+                <form method="GET" id="linea-form">
+
+                    <!-- Conservamos la marca seleccionada -->
+                    {% if marca_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="marca"
+                            value="{{ marca_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos los meses seleccionados -->
+                    {% for mes in meses_seleccionados %}
+                        <input
+                            type="hidden"
+                            name="mes"
+                            value="{{ mes }}"
+                        > 
+                    {% endfor %}
+
+                    <select
+                        name="linea"
+                        class="select-active"
+                        onchange="this.form.submit()"
+                    >
+
+                        <option
+                            value="TODAS"
+                            {% if linea_seleccionada == "TODAS" %}
+                                selected
+                            {% endif %}
+                        >
+                            Todas las líneas
+                        </option>
+
+                        {% for linea in lineas %}
+
+                            <option
+                                value="{{ linea }}"
+                                {% if linea == linea_seleccionada %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ linea }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </form>
 
             </div>
+
 
 
             <div class="filter-group">
 
                 <label>SUCURSAL</label>
 
-                <select>
-                    <option>Todas las sucursales</option>
-                    <option>MATRIZ</option>
-                    <option>MONTERREY</option>
-                    <option>GUADAL</option>
-                    <option>PUEBLA</option>
-                    <option>MARINA</option>
-                </select>
+                <form method="GET" id="sucursal-form">
+
+                    <!-- Conservamos la marca -->
+                    {% if marca_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="marca"
+                            value="{{ marca_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos la línea -->
+                    {% if linea_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="linea"
+                            value="{{ linea_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos los meses -->
+                    {% for mes in meses_seleccionados %}
+                        <input
+                            type="hidden"
+                            name="mes"
+                            value="{{ mes }}"
+                        >
+                    {% endfor %}
+
+                        <select
+                            name="sucursal"
+                            class="select-active"
+                            onchange="this.form.submit()"
+                        >
+
+                        <option
+                            value="TODAS"
+                            {% if sucursal_seleccionada == "TODAS" %}
+                                selected
+                            {% endif %}
+                        >
+                            Todas las sucursales
+                        </option>
+
+                        {% for sucursal in sucursales %}
+
+                            <option
+                                value="{{ sucursal }}"
+                                {% if sucursal == sucursal_seleccionada %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ sucursal }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </form>
 
             </div>
 
@@ -135,16 +635,78 @@
 
                 <label>ALMACÉN</label>
 
-                <select>
-                    <option>Todos los almacenes</option>
-                    <option>CEDISMX</option>
-                    <option>GUADAL</option>
-                    <option>MONTERREY</option>
-                    <option>MONTERREYB</option>
-                    <option>CEDISVILLA</option>
-                </select>
+                <form method="GET" id="almacen-form">
+
+                    <!-- Conservamos la marca -->
+                    {% if marca_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="marca"
+                            value="{{ marca_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos la línea -->
+                    {% if linea_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="linea"
+                            value="{{ linea_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos la sucursal -->
+                    {% if sucursal_seleccionada != "TODAS" %}
+                        <input
+                            type="hidden"
+                            name="sucursal"
+                            value="{{ sucursal_seleccionada }}"
+                        >
+                    {% endif %}
+
+                    <!-- Conservamos los meses -->
+                    {% for mes in meses_seleccionados %}
+                        <input
+                            type="hidden"
+                            name="mes"
+                            value="{{ mes }}"
+                        >
+                    {% endfor %}
+
+                    <select
+                        name="almacen"
+                        class="select-active"
+                        onchange="this.form.submit()"
+                    >
+
+                        <option
+                            value="TODOS"
+                            {% if almacen_seleccionado == "TODOS" %}
+                                selected
+                            {% endif %}
+                        >
+                            Todos los almacenes
+                        </option>
+
+                        {% for almacen in almacenes %}
+
+                            <option
+                                value="{{ almacen }}"
+                                {% if almacen == almacen_seleccionado %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ almacen }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </form>
 
             </div>
+
 
         </section>
 
@@ -247,7 +809,7 @@
                         </h2>
 
                         <p>
-                            CONDUMEX · consolidado de todas sus líneas
+                            {{ marca_seleccionada }} · consolidado de todas sus líneas
                         </p>
 
                     </div>
@@ -257,15 +819,11 @@
 
                         <div class="legend-item">
                             <span class="legend-line blue-line"></span>
-                            Promedio
-                        </div>
-
-                        <div class="legend-item">
-                            <span class="legend-line green-line"></span>
-                            Recuperación
+                            Margen con PP
                         </div>
 
                     </div>
+
 
                 </div>
 
@@ -277,10 +835,6 @@
                         {% set max_margen = namespace(valor=0) %}
 
                         {% for dato in evolucion_mensual %}
-
-                            {% if dato.margen_promedio > max_margen.valor %}
-                                {% set max_margen.valor = dato.margen_promedio %}
-                            {% endif %}
 
                             {% if dato.margen_ppp > max_margen.valor %}
                                 {% set max_margen.valor = dato.margen_ppp %}
@@ -328,17 +882,7 @@
                                 class="chart-blue"
                                 points="
                                 {% for dato in evolucion_mensual %}
-                                    {{ loop.index0 * 90 + 25 }},
-                                    {{ 180 - ((dato.margen_promedio * 100 / escala_max) * 160) }}
-                                {% endfor %}
-                                "
-                            />
-
-                            <polyline
-                                class="chart-green"
-                                points="
-                                {% for dato in evolucion_mensual %}
-                                    {{ loop.index0 * 90 + 25 }},
+                                    {{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }},
                                     {{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}
                                 {% endfor %}
                                 "
@@ -348,31 +892,25 @@
                             {% for dato in evolucion_mensual %}
 
                                 <circle
-                                    cx="{{ loop.index0 * 90 + 25 }}"
-                                    cy="{{ 180 - ((dato.margen_promedio * 100 / escala_max) * 160) }}"
-                                    r="4"
-                                />
-
-                                <circle
-                                    class="green-point"
-                                    cx="{{ loop.index0 * 90 + 25 }}"
+                                    class="chart-point"
+                                    cx="{{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }}"
                                     cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
                                     r="4"
+                                    data-label="{{ dato.mes }}"
+                                    data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
                                 />
+
 
                             {% endfor %}
 
                         </svg>
 
+                        <div id="chart-tooltip" class="chart-tooltip">
 
-                        {% set ultimo = evolucion_mensual[-1] %}
+                            <div class="tooltip-label"></div>
 
-                        <div class="chart-value blue-value">
-                            {{ "%.1f"|format(ultimo.margen_promedio * 100) }}%
-                        </div>
+                            <div class="tooltip-value"></div>
 
-                        <div class="chart-value green-value">
-                            {{ "%.1f"|format(ultimo.margen_ppp * 100) }}%
                         </div>
 
 
@@ -485,8 +1023,9 @@
                                 </strong>
 
                                 <span>
-                                    {{ contribucion_utilidad[0].marca }}
+                                    {{ marca_seleccionada }}
                                 </span>
+
 
                             {% else %}
 
@@ -510,7 +1049,10 @@
 
                         {% for dato in contribucion_utilidad %}
 
-                            <div class="donut-legend-item">
+                            <a
+                                href="{{ url_for('dashboard', marca=dato.marca) }}"
+                                class="donut-legend-item"
+                            >
 
                                 <span
                                     class="legend-dot
@@ -538,7 +1080,7 @@
                                     ) }}%
                                 </strong>
 
-                            </div>
+                            </a>
 
                         {% endfor %}
 
@@ -587,7 +1129,7 @@
             </h2>
 
             <div class="brand-pill">
-                MARCA: CONDUMEX
+                MARCA: {{ marca_seleccionada }}
             </div>
 
         </div>
@@ -596,234 +1138,50 @@
 
             <div class="legend-item">
                 <span class="legend-line blue-line"></span>
-                Costo promedio
-            </div>
-
-            <div class="legend-item">
-                <span class="legend-line green-line"></span>
-                Costo recuperación
+                Costo promedio con PP
             </div>
 
         </div>
+
 
     </div>
 
 
     <div class="bar-chart">
 
+        {% for dato in margen_por_linea %}
 
-        <!-- AFUMEL -->
+            <div class="bar-row">
 
-        <div class="bar-row">
-
-            <div class="bar-name">
-                THW
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: 82%;"
-                    ></div>
-
-                    <span>
-                        28.3%
-                    </span>
-
+                <div class="bar-name">
+                    {{ dato.linea }}
                 </div>
 
+                <div class="bars">
 
-                <div class="bar-track">
+                    <div class="bar-track">
 
-                    <div
-                        class="bar green-bar"
-                        style="width: 87%;"
-                    ></div>
+                        <div
+                            class="bar blue-bar"
+                            style="width: {{ dato.margen_promedio * 100 }}%;"
+                        ></div>
 
-                    <span>
-                        30.1%
+                    </div>
+
+                    <span class="bar-value">
+                        {{ "%.1f"|format(dato.margen_promedio * 100) }}%
                     </span>
+
 
                 </div>
 
             </div>
 
-        </div>
-
-
-        <!-- POLANEL -->
-
-        <div class="bar-row">
-
-            <div class="bar-name">
-                S8000
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: 78%;"
-                    ></div>
-
-                    <span>
-                        27.1%
-                    </span>
-
-                </div>
-
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar green-bar"
-                        style="width: 85%;"
-                    ></div>
-
-                    <span>
-                        29.4%
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ENERGIA CU -->
-
-        <div class="bar-row">
-
-            <div class="bar-name">
-                ENERGIA/CU
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: 76%;"
-                    ></div>
-
-                    <span>
-                        26.5%
-                    </span>
-
-                </div>
-
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar green-bar"
-                        style="width: 82%;"
-                    ></div>
-
-                    <span>
-                        28.4%
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- CONTROL -->
-
-        <div class="bar-row">
-
-            <div class="bar-name">
-                ENERGIA/AL
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: 74%;"
-                    ></div>
-
-                    <span>
-                        25.9%
-                    </span>
-
-                </div>
-
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar green-bar"
-                        style="width: 80%;"
-                    ></div>
-
-                    <span>
-                        27.6%
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- NYLON -->
-
-        <div class="bar-row">
-
-            <div class="bar-name">
-                NYLON
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: 70%;"
-                    ></div>
-
-                    <span>
-                        24.8%
-                    </span>
-
-                </div>
-
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar green-bar"
-                        style="width: 77%;"
-                    ></div>
-
-                    <span>
-                        26.7%
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
+        {% endfor %}
 
 
     </div>
-
+       
 </article>
 
         </section>
@@ -851,16 +1209,18 @@
 
                 <div class="table-container">
 
-                    <table>
+                   <table>
 
                         <thead>
 
                             <tr>
-
                                 <th>SUCURSAL</th>
-                                <th>PROM.</th>
-                                <th>RECUP.</th>
-                                <th>BRECHA</th>
+                                <th>IMP. VENTA</th>
+                                <th>IMP. COSTO</th>
+                                <th>IMP. COSTO CON PP</th>
+                                <th>MARGEN SIN PP</th>
+                                <th>MARGEN CON PP</th>
+                                <th>% DE PARTICIPACIÓN</th>
 
                             </tr>
 
@@ -868,44 +1228,46 @@
 
                         <tbody>
 
-                            <tr>
-                                <td class="strong">MATRIZ</td>
-                                <td class="blue-text">27.1%</td>
-                                <td class="green-text">29.0%</td>
-                                <td class="green-text">+1.9</td>
-                            </tr>
+                            {% for dato in margen_por_sucursal %}
 
-                            <tr>
-                                <td>Guadalajara</td>
-                                <td class="blue-text">26.4%</td>
-                                <td class="green-text">28.1%</td>
-                                <td class="green-text">+1.7</td>
-                            </tr>
+                                <tr>
 
-                            <tr>
-                                <td>Querétaro</td>
-                                <td class="blue-text">25.9%</td>
-                                <td class="green-text">27.7%</td>
-                                <td class="green-text">+1.8</td>
-                            </tr>
+                                    <td class="strong">
+                                        {{ dato.sucursal }}
+                                    </td>
 
-                            <tr>
-                                <td>León</td>
-                                <td class="blue-text">24.8%</td>
-                                <td class="green-text">27.2%</td>
-                                <td class="green-text">+2.4</td>
-                            </tr>
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_venta) }}
+                                    </td>
 
-                            <tr>
-                                <td>Monterrey</td>
-                                <td class="blue-text">23.6%</td>
-                                <td class="green-text">26.1%</td>
-                                <td class="green-text">+2.5</td>
-                            </tr>
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo) }}
+                                    </td>
+
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo_pp) }}
+                                    </td>
+
+                                    <td class="blue-text">
+                                        {{ "%.1f"|format(dato.margen_sin_pp * 100) }}%
+                                    </td>
+
+                                    <td class="green-text">
+                                        {{ "%.1f"|format(dato.margen_con_pp * 100) }}%
+                                    </td>
+
+                                    <td>
+                                        {{ "%.1f"|format(dato.participacion * 100) }}%
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
 
                         </tbody>
 
                     </table>
+
 
                 </div>
 
@@ -936,64 +1298,65 @@
                         <thead>
 
                             <tr>
-
                                 <th>ALMACÉN</th>
-                                <th>PROM.</th>
-                                <th>RECUP.</th>
-                                <th>BRECHA</th>
-
+                                <th>IMP. VENTA</th>
+                                <th>IMP. COSTO</th>
+                                <th>IMP. COSTO CON PP</th>
+                                <th>MARGEN SIN PP</th>
+                                <th>MARGEN CON PP</th>
+                                <th>% DE PARTICIPACIÓN</th>
                             </tr>
 
                         </thead>
 
                         <tbody>
 
-                            <tr>
-                                <td class="strong">CEDISMX</td>
-                                <td class="blue-text">28.0%</td>
-                                <td class="green-text">29.6%</td>
-                                <td class="green-text">+1.6</td>
-                            </tr>
+                            {% for dato in margen_por_almacen %}
 
-                            <tr>
-                                <td>GDL-01</td>
-                                <td class="blue-text">26.2%</td>
-                                <td class="green-text">28.0%</td>
-                                <td class="green-text">+1.8</td>
-                            </tr>
+                                <tr>
 
-                            <tr>
-                                <td>LEO-01</td>
-                                <td class="blue-text">25.5%</td>
-                                <td class="green-text">27.5%</td>
-                                <td class="green-text">+2.0</td>
-                            </tr>
+                                    <td class="strong">
+                                        {{ dato.almacen }}
+                                    </td>
 
-                            <tr>
-                                <td>QRO-01</td>
-                                <td class="blue-text">24.9%</td>
-                                <td class="green-text">27.0%</td>
-                                <td class="green-text">+2.1</td>
-                            </tr>
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_venta) }}
+                                    </td>
 
-                            <tr>
-                                <td>MTY-01</td>
-                                <td class="blue-text">23.9%</td>
-                                <td class="green-text">26.4%</td>
-                                <td class="green-text">+2.5</td>
-                            </tr>
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo) }}
+                                    </td>
+
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo_pp) }}
+                                    </td>
+
+                                    <td class="blue-text">
+                                        {{ "%.1f"|format(dato.margen_sin_pp * 100) }}%
+                                    </td>
+
+                                    <td class="green-text">
+                                        {{ "%.1f"|format(dato.margen_con_pp * 100) }}%
+                                    </td>
+
+                                    <td>
+                                         {{ "%.1f"|format(dato.participacion * 100) }}%
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
 
                         </tbody>
 
                     </table>
+
 
                 </div>
 
             </article>
 
             
-    
-
         </section>
 
     </div>
