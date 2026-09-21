@@ -233,28 +233,6 @@ def cargar_ventas_2026():
             how="left"
         )
 
-
-        print("\n" + "=" * 60)
-        print("VALIDACIÓN DE RELACIÓN SUCURSAL")
-        print("=" * 60)
-
-        print("\nCOLUMNAS DESPUÉS DEL MERGE:")
-        print(ventas.columns.tolist())
-
-        print("\nNOMBRES DE SUCURSAL:")
-        print(
-            sorted(
-                ventas["NOMBRE"]
-                .dropna()
-                .astype(str)
-                .str.strip()
-                .unique()
-            )
-        )
-
-        print("=" * 60)
-
-
         # ========================================================
         # ACTUALIZAR CACHÉ CON LA RELACIÓN DE SUCURSALES
         # ========================================================
@@ -397,32 +375,6 @@ def cargar_ventas_2026():
         how="left"
     )
 
-    print("\nCOLUMNAS DESPUÉS DE RELACIONAR SUCURSALES:")
-    print(ventas.columns.tolist())
-
-    print("\nVALORES DE SUCURSAL AGENTE:")
-    print(
-        ventas["Sucursal Agente"]
-        .dropna()
-        .astype(str)
-        .str.strip()
-        .unique()
-    )
-
-
-    print("\nMUESTRA DE RELACIÓN SUCURSAL:")
-    print(
-        ventas[
-            [
-                "Sucursal Agente",
-                "SUCURSAL AGENTE",
-                "NOMBRE",
-                "GERENTE"
-            ]
-        ].head(10).to_string(index=False)
-    )
-
-
     print("\nGuardando caché de ventas...")
 
     inicio_cache = time.perf_counter() 
@@ -529,32 +481,6 @@ def cargar_sucursales():
         subset=["SUCURSAL AGENTE"],
         keep="first"
     ).copy()
-
-    # ========================================================
-    # DIAGNÓSTICO
-    # ========================================================
-
-    print("\n" + "=" * 60)
-    print("CATÁLOGO DE SUCURSALES")
-    print("=" * 60)
-
-    print(
-        sucursales[
-            [
-                "SUCURSAL AGENTE",
-                "NOMBRE",
-                "GERENTE"
-            ]
-        ].to_string(index=False)
-    )
-
-    print("\nTOTAL DE SUCURSALES:")
-    print(len(sucursales))
-
-    print("\nTIPO DE CLAVE:")
-    print(sucursales["SUCURSAL AGENTE"].dtype)
-
-    print("=" * 60)
 
     return sucursales
 

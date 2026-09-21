@@ -10,11 +10,9 @@ from src.calculos.margen import (
     calcular_margen_por_almacen
 )
 
-
 app = Flask(__name__)
 
 print("========== APP.PY ACTUALIZADO ==========")
-
 
 # ============================================================
 # CARGA DE DATOS
@@ -31,20 +29,6 @@ print("=" * 60)
 inicio_ventas = time.perf_counter()
 
 df_ventas = cargar_ventas_2026()
-
-print("\nMESES DISPONIBLES:")
-
-print(
-    pd.to_datetime(
-        df_ventas["FechaEmision"],
-        errors="coerce"
-    )
-    .dt.month
-    .dropna()
-    .astype(int)
-    .unique()
-)
-
 
 fin_ventas = time.perf_counter()
 
@@ -87,7 +71,6 @@ margen_por_linea = calcular_margen_por_linea(
     df_ventas
 )
 
-
 fin_contribucion = time.perf_counter()
 
 print(
@@ -107,12 +90,6 @@ print(
     f"[OK] Cálculo margen por línea: "
     f"{fin_lineas - inicio_lineas:.2f} segundos"
 )
-
-print("\nEVOLUCIÓN MENSUAL:")
-print(evolucion_mensual)
-
-print("\nCONTRIBUCIÓN A LA UTILIDAD:")
-print(contribucion_utilidad)
 
 fin_app = time.perf_counter()
 
@@ -146,12 +123,6 @@ sucursales = sorted(
     .str.strip()
     .unique()
 )
-
-print("\n========================================")
-print("SUCURSALES DISPONIBLES PARA EL FILTRO")
-print("========================================")
-print(sucursales)
-print("========================================")
 
 almacenes = sorted(
     df_ventas["Almacen"]
@@ -376,7 +347,6 @@ def dashboard():
         df_filtrado
     )
 
-
     # ========================================================
     # EVOLUCIÓN MENSUAL / DIARIA
     # ========================================================
@@ -397,14 +367,6 @@ def dashboard():
             df_filtrado,
             modo="mes"
         )
-
-    print("\n========================================")
-    print("DATOS DE EVOLUCIÓN MENSUAL")
-    print("========================================")
-    print(evolucion_mensual_filtrada)
-    print("TOTAL DE PUNTOS:", len(evolucion_mensual_filtrada))
-    print("========================================")
-
 
     contribucion_utilidad_filtrada = calcular_contribucion_utilidad(
         df_filtrado
@@ -459,6 +421,20 @@ def dashboard():
             )
         ].copy()
 
+    # --------------------------------------------------------
+    # FILTRO SUCURSAL
+    # --------------------------------------------------------
+
+    if sucursal_seleccionada != "TODAS":
+
+        df_tabla_sucursal = df_tabla_sucursal[
+            df_tabla_sucursal["NOMBRE"]
+            .astype(str)
+            .str.strip()
+            == sucursal_seleccionada
+        ].copy()
+
+
     # ========================================================
     # DATAFRAME PARA TABLA POR ALMACÉN
     # ========================================================
@@ -506,6 +482,19 @@ def dashboard():
             fechas_tabla_almacen.dt.month.isin(
                 meses_numericos
             )
+        ].copy()
+
+    # --------------------------------------------------------
+    # FILTRO ALMACÉN
+    # --------------------------------------------------------
+
+    if almacen_seleccionado != "TODOS":
+
+        df_tabla_almacen = df_tabla_almacen[
+            df_tabla_almacen["Almacen"]
+            .astype(str)
+            .str.strip()
+            == almacen_seleccionado
         ].copy()
 
     # ========================================================

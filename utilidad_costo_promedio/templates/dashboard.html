@@ -40,26 +40,49 @@ document.addEventListener("DOMContentLoaded", function () {
         const radioExterior = rect.width / 2;
         const radioInterior = 44;
 
-        /*
-         * Si el clic está fuera del anillo
-         * o dentro del agujero central,
-         * no hacemos nada.
-         */
-        if (
-            distancia > radioExterior ||
-            distancia < radioInterior
-        ) {
+
+        /* =====================================================
+           CONSTRUIR URL CONSERVANDO LOS FILTROS ACTUALES
+        ===================================================== */
+
+        const parametros = new URLSearchParams(
+            window.location.search
+        );
+
+
+        /* =====================================================
+           CLIC EN EL CENTRO DEL ANILLO
+           → MOSTRAR TODAS LAS MARCAS
+        ===================================================== */
+
+        if (distancia < radioInterior) {
+
+            parametros.set("marca", "TODAS");
+
+            window.location.href =
+                "{{ url_for('dashboard') }}"
+                + "?"
+                + parametros.toString();
+
             return;
         }
 
-        /*
-         * Convertimos la posición del clic
-         * a grados.
-         *
-         * CSS conic-gradient comienza
-         * en la posición superior.
-         */
-        let grados = Math.atan2(y, x) * 180 / Math.PI;
+
+        /* =====================================================
+           CLIC FUERA DEL ANILLO
+        ===================================================== */
+
+        if (distancia > radioExterior) {
+            return;
+        }
+
+
+        /* =====================================================
+           DETERMINAR LA SECCIÓN CLICKEADA
+        ===================================================== */
+
+        let grados =
+            Math.atan2(y, x) * 180 / Math.PI;
 
         grados += 90;
 
@@ -67,9 +90,11 @@ document.addEventListener("DOMContentLoaded", function () {
             grados += 360;
         }
 
-        /*
-         * Las contribuciones vienen desde Flask.
-         */
+
+        /* =====================================================
+           CONTRIBUCIONES
+        ===================================================== */
+
         const contribuciones = [
             {% for dato in contribucion_utilidad %}
                 {
@@ -79,6 +104,7 @@ document.addEventListener("DOMContentLoaded", function () {
             {% endfor %}
         ];
 
+
         let acumulado = 0;
 
         for (const dato of contribuciones) {
@@ -87,9 +113,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (grados <= acumulado) {
 
+                parametros.set(
+                    "marca",
+                    dato.marca
+                );
+
                 window.location.href =
-                    "{{ url_for('dashboard') }}?marca="
-                    + encodeURIComponent(dato.marca);
+                    "{{ url_for('dashboard') }}"
+                    + "?"
+                    + parametros.toString();
 
                 return;
             }
@@ -98,6 +130,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+function seleccionarMarca(event, marca) {
+
+    event.preventDefault();
+
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    parametros.set("marca", marca);
+
+    window.location.href =
+        "{{ url_for('dashboard') }}"
+        + "?"
+        + parametros.toString();
+
+}
+
 
 function togglePeriodoMenu() {
 
@@ -468,6 +518,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 <form method="GET">
 
+                    {% for mes in meses_seleccionados %}
+                    <input
+                        type="hidden"
+                        name="mes"
+                        value="{{ mes }}"
+                    >
+                    {% endfor %}
+
                     <select
                         class="select-active"
                         name="marca"
@@ -797,7 +855,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         <section class="charts-grid">
 
-
             <article class="panel evolution-panel">
 
                 <div class="panel-header">
@@ -824,9 +881,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     </div>
 
-
                 </div>
-
 
                 <div class="line-chart">
 
@@ -841,7 +896,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             {% endif %}
 
                         {% endfor %}
-
 
                         {% set escala_max = ((max_margen.valor * 100) // 5 + 1) * 5 %}
 
@@ -871,37 +925,53 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div class="chart-grid-line line24"></div>
                         <div class="chart-grid-line line20"></div>
 
-
-                         <svg
+                        <svg
                             class="chart-svg"
                             viewBox="0 0 700 230"
                             preserveAspectRatio="none"
                         >
 
-                            <polyline
-                                class="chart-blue"
-                                points="
+                            {% if evolucion_mensual|length == 1 %}
+
                                 {% for dato in evolucion_mensual %}
-                                    {{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }},
-                                    {{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}
+
+                                    <circle
+                                        class="chart-point"
+                                        cx="350"
+                                        cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
+                                        r="4"
+                                        data-label="{{ dato.mes }}"
+                                        data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
+                                    />
+
                                 {% endfor %}
-                                "
-                            />
 
+                            {% else %}
 
-                            {% for dato in evolucion_mensual %}
-
-                                <circle
-                                    class="chart-point"
-                                    cx="{{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }}"
-                                    cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
-                                    r="4"
-                                    data-label="{{ dato.mes }}"
-                                    data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
+                                <polyline
+                                    class="chart-blue"
+                                    points="
+                                    {% for dato in evolucion_mensual %}
+                                        {{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }},
+                                        {{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}
+                                    {% endfor %}
+                                    "
                                 />
 
+                                {% for dato in evolucion_mensual %}
 
-                            {% endfor %}
+                                    <circle
+                                        class="chart-point"
+                                        cx="{{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }}"
+                                        cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
+                                        r="4"
+                                        data-label="{{ dato.mes }}"
+                                        data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
+                                    />
+
+                                {% endfor %}
+
+                            {% endif %}
 
                         </svg>
 
@@ -935,7 +1005,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     {% endif %}
 
                 </div>
-
 
             </article>
      
@@ -1011,7 +1080,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         "
 
                     >
-
                         <div class="donut-center">
 
                             {% if contribucion_utilidad %}
@@ -1050,8 +1118,10 @@ document.addEventListener("DOMContentLoaded", function () {
                         {% for dato in contribucion_utilidad %}
 
                             <a
-                                href="{{ url_for('dashboard', marca=dato.marca) }}"
+                                href="#"
                                 class="donut-legend-item"
+                                data-marca="{{ dato.marca }}"
+                                onclick="seleccionarMarca(event, this.dataset.marca)"
                             >
 
                                 <span
@@ -1128,8 +1198,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 Margen por línea
             </h2>
 
-            <div class="brand-pill">
-                MARCA: {{ marca_seleccionada }}
+            <div class="line-filter-actions">
+
+                <div class="brand-pill">
+                    MARCA: {{ marca_seleccionada }}
+                </div>
+
+                {% if linea_seleccionada != "TODAS" %}
+
+                    <a
+                        href="{{ url_for(
+                            'dashboard',
+                            marca=marca_seleccionada,
+                            linea='TODAS',
+                            mes=meses_seleccionados
+                        ) }}"
+                        class="all-lines-link"
+                    >
+                        Ver todas las líneas
+                    </a>
+
+                {% endif %}
+
             </div>
 
         </div>
@@ -1143,7 +1233,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         </div>
 
-
     </div>
 
 
@@ -1151,34 +1240,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
         {% for dato in margen_por_linea %}
 
-            <div class="bar-row">
+        <a
+            href="{{ url_for(
+                'dashboard',
+                marca=marca_seleccionada,
+                linea=dato.linea
+            ) }}"
+            class="bar-row bar-line-link"
+        >
 
-                <div class="bar-name">
-                    {{ dato.linea }}
+            <div class="bar-name">
+                {{ dato.linea }}
+            </div>
+
+            <div class="bars">
+
+                <div class="bar-track">
+
+                    <div
+                        class="bar blue-bar"
+                        style="width: {{ dato.margen_promedio * 100 }}%;"
+                    ></div>
+
                 </div>
 
-                <div class="bars">
-
-                    <div class="bar-track">
-
-                        <div
-                            class="bar blue-bar"
-                            style="width: {{ dato.margen_promedio * 100 }}%;"
-                        ></div>
-
-                    </div>
-
-                    <span class="bar-value">
-                        {{ "%.1f"|format(dato.margen_promedio * 100) }}%
-                    </span>
-
-
-                </div>
+                <span class="bar-value">
+                    {{ "%.1f"|format(dato.margen_promedio * 100) }}%
+                </span>
 
             </div>
 
-        {% endfor %}
+        </a>
 
+    {% endfor %}
 
     </div>
        
@@ -1267,7 +1361,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         </tbody>
 
                     </table>
-
 
                 </div>
 

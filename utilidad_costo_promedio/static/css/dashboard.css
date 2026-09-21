@@ -429,7 +429,6 @@ body {
 
 }
 
-
 /* ============================================================
    KPIs
 ============================================================ */
@@ -1016,7 +1015,6 @@ body {
     padding-right: 8px;
 }
 
-
 .brand-pill {
 
     display: inline-block;
@@ -1037,6 +1035,39 @@ body {
 
 }
 
+.line-filter-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+}
+
+.all-lines-link {
+
+    margin-top: 5px;
+
+    color: var(--blue);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+}
+
+.all-lines-link:hover {
+
+    text-decoration: underline;
+
+}
+
+
 .bar-chart {
 
     padding: 3px 20px 10px;
@@ -1055,6 +1086,25 @@ body {
 
 }
 
+.bar-line-link {
+
+    text-decoration: none;
+
+    color: inherit;
+
+    cursor: pointer;
+
+}
+
+.bar-line-link:hover {
+
+    background: #f5f8fc;
+
+    border-radius: 6px;
+
+}
+
+
 .bar-name {
 
     font-size: 12px;
@@ -1072,7 +1122,6 @@ body {
     text-overflow: ellipsis;
 
 }
-
 
 .bars {
 
@@ -1102,7 +1151,6 @@ body {
 
 }
 
-
 .bar {
 
     height: 6px;
@@ -1116,7 +1164,6 @@ body {
     background: var(--blue);
 
 }
-
 
 .bar-value {
 
@@ -1145,7 +1192,6 @@ body {
     z-index: 2;
 
 }
-
 
 .bar-track:first-child span {
 
@@ -1466,7 +1512,6 @@ tbody tr:last-child td {
 
 }
 
-
 /* Agujero central */
 .donut-chart::before {
 
@@ -1501,7 +1546,18 @@ tbody tr:last-child td {
 
     text-align: center;
 
+    cursor: pointer;
+
 }
+
+.donut-center:hover strong {
+    color: var(--blue);
+}
+
+.donut-center:hover span {
+    color: var(--blue);
+}
+
 
 .donut-center strong {
 
