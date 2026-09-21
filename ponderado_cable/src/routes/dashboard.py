@@ -539,7 +539,6 @@ def desnudo():
         sucursal = request.form.get("sucursal") or None
         gerente = request.form.get("gerente") or None
 
-
         parametros = {
             "fecha_inicio": fecha_inicio,
             "fecha_fin": fecha_fin,
@@ -1096,7 +1095,6 @@ def serie8000():
             if pb == 0: return 0
             return 1 - (importe / pb)
 
-
         descuento_mc = calcular_descuento(df_mc)
 
         descuento_xhhw = calcular_descuento(df_xhhw)
@@ -1337,8 +1335,6 @@ def xlp():
                 df["NombreSucursalA"] == sucursal
             ]
 
-
-
         if df is None or df.empty:
 
             mensaje = (
@@ -1404,7 +1400,6 @@ def xlp():
 
         else:
             descuento_ponderado = 0
-
 
         # TOTALES #
         cantidad_total = (
