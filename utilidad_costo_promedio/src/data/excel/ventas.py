@@ -484,8 +484,6 @@ def cargar_sucursales():
 
     return sucursales
 
-
-
 def cargar_ppp():
     """
     Lee el archivo PPP y devuelve únicamente

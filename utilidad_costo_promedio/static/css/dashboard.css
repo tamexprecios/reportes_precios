@@ -294,7 +294,6 @@ body {
     color: var(--blue);
 }
 
-
 /* MENÚ DESPLEGABLE */
 
 .multi-select-menu {
@@ -320,13 +319,11 @@ body {
     z-index: 1000;
 }
 
-
 /* CUANDO EL MENÚ ESTÁ ABIERTO */
 
 .multi-select-menu.show {
     display: block;
 }
-
 
 /* OPCIONES */
 
@@ -356,7 +353,6 @@ body {
 
 }
 
-
 /* CHECKBOX */
 
 .multi-option input[type="checkbox"] {
@@ -372,7 +368,6 @@ body {
 
 }
 
-
 /* SEPARADOR */
 
 .multi-divider {
@@ -385,7 +380,6 @@ body {
 
 }
 
-
 /* PIE DEL MENÚ */
 
 .multi-select-footer {
@@ -397,7 +391,6 @@ body {
     margin-top: 4px;
 
 }
-
 
 /* BOTÓN APLICAR */
 
@@ -1104,7 +1097,6 @@ body {
 
 }
 
-
 .bar-name {
 
     font-size: 12px;
@@ -1451,7 +1443,6 @@ tbody tr:last-child td {
 
 }
 
-
 /* ============================================================
    CONTRIBUCIÓN A LA UTILIDAD
 ============================================================ */
@@ -1459,7 +1450,6 @@ tbody tr:last-child td {
     height: 250px;
     overflow: hidden;
 }
-
 
 .donut-container {
 
@@ -1473,192 +1463,6 @@ tbody tr:last-child td {
 
     padding: 10px 10px;
 
-}
-
-/* ============================================================
-   GRÁFICO DE ANILLO
-============================================================ */
-.donut-chart {
-
-    width: 145px;
-
-    height: 145px;
-
-    border-radius: 50%;
-
-    background: conic-gradient(
-
-        #0d5cab 0deg 116.64deg,
-
-        #30638E 116.64deg 214.2deg,
-
-        #4c8fd1 214.2deg 292.68deg,
-
-        #08415C 292.68deg 334.44deg,
-
-        #92BCEA 334.44deg 360deg
-
-    );
-
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    flex-shrink: 0;
-
-}
-
-/* Agujero central */
-.donut-chart::before {
-
-    content: "";
-
-    position: absolute;
-
-    width: 88px;
-
-    height: 88px;
-
-    background: #ffffff;
-
-    border-radius: 50%;
-
-}
-
-/* Texto central */
-.donut-center {
-
-    position: relative;
-
-    z-index: 2;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    text-align: center;
-
-    cursor: pointer;
-
-}
-
-.donut-center:hover strong {
-    color: var(--blue);
-}
-
-.donut-center:hover span {
-    color: var(--blue);
-}
-
-
-.donut-center strong {
-
-    font-size: 25px;
-
-    line-height: 1.1;
-
-    color: #123b5d;
-
-}
-
-.donut-center span {
-
-    margin-top: 5px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    color: #718096;
-
-    letter-spacing: .5px;
-
-}
-
-/* ============================================================
-   LEYENDA DEL ANILLO
-============================================================ */
-.donut-legend {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 1px;
-
-    min-width: 170px;
-
-}
-
-.donut-legend-item {
-
-    display: grid;
-
-    grid-template-columns: 10px 1fr auto;
-
-    align-items: center;
-
-    gap: 8px;
-
-    font-size: 12px;
-
-}
-
-.legend-dot {
-
-    width: 9px;
-
-    height: 9px;
-
-    border-radius: 50%;
-
-    display: block;
-
-}
-
-.legend-name {
-
-    color: #4a5568;
-
-    font-weight: 500;
-
-}
-
-.donut-legend-item strong {
-
-    color: #123b5d;
-
-    font-size: 12px;
-
-}
-
-/* Colores */
-.brand-1 {
-    background: #0d5cab;
-}
-
-.brand-2 {
-    background: #30638E;
-}
-
-.brand-3 {
-    background: #4c8fd1;
-}
-
-.brand-4 {
-    background: #08415C;
-}
-
-.brand-5 {
-    background: #92BCEA;
 }
 
 /* ============================================================
@@ -1690,4 +1494,139 @@ tbody tr:last-child td {
 
     font-size: 16px;
 
+}
+
+/* ============================================================
+   MARGEN DE UTILIDAD POR MARCA
+============================================================ */
+
+.brand-margin-chart {
+
+    padding: 4px 20px 8px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-height: 170px;
+
+    overflow-y: auto;
+
+}
+
+.brand-margin-row {
+
+    display: grid;
+
+    grid-template-columns: 105px 1fr;
+
+    align-items: center;
+
+    gap: 10px;
+
+    text-decoration: none;
+
+    color: inherit;
+
+    cursor: pointer;
+
+    padding: 2px 0;
+
+}
+
+.brand-margin-row:hover {
+
+    background: #f5f8fc;
+
+    border-radius: 5px;
+
+}
+
+.brand-margin-name {
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    color: #30394a;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+.brand-margin-bars {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    min-width: 0;
+
+}
+
+.brand-margin-track {
+
+    flex: 1;
+
+    height: 9px;
+
+    background: #edf2f6;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+}
+
+.brand-margin-bar {
+
+    height: 100%;
+
+    background: var(--blue);
+
+    border-radius: 10px;
+
+    min-width: 2px;
+
+}
+
+.brand-margin-value {
+
+    width: 42px;
+
+    text-align: right;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    color: var(--blue);
+
+    white-space: nowrap;
+
+}
+
+/* Alinea el texto a la izquierda y la flecha a la derecha */
+.multi-select-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* Regla para mostrar el menú desplegable cuando se active */
+.multi-select-menu.show {
+    display: block !important;
+}
+
+.chart-point {
+    cursor: pointer;
 }

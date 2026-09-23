@@ -1,375 +1,220 @@
-{<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Margen de utilidad</title>
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/dashboard.css') }}"
-    >
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+// Exponemos las funciones al scope global para que los eventos inline (onclick/onchange) las reconozcan
+function seleccionarMarca(event, marca) {
+    event.preventDefault();
+    const parametros = new URLSearchParams(window.location.search);
 
-    const donut = document.querySelector(".donut-chart");
-
-    if (!donut) {
-        return;
+    // Si hace clic en 'TODAS' o en la marca que ya está seleccionada, quitamos el filtro
+    if (marca === 'TODAS' || parametros.get('marca') === marca) {
+        parametros.delete('marca');
+    } else {
+        parametros.set('marca', marca);
     }
 
-    donut.addEventListener("click", function (event) {
-
-        const rect = donut.getBoundingClientRect();
-
-        const centroX = rect.left + rect.width / 2;
-        const centroY = rect.top + rect.height / 2;
-
-        const x = event.clientX - centroX;
-        const y = event.clientY - centroY;
-
-        const distancia = Math.sqrt(
-            x * x + y * y
-        );
-
-        const radioExterior = rect.width / 2;
-        const radioInterior = 44;
-
-
-        /* =====================================================
-           CONSTRUIR URL CONSERVANDO LOS FILTROS ACTUALES
-        ===================================================== */
-
-        const parametros = new URLSearchParams(
-            window.location.search
-        );
-
-
-        /* =====================================================
-           CLIC EN EL CENTRO DEL ANILLO
-           → MOSTRAR TODAS LAS MARCAS
-        ===================================================== */
-
-        if (distancia < radioInterior) {
-
-            parametros.set("marca", "TODAS");
-
-            window.location.href =
-                "{{ url_for('dashboard') }}"
-                + "?"
-                + parametros.toString();
-
-            return;
-        }
-
-
-        /* =====================================================
-           CLIC FUERA DEL ANILLO
-        ===================================================== */
-
-        if (distancia > radioExterior) {
-            return;
-        }
-
-
-        /* =====================================================
-           DETERMINAR LA SECCIÓN CLICKEADA
-        ===================================================== */
-
-        let grados =
-            Math.atan2(y, x) * 180 / Math.PI;
-
-        grados += 90;
-
-        if (grados < 0) {
-            grados += 360;
-        }
-
-
-        /* =====================================================
-           CONTRIBUCIONES
-        ===================================================== */
-
-        const contribuciones = [
-            {% for dato in contribucion_utilidad %}
-                {
-                    marca: {{ dato.marca|tojson }},
-                    porcentaje: {{ dato.contribucion }}
-                }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
-
-
-        let acumulado = 0;
-
-        for (const dato of contribuciones) {
-
-            acumulado += dato.porcentaje * 360;
-
-            if (grados <= acumulado) {
-
-                parametros.set(
-                    "marca",
-                    dato.marca
-                );
-
-                window.location.href =
-                    "{{ url_for('dashboard') }}"
-                    + "?"
-                    + parametros.toString();
-
-                return;
-            }
-        }
-
-    });
-
-});
-
-function seleccionarMarca(event, marca) {
-
-    event.preventDefault();
-
-    const parametros = new URLSearchParams(
-        window.location.search
-    );
-
-    parametros.set("marca", marca);
-
-    window.location.href =
-        "{{ url_for('dashboard') }}"
-        + "?"
-        + parametros.toString();
-
+    // Generamos la nueva URL limpia o con el nuevo parámetro
+    const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
+    window.location.href = nuevaUrl;
 }
 
+// =========================================================================
+// FUNCIÓN PARA SELECCIONAR MES AL HACER CLIC EN UN PUNTO DE LA GRÁFICA
+// =========================================================================
+function seleccionarMes(event, mesClickeado) {
+    if (event) event.preventDefault();
 
-function togglePeriodoMenu() {
+    // Diccionario para convertir el nombre del mes a número
+    const mesesMap = {
+        'enero': '1', 'febrero': '2', 'marzo': '3', 'abril': '4',
+        'mayo': '5', 'junio': '6', 'julio': '7', 'agosto': '8',
+        'septiembre': '9', 'octubre': '10', 'noviembre': '11', 'diciembre': '12',
+        'ene': '1', 'feb': '2', 'mar': '3', 'abr': '4',
+        'may': '5', 'jun': '6', 'jul': '7', 'ago': '8',
+        'sep': '9', 'oct': '10', 'nov': '11', 'dic': '12'
+    };
 
-    const menu = document.getElementById("periodo-menu");
-
-    if (!menu) {
-        return;
+    // Si nos mandan un texto como "Septiembre", lo convertimos a "9"
+    let mesValor = String(mesClickeado).trim().toLowerCase();
+    if (mesesMap[mesValor]) {
+        mesValor = mesesMap[mesValor];
+    } else {
+        mesValor = String(mesClickeado); // Si ya era un número, lo conserva
     }
 
-    menu.classList.toggle("show");
+    // Leemos los parámetros actuales de la URL (marca, línea, etc.)
+    const parametros = new URLSearchParams(window.location.search);
+    const mesActual = parametros.get('mes');
 
+    // Si hace clic sobre el mes que ya estaba seleccionado, quitamos el filtro (Toggle)
+    if (mesActual === mesValor) {
+        parametros.delete('mes');
+    } else {
+        // Asignamos el nuevo mes guardando los demás filtros (marca, línea, etc.)
+        parametros.set('mes', mesValor);
+    }
+
+    // Generamos la nueva URL manteniendo todos los filtros activos
+    const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
+    window.location.href = nuevaUrl;
+}
+
+function togglePeriodoMenu() {
+    const menu = document.getElementById("periodo-menu");
+    if (menu) {
+        menu.classList.toggle("show");
+    }
 }
 
 function seleccionarTodos(checkbox) {
-
-    const meses = document.querySelectorAll(
-        '#periodo-menu input[name="mes"]'
-    );
-
+    const meses = document.querySelectorAll('#periodo-menu input[name="mes"]');
     if (checkbox.checked) {
-
         meses.forEach(function (mes) {
             mes.checked = false;
         });
-
     }
-
 }
 
 function actualizarPeriodo() {
+    const todos = document.querySelector('#periodo-menu input[value="TODOS"]');
+    const meses = document.querySelectorAll('#periodo-menu input[name="mes"]');
+    const hayMesesSeleccionados = Array.from(meses).some(function (mes) {
+        return mes.checked;
+    });
 
-    const todos = document.querySelector(
-        '#periodo-menu input[value="TODOS"]'
-    );
-
-    const meses = document.querySelectorAll(
-        '#periodo-menu input[name="mes"]'
-    );
-
-    const mesesSeleccionados = Array.from(meses)
-        .filter(function (mes) {
-            return mes.checked;
-        });
-
-    if (mesesSeleccionados.length > 0) {
-
-        todos.checked = false;
-
-    } else {
-
-        todos.checked = true;
-
+    if (todos) {
+        todos.checked = !hayMesesSeleccionados;
     }
-
 }
 
 function aplicarPeriodo() {
-
     const formulario = document.getElementById("periodo-form");
+    if (!formulario) return;
 
-    if (!formulario) {
-        return;
-    }
+    const todos = document.querySelector('#periodo-menu input[value="TODOS"]');
+    const meses = document.querySelectorAll('#periodo-menu input[name="mes"]');
 
-    const todos = document.querySelector(
-        '#periodo-menu input[value="TODOS"]'
-    );
+    // Eliminamos selecciones previas dentro del form antes de enviar
+    formulario.querySelectorAll('input[name="mes"]').forEach(function (input) {
+        input.remove();
+    });
 
-    const meses = document.querySelectorAll(
-        '#periodo-menu input[name="mes"]'
-    );
-
-    /*
-     * Si está seleccionado "Todos los meses",
-     * enviamos TODOS.
-     */
-    if (todos.checked) {
-
+    if (todos && todos.checked) {
         const inputTodos = document.createElement("input");
-
         inputTodos.type = "hidden";
         inputTodos.name = "mes";
         inputTodos.value = "TODOS";
-
         formulario.appendChild(inputTodos);
-
+    } else {
+        meses.forEach(function (mes) {
+            if (mes.checked) {
+                const inputMes = document.createElement("input");
+                inputMes.type = "hidden";
+                inputMes.name = "mes";
+                inputMes.value = mes.value;
+                formulario.appendChild(inputMes);
+            }
+        });
     }
 
-    /*
-     * En caso contrario, los meses seleccionados
-     * ya pertenecen al formulario porque tienen
-     * name="mes".
-     */
-
     formulario.submit();
-
 }
 
+// Inicializaciones cuando el DOM está listo
 document.addEventListener("DOMContentLoaded", function () {
 
+    // Cerrar menú de periodo al hacer clic afuera
+    document.addEventListener("click", function (event) {
+        const menu = document.getElementById("periodo-menu");
+        const boton = document.getElementById("periodo-button");
+
+        if (!menu || !boton) return;
+
+        if (!menu.contains(event.target) && !boton.contains(event.target)) {
+            menu.classList.remove("show");
+        }
+    });
+
+    // Configuración del Tooltip y Evento de Clic de la gráfica
     const puntos = document.querySelectorAll(".chart-point");
     const tooltip = document.getElementById("chart-tooltip");
 
-    if (puntos.length === 0 || !tooltip) {
-        return;
+    if (puntos.length > 0) {
+        const tooltipLabel = tooltip ? tooltip.querySelector(".tooltip-label") : null;
+        const tooltipValue = tooltip ? tooltip.querySelector(".tooltip-value") : null;
+
+        puntos.forEach(function (punto) {
+            
+            // Eventos del Tooltip (Hover original sin modificaciones)
+            if (tooltip && tooltipLabel && tooltipValue) {
+                punto.addEventListener("mouseenter", function () {
+                    tooltipLabel.textContent = punto.dataset.label;
+                    tooltipValue.textContent = "Margen con PP: " + punto.dataset.value + "%";
+                    tooltip.style.display = "block";
+                });
+
+                punto.addEventListener("mousemove", function (event) {
+                    const contenedor = tooltip.parentElement;
+                    const rect = contenedor.getBoundingClientRect();
+
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+
+                    let posicionX = x;
+                    const tooltipWidth = tooltip.offsetWidth;
+
+                    if (posicionX < tooltipWidth / 2) posicionX = tooltipWidth / 2;
+                    if (posicionX > rect.width - tooltipWidth / 2) posicionX = rect.width - tooltipWidth / 2;
+
+                    const tooltipHeight = tooltip.offsetHeight;
+                    const espacioArriba = y;
+                    
+                    let posicionY; 
+
+                    if (espacioArriba >= tooltipHeight + 10) {
+                        posicionY = y - tooltipHeight - 10;
+                    } else {
+                        posicionY = y + 15;
+                    }
+
+                    tooltip.style.left = posicionX + "px";
+                    tooltip.style.top = posicionY + "px";
+                });
+
+                punto.addEventListener("mouseleave", function () {
+                    tooltip.style.display = "none";
+                });
+            }
+
+            // EVENTO DE CLIC (Única adición limpia para activar la interacción)
+            punto.addEventListener("click", function (event) {
+                const mesNombre = punto.dataset.label;
+                if (mesNombre) {
+                    seleccionarMes(event, mesNombre);
+                }
+            });
+
+        });
     }
-
-    const tooltipLabel =
-        tooltip.querySelector(".tooltip-label");
-
-    const tooltipValue =
-        tooltip.querySelector(".tooltip-value");
-
-
-    puntos.forEach(function (punto) {
-
-        punto.addEventListener("mouseenter", function () {
-
-            tooltipLabel.textContent =
-                punto.dataset.label;
-
-            tooltipValue.textContent =
-                "Margen con PP: "
-                + punto.dataset.value
-                + "%";
-
-            tooltip.style.display = "block";
-
-        });
-
-
-        punto.addEventListener("mousemove", function (event) {
-
-            const contenedor =
-                tooltip.parentElement;
-
-            const rect =
-                contenedor.getBoundingClientRect();
-
-            const x =
-                event.clientX - rect.left;
-
-            const y =
-                event.clientY - rect.top;
-
-            let posicionX = x;
-
-            const tooltipWidth = tooltip.offsetWidth;
-
-            if (posicionX < tooltipWidth / 2) {
-
-                posicionX = tooltipWidth / 2;
-
-            }
-
-            if (posicionX > rect.width - tooltipWidth / 2) {
-
-                posicionX = rect.width - tooltipWidth / 2;
-
-            }
-
-            /* =====================================================
-            POSICIÓN VERTICAL
-            ===================================================== */
-
-            const tooltipHeight = tooltip.offsetHeight;
-
-            const espacioArriba = y;
-
-            const espacioAbajo = rect.height - y;
-
-            /*
-            * Si hay espacio suficiente arriba,
-            * mostramos el tooltip arriba del punto.
-            */
-
-            if (
-                espacioArriba >=
-                tooltipHeight + 10
-            ) {
-
-                posicionY =
-                    y - tooltipHeight - 10;
-
-            }
-
-            /*
-            * Si no hay espacio arriba,
-            * lo mostramos debajo.
-            */
-
-            else {
-
-                posicionY =
-                    y + 15;
-
-            }
-
-
-            tooltip.style.left =
-                posicionX + "px";
-
-            tooltip.style.top =
-                posicionY + "px";
-
-       
-        });
-
-
-        punto.addEventListener("mouseleave", function () {
-
-            tooltip.style.display = "none";
-
-        });
-
-    });
-
 });
-
 
 </script>
 
+<body>
+    <!-- Tu contenido HTML del dashboard aquí... -->
+</body>
+</html>
+
+</script>
 
 <body>
 
@@ -399,7 +244,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </div>
 
-
         </header>
 
         <section class="filters">
@@ -420,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     <div class="multi-select">
 
-                        <button
+                         <button
                             type="button"
                             class="multi-select-button"
                             onclick="togglePeriodoMenu()"
@@ -531,7 +375,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         name="marca"
                         onchange="this.form.submit()"
                     >
-
                         <option
                             value="TODAS"
                             {% if marca_seleccionada == "TODAS" %}
@@ -559,7 +402,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </form>
 
             </div>
-
 
             <div class="filter-group">
 
@@ -618,8 +460,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </form>
 
             </div>
-
-
 
             <div class="filter-group">
 
@@ -865,12 +705,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             Evolución mensual
                         </h2>
 
-                        <p>
-                            {{ marca_seleccionada }} · consolidado de todas sus líneas
-                        </p>
-
                     </div>
-
 
                     <div class="legend">
 
@@ -884,6 +719,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
 
                 <div class="line-chart">
+
+                    <a href="#" 
+                        class="brand-margin-row {% if not request.args.get('mes') or request.args.get('mes') == 'TODOS' %}active{% endif %}" 
+                        onclick="seleccionarMes(event, 'TODOS')">
+                        <div class="brand-margin-name" style="font-weight: bold;">
+                            Todos los meses
+                        </div>
+                    </a>
 
                     {% if evolucion_mensual %}
 
@@ -939,9 +782,11 @@ document.addEventListener("DOMContentLoaded", function () {
                                         class="chart-point"
                                         cx="350"
                                         cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
-                                        r="4"
+                                        r="6"
+                                        style="cursor: pointer;"
                                         data-label="{{ dato.mes }}"
                                         data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
+                                        onclick="seleccionarMes(event, '{{ dato.mes }}')"
                                     />
 
                                 {% endfor %}
@@ -964,9 +809,11 @@ document.addEventListener("DOMContentLoaded", function () {
                                         class="chart-point"
                                         cx="{{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }}"
                                         cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
-                                        r="4"
+                                        r="6"
+                                        style="cursor: pointer;"
                                         data-label="{{ dato.mes }}"
                                         data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
+                                        onclick="seleccionarMes(event, '{{ dato.mes }}')"
                                     />
 
                                 {% endfor %}
@@ -1015,179 +862,79 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div>
 
                         <h2>
-                            Contribución a la utilidad
+                            Margen de utilidad por marca
                         </h2>
-
-                        <p>
-                            Distribución de la utilidad por marca
-                        </p>
 
                     </div>
 
-                </div>
+                    <div class="legend">
 
-                <div class="donut-container">
-
-                    <!-- GRÁFICO DE ANILLO -->
-
-                    <div
-                        class="donut-chart"
-                        
-                        style="
-                            {% if contribucion_utilidad %}
-
-                                {% set ns = namespace(acumulado=0) %}
-
-                                background: conic-gradient(
-
-                                    {% for dato in contribucion_utilidad %}
-
-                                        {% if loop.index == 1 %}
-                                            #1e3a8a
-                                        {% elif loop.index == 2 %}
-                                            #1d4ed8
-                                        {% elif loop.index == 3 %}
-                                            #2563eb
-                                        {% elif loop.index == 4 %}
-                                            #3b82f6
-                                        {% elif loop.index == 5 %}
-                                            #60a5fa
-                                        {% elif loop.index == 6 %}
-                                            #93c5fd
-                                        {% elif loop.index == 7 %}
-                                            #bfdbfe  
-                                        {% elif loop.index == 8 %}
-                                            #dbeafe
-                                        {% elif loop.index == 9 %}
-                                            #e0f2fe
-                                        {% else %}
-                                            #eff6ff 
-                                        {% endif %}
-
-                                        {{ ns.acumulado * 100 }}%
-
-                                        {% set ns.acumulado = ns.acumulado + dato.contribucion %}
-
-                                        {{ ns.acumulado * 100 }}%
-
-                                        {% if not loop.last %},{% endif %}
-
-                                    {% endfor %}
-
-                                );
-
-                            {% endif %}
-                        "
-
-                    >
-                        <div class="donut-center">
-
-                            {% if contribucion_utilidad %}
-
-                                <strong>
-                                    {{ "%.1f"|format(
-                                        contribucion_utilidad[0].contribucion * 100
-                                    ) }}%
-                                </strong>
-
-                                <span>
-                                    {{ marca_seleccionada }}
-                                </span>
-
-
-                            {% else %}
-
-                                <strong>
-                                    0.0%
-                                </strong>
-
-                                <span>
-                                    SIN DATOS
-                                </span>
-
-                            {% endif %}
-
+                        <div class="legend-item">
+                            <span class="legend-line blue-line"></span>
+                            Margen con PP
                         </div>
 
                     </div>
-                    
-                    <!-- LEYENDA -->
-
-                    <div class="donut-legend">
-
-                        {% for dato in contribucion_utilidad %}
-
-                            <a
-                                href="#"
-                                class="donut-legend-item"
-                                data-marca="{{ dato.marca }}"
-                                onclick="seleccionarMarca(event, this.dataset.marca)"
-                            >
-
-                                <span
-                                    class="legend-dot
-                                    {% if loop.index == 1 %}
-                                        brand-1
-                                    {% elif loop.index == 2 %}
-                                        brand-2
-                                    {% elif loop.index == 3 %}
-                                        brand-3
-                                    {% elif loop.index == 4 %}
-                                        brand-4
-                                    {% else %}
-                                        brand-5
-                                    {% endif %}
-                                    "
-                                ></span>
-
-                                <span class="legend-name">
-                                    {{ dato.marca }}
-                                </span>
-
-                                <strong>
-                                    {{ "%.1f"|format(
-                                        dato.contribucion * 100
-                                    ) }}%
-                                </strong>
-
-                            </a>
-
-                        {% endfor %}
-
-                    </div>
 
                 </div>
 
 
-                 <div class="contribution-footer">
+                <div class="brand-margin-chart">
 
-                    <span>
-                        Utilidad total del periodo
-                    </span>
+                    <a href="#" 
+                        class="brand-margin-row {% if not request.args.get('marca') or request.args.get('marca') == 'TODAS' %}active{% endif %}" 
+                        onclick="seleccionarMarca(event, 'TODAS')">
+                        <div class="brand-margin-name" style="font-weight: bold;">
+                            Todas las marcas
+                        </div>
+                    </a>
 
-                    <strong>
+                    {% for dato in contribucion_utilidad_filtrada %}
 
-                        {% if contribucion_utilidad %}
+                        <a
+                            href="#"
+                            class="brand-margin-row"
+                            data-marca="{{ dato.marca }}"
+                            onclick="seleccionarMarca(event, this.dataset.marca)"
+                        >
 
-                            ${{ "{:,.2f}".format(
-                                contribucion_utilidad
-                                | map(attribute="utilidad")
-                                | sum
-                            ) }}
+                            <div class="brand-margin-name">
+                                {{ dato.marca }}
+                            </div>
 
-                        {% else %}
+                            <div class="brand-margin-bars">
 
-                            $0.00
+                                <div class="brand-margin-track">
 
-                        {% endif %}
+                                    <div
+                                        class="brand-margin-bar"
+                                        style="
+                                            width:
+                                            {% if dato.margen_ppp > 0 %}
+                                                {{ dato.margen_ppp * 100 }}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        "
+                                    ></div>
 
-                    </strong>
+                                </div>
+
+                                <span class="brand-margin-value">
+                                    {{ "%.1f"|format(dato.margen_ppp * 100) }}%
+                                </span>
+
+                            </div>
+
+                        </a>
+
+                    {% endfor %}
 
                 </div>
 
             </article>
-       
 
+       
             <article class="panel line-panel">
 
     <div class="panel-header">

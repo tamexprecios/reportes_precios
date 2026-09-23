@@ -325,19 +325,33 @@ def dashboard():
 
     if "TODOS" not in meses_seleccionados:
 
-        meses_numericos = [
-            int(mes)
-            for mes in meses_seleccionados
-        ]
+        # Mapeo para convertir nombres de mes a número si llegan como texto
+        mapa_meses = {
+            "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
+            "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
+            "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12,
+            "ene": 1, "feb": 2, "mar": 3, "abr": 4,
+            "may": 5, "jun": 6, "jul": 7, "ago": 8,
+            "sep": 9, "oct": 10, "nov": 11, "dic": 12
+        }
 
-        fechas = pd.to_datetime(
-            df_filtrado["FechaEmision"],
-            errors="coerce"
-        )
+        meses_numericos = []
+        for mes in meses_seleccionados:
+            mes_str = str(mes).strip().lower()
+            if mes_str in mapa_meses:
+                meses_numericos.append(mapa_meses[mes_str])
+            elif mes_str.isdigit():
+                meses_numericos.append(int(mes_str))
 
-        df_filtrado = df_filtrado[
-            fechas.dt.month.isin(meses_numericos)
-        ].copy()
+        if meses_numericos:
+            fechas = pd.to_datetime(
+                df_filtrado["FechaEmision"],
+                errors="coerce"
+            )
+
+            df_filtrado = df_filtrado[
+                fechas.dt.month.isin(meses_numericos)
+            ].copy()
 
     # ========================================================
     # MÉTRICAS DEL DATAFRAME FILTRADO
@@ -518,9 +532,7 @@ def dashboard():
         # ----------------------------------------------------
 
         evolucion_mensual=evolucion_mensual_filtrada,
-
-        contribucion_utilidad=contribucion_utilidad_filtrada,
-
+        contribucion_utilidad_filtrada=contribucion_utilidad_filtrada,
         margen_por_linea=margen_por_linea_filtrado,
 
         # ----------------------------------------------------

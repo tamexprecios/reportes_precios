@@ -43,135 +43,77 @@ def calcular_evolucion_mensual(
 ) -> list:
     """
     Calcula la evolución del margen de utilidad con PP.
-
-    modo="mes":
-        Devuelve un punto por cada mes.
-
-    modo="dia":
-        Devuelve un punto por cada día con información
-        dentro del periodo seleccionado.
     """
-
     df = df.copy()
-
-    df["FechaEmision"] = pd.to_datetime(
-        df["FechaEmision"],
-        errors="coerce"
-    )
-
-    df = df.dropna(
-        subset=["FechaEmision"]
-    )
+    df["FechaEmision"] = pd.to_datetime(df["FechaEmision"], errors="coerce")
+    df = df.dropna(subset=["FechaEmision"])
 
     resultados = []
 
-    # ========================================================
-    # EVOLUCIÓN DIARIA
-    # ========================================================
-
     if modo == "dia":
-
         df["Dia"] = df["FechaEmision"].dt.date
-
-        fechas = sorted(
-            df["Dia"].unique()
-        )
+        fechas = sorted(df["Dia"].unique())
 
         for fecha in fechas:
-
-            df_dia = df[
-                df["Dia"] == fecha
-            ]
-
-            venta = df_dia["SubTotalMN"].sum()
-
-            costo_ppp = df_dia["ImporteCostoPPP"].sum()
-
-            utilidad_ppp = (
-                venta - costo_ppp
-            )
-
-            margen_ppp = (
-                utilidad_ppp / venta
-                if venta != 0
-                else 0
-            )
+            df_dia = df[df["Dia"] == fecha]
+            venta = float(df_dia["SubTotalMN"].sum())
+            costo_ppp = float(df_dia["ImporteCostoPPP"].sum())
+            utilidad_ppp = venta - costo_ppp
+            margen_ppp = (utilidad_ppp / venta) if venta != 0 else 0
 
             resultados.append({
                 "mes": fecha.strftime("%d"),
-                "margen_ppp": margen_ppp,
+                "fecha_ref": fecha.strftime("%Y-%m-%d"),
+                "venta": venta,
+                "utilidad_ppp": utilidad_ppp,
+                "margen_ppp" : (utilidad_ppp / venta) if venta != 0 else 0
             })
 
         return resultados
 
-
-    # ========================================================
-    # EVOLUCIÓN MENSUAL
-    # ========================================================
-
     meses = {
-        1: "Ene",
-        2: "Feb",
-        3: "Mar",
-        4: "Abr",
-        5: "May",
-        6: "Jun",
-        7: "Jul",
-        8: "Ago",
-        9: "Sep",
-        10: "Oct",
-        11: "Nov",
-        12: "Dic",
+        1: "Ene", 2: "Feb", 3: "Mar", 4: "Abr",
+        5: "May", 6: "Jun", 7: "Jul", 8: "Ago",
+        9: "Sep", 10: "Oct", 11: "Nov", 12: "Dic",
     }
 
     for numero_mes, nombre_mes in meses.items():
-
-        df_mes = df[
-            df["FechaEmision"].dt.month == numero_mes
-        ].copy()
-
+        df_mes = df[df["FechaEmision"].dt.month == numero_mes].copy()
         if df_mes.empty:
             continue
 
-        venta = df_mes["SubTotalMN"].sum()
-
-        costo_ppp = df_mes["ImporteCostoPPP"].sum()
-
-        utilidad_ppp = (
-            venta - costo_ppp
-        )
-
-        margen_ppp = (
-            utilidad_ppp / venta
-            if venta != 0
-            else 0
-        )
+        venta = float(df_mes["SubTotalMN"].sum())
+        costo_ppp = float(df_mes["ImporteCostoPPP"].sum())
+        utilidad_ppp = venta - costo_ppp
+        margen_ppp = (utilidad_ppp / venta) if venta != 0 else 0
 
         resultados.append({
             "mes": nombre_mes,
-            "margen_ppp": margen_ppp,
+            "numero_mes": numero_mes,
+            "venta": venta,
+            "utilidad_ppp": utilidad_ppp,
+            "margen_ppp": (utilidad_ppp / venta) if venta != 0 else 0
         })
 
     return resultados
 
-
 def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
     """
-    Calcula la contribución de cada marca (Categoria)
-    a la utilidad total del periodo.
+    Calcula el margen de utilidad con PP de cada marca.
 
-    Devuelve las 9 marcas con mayor utilidad
+    Margen con PP:
+        (Venta - Costo PPP) / Venta
+
+    Devuelve las 9 marcas con mayor margen
     y agrupa el resto en 'Otras'.
     """
 
     df = df.copy()
 
-    # Utilidad por registro
-    df["Utilidad"] = (
-        df["SubTotalMN"] - df["ImporteCostoPPP"]
-    )
+    # ========================================================
+    # LIMPIAR MARCA
+    # ========================================================
 
-    # Limpiar marca
     df["Categoria"] = (
         df["Categoria"]
         .fillna("SIN MARCA")
@@ -179,59 +121,105 @@ def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
         .str.strip()
     )
 
-    # Agrupar por marca
+    # ========================================================
+    # AGRUPAR POR MARCA
+    # ========================================================
+
     resumen = (
         df.groupby("Categoria", as_index=False)
         .agg(
             venta=("SubTotalMN", "sum"),
-            utilidad=("Utilidad", "sum")
+            costo_ppp=("ImporteCostoPPP", "sum")
         )
     )
 
-    # Utilidad total
-    utilidad_total = resumen["utilidad"].sum()
+    # ========================================================
+    # CALCULAR UTILIDAD CON PP
+    # ========================================================
 
-    if utilidad_total == 0:
-        return []
+    resumen["utilidad_ppp"] = (
+        resumen["venta"]
+        - resumen["costo_ppp"]
+    )
 
-    # Ordenar de mayor a menor utilidad
+    # ========================================================
+    # CALCULAR MARGEN CON PP
+    # ========================================================
+
+    resumen["margen_ppp"] = (
+        resumen["utilidad_ppp"]
+        / resumen["venta"]
+    ).where(
+        resumen["venta"] != 0,
+        0
+    )
+
+    # ========================================================
+    # ORDENAR POR MARGEN
+    # ========================================================
+
     resumen = resumen.sort_values(
-        "utilidad",
+        "margen_ppp",
         ascending=False
     ).reset_index(drop=True)
 
-    # 9 marcas principales
+    # ========================================================
+    # 9 MARCAS PRINCIPALES
+    # ========================================================
+
     principales = resumen.head(9).copy()
 
-    # Resto de las marcas
-    otras = resumen.iloc[9:]
+    # ========================================================
+    # RESTO DE MARCAS
+    # ========================================================
 
-    venta_otras = otras["venta"].sum()
-    utilidad_otras = otras["utilidad"].sum()
+    otras = resumen.iloc[9:]
 
     resultado = []
 
-    # Agregar las 9 principales
+    # ========================================================
+    # AGREGAR LAS 9 PRINCIPALES
+    # ========================================================
+
     for _, fila in principales.iterrows():
 
         resultado.append({
             "marca": fila["Categoria"],
             "venta": fila["venta"],
-            "utilidad": fila["utilidad"],
-            "contribucion": fila["utilidad"] / utilidad_total,
+            "utilidad": fila["utilidad_ppp"],
+            "margen_ppp": fila["margen_ppp"],
         })
 
-    # Agregar la décima categoría: Otras
+    # ========================================================
+    # AGREGAR "OTRAS"
+    # ========================================================
+
     if not otras.empty:
+
+        venta_otras = otras["venta"].sum()
+
+        costo_otras = otras["costo_ppp"].sum()
+
+        utilidad_otras = (
+            venta_otras
+            - costo_otras
+        )
+
+        margen_otras = (
+            utilidad_otras / venta_otras
+            if venta_otras != 0
+            else 0
+        )
 
         resultado.append({
             "marca": "Otras",
             "venta": venta_otras,
             "utilidad": utilidad_otras,
-            "contribucion": utilidad_otras / utilidad_total,
+            "margen_ppp": margen_otras,
         })
 
     return resultado
+
 
 def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
 
