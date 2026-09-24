@@ -220,7 +220,6 @@ def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
 
     return resultado
 
-
 def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
 
     """
@@ -238,7 +237,6 @@ def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
             .str.strip()
             == marca
         ].copy()
-
 
     # Limpiar línea
     df["Linea"] = (
@@ -291,7 +289,6 @@ def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
             "margen_promedio": fila["margen_promedio"],
         })
 
-
     return resultado
 
 def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
@@ -343,7 +340,6 @@ def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
     else:
 
         resumen["participacion"] = 0
-
 
     # ========================================================
     # MARGEN SIN PP
@@ -403,7 +399,6 @@ def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
         })
 
     return resultado
-
 
 def calcular_margen_por_almacen(df: pd.DataFrame) -> list:
     """

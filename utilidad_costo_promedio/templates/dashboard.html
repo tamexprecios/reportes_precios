@@ -10,30 +10,38 @@
 
 <script>
 
-// Exponemos las funciones al scope global para que los eventos inline (onclick/onchange) las reconozcan
+// Exponemos las funciones al scope global para que los eventos inline (onclick) las reconozcan
+
 function seleccionarMarca(event, marca) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     const parametros = new URLSearchParams(window.location.search);
 
-    // Si hace clic en 'TODAS' o en la marca que ya está seleccionada, quitamos el filtro
     if (marca === 'TODAS' || parametros.get('marca') === marca) {
         parametros.delete('marca');
     } else {
         parametros.set('marca', marca);
     }
 
-    // Generamos la nueva URL limpia o con el nuevo parámetro
     const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
     window.location.href = nuevaUrl;
 }
 
 // =========================================================================
-// FUNCIÓN PARA SELECCIONAR MES AL HACER CLIC EN UN PUNTO DE LA GRÁFICA
+// FUNCIÓN PARA SELECCIONAR MES
 // =========================================================================
 function seleccionarMes(event, mesClickeado) {
     if (event) event.preventDefault();
 
-    // Diccionario para convertir el nombre del mes a número
+    if (mesClickeado === 'TODOS') {
+        const parametros = new URLSearchParams(window.location.search);
+        parametros.delete('mes');
+        parametros.delete('dia');
+        const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
+        window.location.href = nuevaUrl;
+        return;
+    }
+
+    // Mapeo para convertir nombres de meses a número (ej: 'septiembre' -> '9')
     const mesesMap = {
         'enero': '1', 'febrero': '2', 'marzo': '3', 'abril': '4',
         'mayo': '5', 'junio': '6', 'julio': '7', 'agosto': '8',
@@ -43,28 +51,60 @@ function seleccionarMes(event, mesClickeado) {
         'sep': '9', 'oct': '10', 'nov': '11', 'dic': '12'
     };
 
-    // Si nos mandan un texto como "Septiembre", lo convertimos a "9"
     let mesValor = String(mesClickeado).trim().toLowerCase();
     if (mesesMap[mesValor]) {
         mesValor = mesesMap[mesValor];
     } else {
-        mesValor = String(mesClickeado); // Si ya era un número, lo conserva
+        mesValor = String(mesClickeado);
     }
 
-    // Leemos los parámetros actuales de la URL (marca, línea, etc.)
     const parametros = new URLSearchParams(window.location.search);
     const mesActual = parametros.get('mes');
 
-    // Si hace clic sobre el mes que ya estaba seleccionado, quitamos el filtro (Toggle)
+    // Al cambiar de mes, siempre limpiamos la selección de día
+    parametros.delete('dia');
+
     if (mesActual === mesValor) {
         parametros.delete('mes');
     } else {
-        // Asignamos el nuevo mes guardando los demás filtros (marca, línea, etc.)
         parametros.set('mes', mesValor);
     }
 
-    // Generamos la nueva URL manteniendo todos los filtros activos
     const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
+    window.location.href = nuevaUrl;
+}
+
+// =========================================================================
+// FUNCIÓN PARA SELECCIONAR DÍA
+// =========================================================================
+function seleccionarDia(event, diaClickeado) {
+    if (event) event.preventDefault();
+
+    const parametros = new URLSearchParams(window.location.search);
+    
+    // Convertimos a string y limpiamos espacios o mayúsculas para evitar fallos de formato
+    const valorDia = String(diaClickeado).trim().toUpperCase();
+    const diaActualEnUrl = parametros.get('dia');
+
+    // Evaluamos si el usuario quiere restablecer ("TODOS", "ALL", vacio)
+    // O si volvió a hacer clic en el mismo punto que ya estaba seleccionado
+    if (
+        valorDia === 'TODOS' || 
+        valorDia === 'ALL' || 
+        valorDia === '' || 
+        (diaActualEnUrl && diaActualEnUrl === String(diaClickeado))
+    ) {
+        parametros.delete('dia'); // Quitamos el filtro de día
+    } else {
+        parametros.set('dia', diaClickeado); // Aplicamos el filtro del día seleccionado
+    }
+
+    // Construimos la URL de destino
+    const queryString = parametros.toString();
+    const baseRoute = "{{ url_for('dashboard') }}";
+    const nuevaUrl = baseRoute + (queryString ? "?" + queryString : "");
+
+    // Redireccionamos
     window.location.href = nuevaUrl;
 }
 
@@ -103,7 +143,6 @@ function aplicarPeriodo() {
     const todos = document.querySelector('#periodo-menu input[value="TODOS"]');
     const meses = document.querySelectorAll('#periodo-menu input[name="mes"]');
 
-    // Eliminamos selecciones previas dentro del form antes de enviar
     formulario.querySelectorAll('input[name="mes"]').forEach(function (input) {
         input.remove();
     });
@@ -129,8 +168,44 @@ function aplicarPeriodo() {
     formulario.submit();
 }
 
+// =========================================================================
+// FUNCIONES GLOBALES (Deben ir FUERA para que el onclick="" del HTML las vea)
+// =========================================================================
+
+function seleccionarDia(event, diaClickeado) {
+    if (event) event.preventDefault();
+
+    const parametros = new URLSearchParams(window.location.search);
+
+    // Si hace clic en 'TODOS' o si vuelve a presionar el día que ya estaba seleccionado
+    if (String(diaClickeado).toUpperCase() === 'TODOS' || parametros.get('dia') === String(diaClickeado)) {
+        parametros.delete('dia'); // Elimina el filtro de día para ver el mes completo
+    } else {
+        parametros.set('dia', diaClickeado); // Aplica el filtro del día seleccionado
+    }
+
+    // Recarga la página con la nueva URL limpia
+    const queryString = parametros.toString();
+    window.location.href = window.location.pathname + (queryString ? "?" + queryString : "");
+}
+
 // Inicializaciones cuando el DOM está listo
 document.addEventListener("DOMContentLoaded", function () {
+
+    const btnTodosDias = document.getElementById("btn-todos-los-dias");
+    if (btnTodosDias) {
+        btnTodosDias.addEventListener("click", function (event) {
+            event.preventDefault();
+            
+            // Toma la URL actual y borra el parámetro 'dia'
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.delete("dia");
+            
+            // Recarga la página sin el parámetro 'dia'
+            const nuevaQuery = urlParams.toString();
+            window.location.href = window.location.pathname + (nuevaQuery ? "?" + nuevaQuery : "");
+        });
+    }
 
     // Cerrar menú de periodo al hacer clic afuera
     document.addEventListener("click", function (event) {
@@ -144,18 +219,16 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Configuración del Tooltip y Evento de Clic de la gráfica
+    // Configuración del Tooltip para la gráfica
     const puntos = document.querySelectorAll(".chart-point");
     const tooltip = document.getElementById("chart-tooltip");
 
-    if (puntos.length > 0) {
-        const tooltipLabel = tooltip ? tooltip.querySelector(".tooltip-label") : null;
-        const tooltipValue = tooltip ? tooltip.querySelector(".tooltip-value") : null;
+    if (puntos.length > 0 && tooltip) {
+        const tooltipLabel = tooltip.querySelector(".tooltip-label");
+        const tooltipValue = tooltip.querySelector(".tooltip-value");
 
         puntos.forEach(function (punto) {
-            
-            // Eventos del Tooltip (Hover original sin modificaciones)
-            if (tooltip && tooltipLabel && tooltipValue) {
+            if (tooltipLabel && tooltipValue) {
                 punto.addEventListener("mouseenter", function () {
                     tooltipLabel.textContent = punto.dataset.label;
                     tooltipValue.textContent = "Margen con PP: " + punto.dataset.value + "%";
@@ -177,9 +250,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     const tooltipHeight = tooltip.offsetHeight;
                     const espacioArriba = y;
-                    
-                    let posicionY; 
 
+                    let posicionY;
                     if (espacioArriba >= tooltipHeight + 10) {
                         posicionY = y - tooltipHeight - 10;
                     } else {
@@ -194,25 +266,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     tooltip.style.display = "none";
                 });
             }
-
-            // EVENTO DE CLIC (Única adición limpia para activar la interacción)
-            punto.addEventListener("click", function (event) {
-                const mesNombre = punto.dataset.label;
-                if (mesNombre) {
-                    seleccionarMes(event, mesNombre);
-                }
-            });
-
         });
     }
 });
 
 </script>
-
-<body>
-    <!-- Tu contenido HTML del dashboard aquí... -->
-</body>
-</html>
 
 </script>
 
@@ -698,97 +756,110 @@ document.addEventListener("DOMContentLoaded", function () {
             <article class="panel evolution-panel">
 
                 <div class="panel-header">
-
                     <div>
-
                         <h2>
-                            Evolución mensual
+                            {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
+                                Evolución diaria (Mes {{ mes_seleccionado }})
+                            {% else %}
+                                Evolución mensual
+                            {% endif %}
                         </h2>
-
                     </div>
 
                     <div class="legend">
-
                         <div class="legend-item">
                             <span class="legend-line blue-line"></span>
                             Margen con PP
                         </div>
-
                     </div>
-
                 </div>
 
                 <div class="line-chart">
 
-                    <a href="#" 
-                        class="brand-margin-row {% if not request.args.get('mes') or request.args.get('mes') == 'TODOS' %}active{% endif %}" 
-                        onclick="seleccionarMes(event, 'TODOS')">
-                        <div class="brand-margin-name" style="font-weight: bold;">
-                            Todos los meses
-                        </div>
-                    </a>
+                    <!-- Botones de navegación dinámicos -->
+                    <div style="margin-bottom: 25px; display: flex; gap: 10px; position: relative; z-index: 1000;">
+                        {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
+                            <!-- Botón 1: Volver a todos los meses -->
+                            <button type="button"
+                                    onclick="seleccionarMes(event, 'TODOS')"
+                                    tyle="padding: 8px 12px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold; color: #374151;">
+                                Todos los meses
+                            </button>
+
+                            <!-- Botón 2: Ver todos los días del mes actual -->
+                            <button type="button"
+                                    onclick="seleccionarDia(event, 'TODOS')"
+                                    style="padding: 8px 12px; background: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#2563eb{% else %}#f3f4f6{% endif %}; color: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#ffffff{% else %}#374151{% endif %}; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                Todos los días
+                            </button>
+                        {% else %}
+                            <!-- Botón Vista General -->
+                            <button type="button"
+                                    onclick="seleccionarMes(event, 'TODOS')"
+                                    style="padding: 8px 12px; background: #2563eb; color: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                Todos los meses
+                            </button>
+                        {% endif %}
+                    </div>
 
                     {% if evolucion_mensual %}
 
+                        {# 1. Buscar valor máximo en los datos #}
                         {% set max_margen = namespace(valor=0) %}
-
                         {% for dato in evolucion_mensual %}
-
                             {% if dato.margen_ppp > max_margen.valor %}
                                 {% set max_margen.valor = dato.margen_ppp %}
                             {% endif %}
-
                         {% endfor %}
 
+                        {# 2. Calcular límite máximo redondeado #}
                         {% set escala_max = ((max_margen.valor * 100) // 5 + 1) * 5 %}
-
                         {% if escala_max < 10 %}
                             {% set escala_max = 10 %}
                         {% endif %}
 
-
-                        <div class="y-label y32">
-                            {{ escala_max }}%
-                        </div>
-
-                        <div class="y-label y28">
-                            {{ (escala_max * 0.75)|round(0)|int }}%
-                        </div>
-
-                        <div class="y-label y24">
-                            {{ (escala_max * 0.50)|round(0)|int }}%
-                        </div>
-
-                        <div class="y-label y20">
-                            {{ (escala_max * 0.25)|round(0)|int }}%
-                        </div>
-
-                        <div class="chart-grid-line line32"></div>
-                        <div class="chart-grid-line line28"></div>
-                        <div class="chart-grid-line line24"></div>
-                        <div class="chart-grid-line line20"></div>
-
                         <svg
                             class="chart-svg"
-                            viewBox="0 0 700 230"
+                            viewBox="0 0 600 150"
                             preserveAspectRatio="none"
                         >
+                            <!-- ================= EJE Y Y LÍNEAS DE GUÍA ================= -->
+                            <line x1="0" y1="15" x2="600" y2="15" stroke="#e5e7eb" stroke-dasharray="4" stroke-width="1" />
+                            <text x="-5" y="18" fill="#6b7280" font-size="10" text-anchor="end">{{ escala_max|int }}%</text>
 
+                            <line x1="0" y1="45" x2="600" y2="45" stroke="#e5e7eb" stroke-dasharray="4" stroke-width="1" />
+                            <text x="-5" y="48" fill="#6b7280" font-size="10" text-anchor="end">{{ (escala_max * 0.75)|round(0)|int }}%</text>
+
+                            <line x1="0" y1="75" x2="600" y2="75" stroke="#e5e7eb" stroke-dasharray="4" stroke-width="1" />
+                            <text x="-5" y="78" fill="#6b7280" font-size="10" text-anchor="end">{{ (escala_max * 0.50)|round(0)|int }}%</text>
+
+                            <line x1="0" y1="105" x2="600" y2="105" stroke="#e5e7eb" stroke-dasharray="4" stroke-width="1" />
+                            <text x="-5" y="108" fill="#6b7280" font-size="10" text-anchor="end">{{ (escala_max * 0.25)|round(0)|int }}%</text>
+
+                            <line x1="0" y1="135" x2="600" y2="135" stroke="#e5e7eb" stroke-width="1.5" />
+                            <text x="-5" y="138" fill="#6b7280" font-size="10" text-anchor="end">0%</text>
+
+                            <!-- ================= TRAZADO DE DATOS ================= -->
                             {% if evolucion_mensual|length == 1 %}
 
                                 {% for dato in evolucion_mensual %}
+                                    {% set valor_pct = dato.margen_ppp * 100 %}
+                                    {% set pos_y = 135 - ((valor_pct / escala_max) * 120) %}
 
                                     <circle
                                         class="chart-point"
-                                        cx="350"
-                                        cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
-                                        r="6"
+                                        cx="300"
+                                        cy="{{ pos_y }}"
+                                        r="5"
                                         style="cursor: pointer;"
-                                        data-label="{{ dato.mes }}"
-                                        data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
-                                        onclick="seleccionarMes(event, '{{ dato.mes }}')"
+                                        data-label="{{ dato.mes if modo == 'mes' else dato.dia }}"
+                                        data-value="{{ "%.1f"|format(valor_pct) }}"
+                                        {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
+                                            onclick="seleccionarDia(event, '{{ dato.dia if dato.dia is defined else dato.mes }}')"
+                                        {% else %}
+                                            onclick="seleccionarMes(event, '{{ dato.mes }}')"
+                                        {% endif %}
                                     />
-
                                 {% endfor %}
 
                             {% else %}
@@ -797,64 +868,64 @@ document.addEventListener("DOMContentLoaded", function () {
                                     class="chart-blue"
                                     points="
                                     {% for dato in evolucion_mensual %}
-                                        {{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }},
-                                        {{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}
+                                        {% set valor_pct = dato.margen_ppp * 100 %}
+                                        {% set pos_x = (loop.index0 * (580 / (evolucion_mensual|length - 1))) + 10 %}
+                                        {% set pos_y = 135 - ((valor_pct / escala_max) * 120) %}
+                                        {{ pos_x }},{{ pos_y }}
                                     {% endfor %}
                                     "
                                 />
 
                                 {% for dato in evolucion_mensual %}
+                                    {% set valor_pct = dato.margen_ppp * 100 %}
+                                    {% set pos_x = (loop.index0 * (580 / (evolucion_mensual|length - 1))) + 10 %}
+                                    {% set pos_y = 135 - ((valor_pct / escala_max) * 120) %}
+
+                                    <!-- Evaluamos si el dato contiene atributo 'dia' o 'mes' -->
+                                    {% set clave_item = dato.dia if dato.dia is defined else dato.mes %}
 
                                     <circle
                                         class="chart-point"
-                                        cx="{{ (loop.index0 * (650 / (evolucion_mensual|length - 1))) + 25 }}"
-                                        cy="{{ 180 - ((dato.margen_ppp * 100 / escala_max) * 160) }}"
-                                        r="6"
+                                        cx="{{ pos_x }}"
+                                        cy="{{ pos_y }}"
+                                        r="5"
                                         style="cursor: pointer;"
-                                        data-label="{{ dato.mes }}"
-                                        data-value="{{ "%.1f"|format(dato.margen_ppp * 100) }}"
-                                        onclick="seleccionarMes(event, '{{ dato.mes }}')"
+                                        data-label="{{ clave_item }}"
+                                        data-value="{{ "%.1f"|format(valor_pct) }}"
+                                        {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
+                                            onclick="seleccionarDia(event, '{{ clave_item }}')"
+                                        {% else %}
+                                            onclick="seleccionarMes(event, '{{ clave_item }}')"
+                                        {% endif %}
                                     />
-
                                 {% endfor %}
-
+                
                             {% endif %}
 
                         </svg>
 
                         <div id="chart-tooltip" class="chart-tooltip">
-
                             <div class="tooltip-label"></div>
-
                             <div class="tooltip-value"></div>
-
                         </div>
 
-
+                        <!-- Etiquetas X -->
                         <div class="x-labels">
-
                             {% for dato in evolucion_mensual %}
-
-                                <span>
-                                    {{ dato.mes }}
-                                </span>
-
+                                <span>{{ dato.dia if dato.dia is defined else dato.mes }}</span>
                             {% endfor %}
-
                         </div>
 
                     {% else %}
 
-                        <p>
-                            No hay información disponible para mostrar la evolución mensual.
-                        </p>
+                        <p>No hay información disponible para mostrar la evolución.</p>
 
                     {% endif %}
 
                 </div>
 
             </article>
-     
+
             <article class="panel contribution-panel">
 
                 <div class="panel-header">

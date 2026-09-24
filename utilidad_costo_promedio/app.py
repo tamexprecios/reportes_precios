@@ -161,7 +161,6 @@ def dashboard():
 
     print("========== DASHBOARD EJECUTADO ==========")
 
-
     # ========================================================
     # FILTRO MARCA
     # ========================================================
@@ -354,6 +353,22 @@ def dashboard():
             ].copy()
 
     # ========================================================
+    # PASO 1: APLICAR FILTRO DE DÍA EN DATAFRAME PRINCIPAL
+    # ========================================================
+    dia_seleccionado = request.args.get('dia', 'TODOS').strip().upper()
+    mes_seleccionado = request.args.get('mes', 'TODOS')
+
+    if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
+        if dia_seleccionado.isdigit():
+            fechas_dia = pd.to_datetime(
+                df_filtrado["FechaEmision"],
+                errors="coerce"
+            )
+            df_filtrado = df_filtrado[
+                fechas_dia.dt.day == int(dia_seleccionado)
+            ].copy()
+
+    # ========================================================
     # MÉTRICAS DEL DATAFRAME FILTRADO
     # ========================================================
 
@@ -369,14 +384,11 @@ def dashboard():
         "TODOS" not in meses_seleccionados
         and len(meses_seleccionados) == 1
     ):
-
         evolucion_mensual_filtrada = calcular_evolucion_mensual(
             df_filtrado,
             modo="dia"
         )
-
     else:
-
         evolucion_mensual_filtrada = calcular_evolucion_mensual(
             df_filtrado,
             modo="mes"
@@ -435,6 +447,19 @@ def dashboard():
             )
         ].copy()
 
+    # ========================================================
+    # PASO 2: AQUÍ VA EL FILTRO DE DÍA PARA TABLA SUCURSAL
+    # ========================================================
+    if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
+        if dia_seleccionado.isdigit():
+            fechas_tabla_sucursal = pd.to_datetime(
+                df_tabla_sucursal["FechaEmision"],
+                errors="coerce"
+            )
+            df_tabla_sucursal = df_tabla_sucursal[
+                fechas_tabla_sucursal.dt.day == int(dia_seleccionado)
+            ].copy()
+
     # --------------------------------------------------------
     # FILTRO SUCURSAL
     # --------------------------------------------------------
@@ -447,7 +472,6 @@ def dashboard():
             .str.strip()
             == sucursal_seleccionada
         ].copy()
-
 
     # ========================================================
     # DATAFRAME PARA TABLA POR ALMACÉN
@@ -498,6 +522,19 @@ def dashboard():
             )
         ].copy()
 
+    # ========================================================
+    # PASO 3: AQUÍ VA EL FILTRO DE DÍA PARA TABLA ALMACÉN
+    # ========================================================
+    if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
+        if dia_seleccionado.isdigit():
+            fechas_tabla_almacen = pd.to_datetime(
+                df_tabla_almacen["FechaEmision"],
+                errors="coerce"
+            )
+            df_tabla_almacen = df_tabla_almacen[
+                fechas_tabla_almacen.dt.day == int(dia_seleccionado)
+            ].copy()
+
     # --------------------------------------------------------
     # FILTRO ALMACÉN
     # --------------------------------------------------------
@@ -522,7 +559,6 @@ def dashboard():
     margen_por_almacen_filtrado = calcular_margen_por_almacen(
         df_tabla_almacen
     )
-
     return render_template(
 
         "dashboard.html",
@@ -532,6 +568,8 @@ def dashboard():
         # ----------------------------------------------------
 
         evolucion_mensual=evolucion_mensual_filtrada,
+        mes_seleccionado=mes_seleccionado,
+        dia_seleccionado=dia_seleccionado,
         contribucion_utilidad_filtrada=contribucion_utilidad_filtrada,
         margen_por_linea=margen_por_linea_filtrado,
 

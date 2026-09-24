@@ -1451,20 +1451,6 @@ tbody tr:last-child td {
     overflow: hidden;
 }
 
-.donut-container {
-
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: center;
-
-    gap: 15px;
-
-    padding: 10px 10px;
-
-}
-
 /* ============================================================
    PIE DEL PANEL
 ============================================================ */

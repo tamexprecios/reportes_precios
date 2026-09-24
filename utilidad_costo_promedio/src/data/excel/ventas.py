@@ -27,10 +27,6 @@ MESES_2026 = [
 ]
 
 def obtener_archivos_ventas():
-    """
-    Obtiene únicamente los reportes mensuales oficiales de ventas 2026.
-    """
-
     archivos = []
 
     for mes in MESES_2026:
@@ -45,9 +41,6 @@ def obtener_archivos_ventas():
     return archivos
 
 def leer_archivo_ventas(ruta_archivo):
-    """
-    Lee únicamente las columnas necesarias de un archivo Excel de ventas.
-    """
 
     columnas_necesarias = [
     "Estatus",
@@ -62,16 +55,12 @@ def leer_archivo_ventas(ruta_archivo):
     "ImporteCosto",
     ]
 
-
     return pd.read_excel(
         ruta_archivo,
         usecols=columnas_necesarias
     )
 
 def guardar_parquet(df, ruta):
-    """
-    Guarda un DataFrame en formato Parquet.
-    """
 
     ruta.parent.mkdir(
         parents=True,
@@ -84,10 +73,7 @@ def guardar_parquet(df, ruta):
     )
 
 def archivos_ventas_cambiaron(archivos, archivo_control):
-    """
-    Comprueba si alguno de los archivos Excel de ventas
-    cambió desde la última carga.
-    """
+    """Comprueba si alguno de los archivos Excel de ventas cambió desde la última carga."""
 
     estado_actual = {}
 
@@ -122,12 +108,7 @@ def archivos_ventas_cambiaron(archivos, archivo_control):
 
     return False, estado_actual
 
-
 def cargar_ventas_2026():
-    """
-    Carga los reportes mensuales de ventas de 2026
-    y conserva únicamente registros CONCLUIDOS.
-    """
     
     import time
 
@@ -183,8 +164,6 @@ def cargar_ventas_2026():
             .str.strip()
         )
 
-        # Si la caché ya contiene columnas del catálogo,
-        # las eliminamos antes de volver a relacionarlas.
         columnas_catalogo = [
             "SUCURSAL AGENTE",
             "NOMBRE",
@@ -255,7 +234,6 @@ def cargar_ventas_2026():
 
         return ventas
 
-
     dataframes = []
 
     import time
@@ -265,7 +243,6 @@ def cargar_ventas_2026():
     print("\n" + "=" * 60)
     print("DIAGNÓSTICO DE CARGA DE VENTAS")
     print("=" * 60)
-
 
     for archivo in obtener_archivos_ventas():
 
@@ -319,7 +296,6 @@ def cargar_ventas_2026():
             f"  Filas después del filtro: {len(df):,}"
         )
 
-
         dataframes.append(df)
 
     if not dataframes:
@@ -367,7 +343,6 @@ def cargar_ventas_2026():
         .str.strip()
     )
 
- 
     ventas = ventas.merge(
         sucursales,
         left_on="Sucursal Agente",
@@ -418,18 +393,7 @@ def cargar_ventas_2026():
     return ventas
 
 def cargar_sucursales():
-    """
-    Lee el catálogo de sucursales utilizado por el dashboard.
-
-    Relaciona:
-        Ventas["Sucursal Agente"]
-        con
-        Sucursales["SUCURSAL AGENTE"]
-
-    El nombre visible de la sucursal será:
-        Sucursales["NOMBRE"]
-    """
-
+   
     archivo = RUTA_VENTAS / "SUCURSALES REPORTES PYTHON.xlsx"
 
     sucursales = pd.read_excel(
@@ -485,10 +449,6 @@ def cargar_sucursales():
     return sucursales
 
 def cargar_ppp():
-    """
-    Lee el archivo PPP y devuelve únicamente
-    los campos necesarios para relacionarlo con ventas.
-    """
 
     archivo = RUTA_VENTAS / "PPP.xlsx"
 
@@ -498,10 +458,6 @@ def cargar_ppp():
     )
 
 def calcular_resumen_ventas(df):
-    """
-    Calcula los principales indicadores de utilidad
-    utilizando el costo promedio con PPP.
-    """
 
     importe_venta = df["SubTotalMN"].sum()
 
