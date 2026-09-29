@@ -1,13 +1,14 @@
 from flask import Flask, render_template, request
 import pandas as pd
+from src.calculos.margen import obtener_lista_prefijos
 from src.data.excel.ventas import cargar_ventas_2026
 from src.calculos.margen import (
     calcular_metricas,
     calcular_evolucion_mensual,
     calcular_contribucion_utilidad,
     calcular_margen_por_linea,
-    calcular_margen_por_sucursal,
-    calcular_margen_por_almacen
+    calcular_margen_por_articulo,
+    calcular_margen_por_sucursal
 )
 
 app = Flask(__name__)
@@ -124,14 +125,6 @@ sucursales = sorted(
     .unique()
 )
 
-almacenes = sorted(
-    df_ventas["Almacen"]
-    .dropna()
-    .astype(str)
-    .str.strip()
-    .unique()
-)
-
 meses = [
     (1, "Enero"),
     (2, "Febrero"),
@@ -158,173 +151,50 @@ def formato_porcentaje(valor):
 # ============================================================
 @app.route("/")
 def dashboard():
+    import time
 
+    inicio_dashboard = time.perf_counter()
     print("========== DASHBOARD EJECUTADO ==========")
 
     # ========================================================
-    # FILTRO MARCA
+    # 1. LECTURA Y VALIDACIÓN DE PARÁMETROS
     # ========================================================
 
-    marca_seleccionada = request.args.get(
-        "marca",
-        "TODAS"
-    )
-
-    # ========================================================
-    # FILTRO LÍNEA
-    # ========================================================
-
-    linea_seleccionada = request.args.get(
-        "linea",
-        "TODAS"
-    )
-
-    # ========================================================
-    # FILTRO SUCURSAL
-    # ========================================================
-
-    sucursal_seleccionada = request.args.get(
-        "sucursal",
-        "TODAS"
-    )
-
-    # ========================================================
-    # FILTRO ALMACÉN
-    # ========================================================
-
-    almacen_seleccionado = request.args.get(
-        "almacen",
-        "TODOS"
-    )
-
-    # ========================================================
-    # FILTRO PERIODO
-    # ========================================================
-
-    meses_seleccionados = request.args.getlist("mes")
-
-    if not meses_seleccionados:
-        meses_seleccionados = ["TODOS"]
-
-    # ========================================================
-    # DATAFRAME BASE
-    # ========================================================
-
-    df_filtrado = df_ventas.copy()
-
-    # ========================================================
-    # APLICAR FILTRO MARCA
-    # ========================================================
-
-    if marca_seleccionada != "TODAS":
-
-        df_filtrado = df_filtrado[
-            df_filtrado["Categoria"]
-            .astype(str)
-            .str.strip()
-            == marca_seleccionada
-        ].copy()
-
-    # ========================================================
-    # OBTENER LÍNEAS DISPONIBLES
-    # ========================================================
-
-    if marca_seleccionada != "TODAS":
-
-        lineas = sorted(
-            df_filtrado["Linea"]
-            .dropna()
-            .astype(str)
-            .str.strip()
-            .unique()
-        )
-
+    # Filtro Marca (Múltiple)
+    marca_raw = request.args.get("marca", "TODAS")
+    if marca_raw and marca_raw != "TODAS":
+        marcas_seleccionadas = [m.strip() for m in marca_raw.split(",") if m.strip()]
     else:
+        marcas_seleccionadas = []
 
-        lineas = sorted(
-            df_ventas["Linea"]
-            .dropna()
-            .astype(str)
-            .str.strip()
-            .unique()
-        )
+    # Filtro Línea (Múltiple)
+    linea_raw = request.args.get("linea", "TODAS")
+    if linea_raw and linea_raw != "TODAS":
+        lineas_seleccionadas = [l.strip() for l in linea_raw.split(",") if l.strip()]
+    else:
+        lineas_seleccionadas = []
 
-    # ========================================================
-    # VALIDAR LÍNEA SELECCIONADA
-    # ========================================================
+    # Filtro Sucursal
+    sucursal_seleccionada = request.args.get("sucursal", "TODAS")
+    if sucursal_seleccionada != "TODAS" and sucursal_seleccionada not in sucursales:
+        sucursal_seleccionada = "TODAS"
 
-    if linea_seleccionada != "TODAS":
+    # Filtro Prefijo
+    prefijo_seleccionado = request.args.get('prefijo') or request.form.get('prefijo') or 'TODOS'
 
-        if linea_seleccionada not in lineas:
+    # Obtener todos los prefijos de 3 dígitos disponibles
+    lista_prefijos = obtener_lista_prefijos(df_ventas)
 
-            linea_seleccionada = "TODAS"
+    # Filtro Periodo (Meses)
+    meses_seleccionados = request.args.getlist("mes") or ["TODOS"]
 
-    # ========================================================
-    # VALIDAR SUCURSAL SELECCIONADA
-    # ========================================================
+    # Filtro Día
+    dia_seleccionado = request.args.get('dia', 'TODOS').strip().upper()
+    mes_seleccionado = request.args.get('mes', 'TODOS')
 
-    if sucursal_seleccionada != "TODAS":
-
-        if sucursal_seleccionada not in sucursales:
-
-            sucursal_seleccionada = "TODAS"
-
-    # ========================================================
-    # VALIDAR ALMACÉN SELECCIONADO
-    # ========================================================
-
-    if almacen_seleccionado != "TODOS":
-
-        if almacen_seleccionado not in almacenes:
-
-            almacen_seleccionado = "TODOS"
-
-    # ========================================================
-    # APLICAR FILTRO LÍNEA
-    # ========================================================
-
-    if linea_seleccionada != "TODAS":
-
-        df_filtrado = df_filtrado[
-            df_filtrado["Linea"]
-            .astype(str)
-            .str.strip()
-            == linea_seleccionada
-        ].copy()
-
-    # ========================================================
-    # APLICAR FILTRO SUCURSAL
-    # ========================================================
-
-    if sucursal_seleccionada != "TODAS":
-
-        df_filtrado = df_filtrado[
-            df_filtrado["NOMBRE"]
-            .astype(str)
-            .str.strip()
-            == sucursal_seleccionada
-        ].copy()
-
-    # ========================================================
-    # APLICAR FILTRO ALMACÉN
-    # ========================================================
-
-    if almacen_seleccionado != "TODOS":
-
-        df_filtrado = df_filtrado[
-            df_filtrado["Almacen"]
-            .astype(str)
-            .str.strip()
-            == almacen_seleccionado
-        ].copy()
-
-    # ========================================================
-    # APLICAR FILTRO PERIODO
-    # ========================================================
-
+    # Mapeo numérico de meses (si no es TODOS)
+    meses_numericos = []
     if "TODOS" not in meses_seleccionados:
-
-        # Mapeo para convertir nombres de mes a número si llegan como texto
         mapa_meses = {
             "enero": 1, "febrero": 2, "marzo": 3, "abril": 4,
             "mayo": 5, "junio": 6, "julio": 7, "agosto": 8,
@@ -333,8 +203,6 @@ def dashboard():
             "may": 5, "jun": 6, "jul": 7, "ago": 8,
             "sep": 9, "oct": 10, "nov": 11, "dic": 12
         }
-
-        meses_numericos = []
         for mes in meses_seleccionados:
             mes_str = str(mes).strip().lower()
             if mes_str in mapa_meses:
@@ -342,274 +210,146 @@ def dashboard():
             elif mes_str.isdigit():
                 meses_numericos.append(int(mes_str))
 
-        if meses_numericos:
-            fechas = pd.to_datetime(
-                df_filtrado["FechaEmision"],
-                errors="coerce"
-            )
-
-            df_filtrado = df_filtrado[
-                fechas.dt.month.isin(meses_numericos)
-            ].copy()
-
     # ========================================================
-    # PASO 1: APLICAR FILTRO DE DÍA EN DATAFRAME PRINCIPAL
+    # 2. CONSTRUCCIÓN DE DATAFRAME PRINCIPAL (df_filtrado)
     # ========================================================
-    dia_seleccionado = request.args.get('dia', 'TODOS').strip().upper()
-    mes_seleccionado = request.args.get('mes', 'TODOS')
+    df_filtrado = df_ventas.copy()
 
-    if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
-        if dia_seleccionado.isdigit():
-            fechas_dia = pd.to_datetime(
-                df_filtrado["FechaEmision"],
-                errors="coerce"
-            )
-            df_filtrado = df_filtrado[
-                fechas_dia.dt.day == int(dia_seleccionado)
-            ].copy()
-
-    # ========================================================
-    # MÉTRICAS DEL DATAFRAME FILTRADO
-    # ========================================================
-
-    metricas_filtradas = calcular_metricas(
-        df_filtrado
-    )
-
-    # ========================================================
-    # EVOLUCIÓN MENSUAL / DIARIA
-    # ========================================================
-
-    if (
-        "TODOS" not in meses_seleccionados
-        and len(meses_seleccionados) == 1
-    ):
-        evolucion_mensual_filtrada = calcular_evolucion_mensual(
-            df_filtrado,
-            modo="dia"
-        )
-    else:
-        evolucion_mensual_filtrada = calcular_evolucion_mensual(
-            df_filtrado,
-            modo="mes"
-        )
-
-    contribucion_utilidad_filtrada = calcular_contribucion_utilidad(
-        df_filtrado
-    )
-
-    margen_por_linea_filtrado = calcular_margen_por_linea(
-        df_filtrado
-    )
-
-    df_tabla_sucursal = df_ventas.copy()
-
-    # --------------------------------------------------------
-    # FILTRO MARCA
-    # --------------------------------------------------------
-
-    if marca_seleccionada != "TODAS":
-
-        df_tabla_sucursal = df_tabla_sucursal[
-            df_tabla_sucursal["Categoria"]
+    # A) Aplicar Filtro Marca
+    if marcas_seleccionadas:
+        df_filtrado = df_filtrado[
+            df_filtrado["Categoria"]
             .astype(str)
             .str.strip()
-            == marca_seleccionada
+            .isin(marcas_seleccionadas)
         ].copy()
 
-    # --------------------------------------------------------
-    # FILTRO LÍNEA
-    # --------------------------------------------------------
+    # B) Obtener Líneas disponibles y validar selección
+    base_lineas = df_filtrado if marcas_seleccionadas else df_ventas
+    lineas = sorted(
+        base_lineas["Linea"]
+        .dropna()
+        .astype(str)
+        .str.strip()
+        .unique()
+    )
+    lineas_seleccionadas = [l for l in lineas_seleccionadas if l in lineas]
 
-    if linea_seleccionada != "TODAS":
-
-        df_tabla_sucursal = df_tabla_sucursal[
-            df_tabla_sucursal["Linea"]
+    # C) Aplicar Filtro Línea
+    if lineas_seleccionadas:
+        df_filtrado = df_filtrado[
+            df_filtrado["Linea"]
             .astype(str)
             .str.strip()
-            == linea_seleccionada
+            .isin(lineas_seleccionadas)
         ].copy()
 
-    # --------------------------------------------------------
-    # FILTRO PERIODO
-    # --------------------------------------------------------
-
-    if "TODOS" not in meses_seleccionados:
-
-        fechas_tabla_sucursal = pd.to_datetime(
-            df_tabla_sucursal["FechaEmision"],
-            errors="coerce"
-        )
-
-        df_tabla_sucursal = df_tabla_sucursal[
-            fechas_tabla_sucursal.dt.month.isin(
-                meses_numericos
-            )
-        ].copy()
-
-    # ========================================================
-    # PASO 2: AQUÍ VA EL FILTRO DE DÍA PARA TABLA SUCURSAL
-    # ========================================================
-    if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
-        if dia_seleccionado.isdigit():
-            fechas_tabla_sucursal = pd.to_datetime(
-                df_tabla_sucursal["FechaEmision"],
-                errors="coerce"
-            )
-            df_tabla_sucursal = df_tabla_sucursal[
-                fechas_tabla_sucursal.dt.day == int(dia_seleccionado)
-            ].copy()
-
-    # --------------------------------------------------------
-    # FILTRO SUCURSAL
-    # --------------------------------------------------------
-
+    # D) Aplicar Filtro Sucursal
     if sucursal_seleccionada != "TODAS":
-
-        df_tabla_sucursal = df_tabla_sucursal[
-            df_tabla_sucursal["NOMBRE"]
+        df_filtrado = df_filtrado[
+            df_filtrado["NOMBRE"]
             .astype(str)
             .str.strip()
             == sucursal_seleccionada
         ].copy()
 
-    # ========================================================
-    # DATAFRAME PARA TABLA POR ALMACÉN
-    # ========================================================
-
-    df_tabla_almacen = df_ventas.copy()
-
-    # --------------------------------------------------------
-    # FILTRO MARCA
-    # --------------------------------------------------------
-
-    if marca_seleccionada != "TODAS":
-
-        df_tabla_almacen = df_tabla_almacen[
-            df_tabla_almacen["Categoria"]
+    # E) Aplicar Filtro Prefijo
+    if prefijo_seleccionado and prefijo_seleccionado != 'TODOS':
+        df_filtrado = df_filtrado[
+            df_filtrado['Articulo']
             .astype(str)
-            .str.strip()
-            == marca_seleccionada
+            .str[:3] == prefijo_seleccionado
         ].copy()
 
-    # --------------------------------------------------------
-    # FILTRO LÍNEA
-    # --------------------------------------------------------
+    # F) Aplicar Filtro Meses
+    if meses_numericos:
+        fechas = pd.to_datetime(df_filtrado["FechaEmision"], errors="coerce")
+        df_filtrado = df_filtrado[fechas.dt.month.isin(meses_numericos)].copy()
 
-    if linea_seleccionada != "TODAS":
-
-        df_tabla_almacen = df_tabla_almacen[
-            df_tabla_almacen["Linea"]
-            .astype(str)
-            .str.strip()
-            == linea_seleccionada
-        ].copy()
-
-    # --------------------------------------------------------
-    # FILTRO PERIODO
-    # --------------------------------------------------------
-
-    if "TODOS" not in meses_seleccionados:
-
-        fechas_tabla_almacen = pd.to_datetime(
-            df_tabla_almacen["FechaEmision"],
-            errors="coerce"
-        )
-
-        df_tabla_almacen = df_tabla_almacen[
-            fechas_tabla_almacen.dt.month.isin(
-                meses_numericos
-            )
-        ].copy()
-
-    # ========================================================
-    # PASO 3: AQUÍ VA EL FILTRO DE DÍA PARA TABLA ALMACÉN
-    # ========================================================
+    # G) Aplicar Filtro Día
     if dia_seleccionado and dia_seleccionado not in ['TODOS', 'ALL', '', 'TODOS LOS DIAS', 'TODOS LOS DÍAS']:
         if dia_seleccionado.isdigit():
-            fechas_tabla_almacen = pd.to_datetime(
-                df_tabla_almacen["FechaEmision"],
-                errors="coerce"
-            )
-            df_tabla_almacen = df_tabla_almacen[
-                fechas_tabla_almacen.dt.day == int(dia_seleccionado)
-            ].copy()
+            fechas_dia = pd.to_datetime(df_filtrado["FechaEmision"], errors="coerce")
+            df_filtrado = df_filtrado[fechas_dia.dt.day == int(dia_seleccionado)].copy()
 
-    # --------------------------------------------------------
-    # FILTRO ALMACÉN
-    # --------------------------------------------------------
+    # ========================================================
+    # 3. DATAFRAMES SECUNDARIOS (Tabla Sucursal / Tabla Almacén)
+    # ========================================================
+    
+    # Tabla Sucursal (Independiente del filtro de Sucursal)
+    df_tabla_sucursal = df_ventas.copy()
+    if marcas_seleccionadas:
+        df_tabla_sucursal = df_tabla_sucursal[
+            df_tabla_sucursal["Categoria"].astype(str).str.strip().isin(marcas_seleccionadas)
+        ]
+    if lineas_seleccionadas:
+        df_tabla_sucursal = df_tabla_sucursal[
+            df_tabla_sucursal["Linea"].astype(str).str.strip().isin(lineas_seleccionadas)
+        ]
+    if meses_numericos:
+        fechas_suc = pd.to_datetime(df_tabla_sucursal["FechaEmision"], errors="coerce")
+        df_tabla_sucursal = df_tabla_sucursal[fechas_suc.dt.month.isin(meses_numericos)]
+    if dia_seleccionado and dia_seleccionado.isdigit():
+        fechas_suc_dia = pd.to_datetime(df_tabla_sucursal["FechaEmision"], errors="coerce")
+        df_tabla_sucursal = df_tabla_sucursal[fechas_suc_dia.dt.day == int(dia_seleccionado)]
 
-    if almacen_seleccionado != "TODOS":
-
+    # Tabla Almacén (Si usas un dataframe base distinto o copia)
+    df_tabla_almacen = df_ventas.copy()
+    if marcas_seleccionadas:
         df_tabla_almacen = df_tabla_almacen[
-            df_tabla_almacen["Almacen"]
-            .astype(str)
-            .str.strip()
-            == almacen_seleccionado
-        ].copy()
+            df_tabla_almacen["Categoria"].astype(str).str.strip().isin(marcas_seleccionadas)
+        ]
+    if lineas_seleccionadas:
+        df_tabla_almacen = df_tabla_almacen[
+            df_tabla_almacen["Linea"].astype(str).str.strip().isin(lineas_seleccionadas)
+        ]
+    if meses_numericos:
+        fechas_alm = pd.to_datetime(df_tabla_almacen["FechaEmision"], errors="coerce")
+        df_tabla_almacen = df_tabla_almacen[fechas_alm.dt.month.isin(meses_numericos)]
 
     # ========================================================
-    # CALCULAR TABLAS
+    # 4. CÁLCULO DE MÉTRICAS Y TABLAS
     # ========================================================
+    metricas_filtradas = calcular_metricas(df_filtrado)
 
-    margen_por_sucursal_filtrado = calcular_margen_por_sucursal(
-        df_tabla_sucursal
-    )
+    modo_evolucion = "dia" if ("TODOS" not in meses_seleccionados and len(meses_seleccionados) == 1) else "mes"
+    evolucion_mensual_filtrada = calcular_evolucion_mensual(df_filtrado, modo=modo_evolucion)
 
-    margen_por_almacen_filtrado = calcular_margen_por_almacen(
-        df_tabla_almacen
-    )
+    contribucion_utilidad_filtrada = calcular_contribucion_utilidad(df_filtrado)
+    margen_por_linea_filtrado = calcular_margen_por_linea(df_filtrado)
+    margen_por_articulo_filtrado = calcular_margen_por_articulo(df_filtrado)
+    margen_por_sucursal_filtrado = calcular_margen_por_sucursal(df_tabla_sucursal)
+
+    print(f"TIEMPO TOTAL DASHBOARD: {time.perf_counter() - inicio_dashboard:.2f} segundos")
+
+    # ========================================================
+    # 5. RENDER TEMPLATE
+    # ========================================================
     return render_template(
-
         "dashboard.html",
-
-        # ----------------------------------------------------
-        # GRÁFICAS
-        # ----------------------------------------------------
-
+        # Gráficas
         evolucion_mensual=evolucion_mensual_filtrada,
         mes_seleccionado=mes_seleccionado,
         dia_seleccionado=dia_seleccionado,
         contribucion_utilidad_filtrada=contribucion_utilidad_filtrada,
         margen_por_linea=margen_por_linea_filtrado,
-
-        # ----------------------------------------------------
+        margen_articulo=margen_por_articulo_filtrado,
+        margen_por_sucursal=margen_por_sucursal_filtrado,
         # KPIs
-        # ----------------------------------------------------
-
-        venta=formato_moneda(
-            metricas_filtradas["venta"]
-        ),
-
-        costo_promedio=formato_moneda(
-            metricas_filtradas["costo_promedio"]
-        ),
-
-        margen_promedio=formato_porcentaje(
-            metricas_filtradas["margen_promedio"]
-        ),
-
-        costo_ppp=formato_moneda(
-            metricas_filtradas["costo_ppp"]
-        ),
-
-        margen_ppp=formato_porcentaje(
-            metricas_filtradas["margen_ppp"]
-        ),
-
-        # ----------------------------------------------------
-        # FILTROS
-        # ----------------------------------------------------
+        venta=formato_moneda(metricas_filtradas["venta"]),
+        costo_promedio=formato_moneda(metricas_filtradas["costo_promedio"]),
+        margen_promedio=formato_porcentaje(metricas_filtradas["margen_promedio"]),
+        costo_ppp=formato_moneda(metricas_filtradas["costo_ppp"]),
+        margen_ppp=formato_porcentaje(metricas_filtradas["margen_ppp"]),
+        # Filtros
         marcas=marcas,
-        marca_seleccionada=marca_seleccionada,
+        marcas_seleccionadas=marcas_seleccionadas,
         lineas=lineas,
-        linea_seleccionada=linea_seleccionada,
+        lineas_seleccionadas=lineas_seleccionadas,
         sucursales=sucursales,
         sucursal_seleccionada=sucursal_seleccionada,
-        almacenes=almacenes,
-        almacen_seleccionado=almacen_seleccionado,
         meses=meses,
         meses_seleccionados=meses_seleccionados,
-        margen_por_sucursal=margen_por_sucursal_filtrado,
-        margen_por_almacen=margen_por_almacen_filtrado
+        lista_prefijos=lista_prefijos,
+        prefijo_seleccionado=prefijo_seleccionado
     )

@@ -413,110 +413,189 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </div>
 
-            
             <div class="filter-group">
-
-                <label>MARCA</label>
-
-                <form method="GET">
-
-                    {% for mes in meses_seleccionados %}
-                    <input
-                        type="hidden"
-                        name="mes"
-                        value="{{ mes }}"
-                    >
-                    {% endfor %}
-
-                    <select
-                        class="select-active"
-                        name="marca"
-                        onchange="this.form.submit()"
-                    >
-                        <option
-                            value="TODAS"
-                            {% if marca_seleccionada == "TODAS" %}
-                                selected
+                <label>PREFIJO</label>
+                <div class="custom-multiselect" id="prefijo-multiselect">
+        
+                    <!-- Botón principal con la flecha desplegable -->
+                    <button type="button" class="multiselect-btn" onclick="toggleDropdown('prefijo-dropdown')">
+                            {% if prefijo_seleccionado and prefijo_seleccionado != 'TODOS' %}
+                                {{ prefijo_seleccionado }}
+                            {% else %}
+                                TODOS
                             {% endif %}
-                        >
-                            Todas las marcas
-                            </option>
+                         <span class="arrow">▼</span>
+                    
+                    </button>
 
+                    <div id="prefijo-dropdown" class="multiselect-content">
+                        <!-- Buscador interno -->
+                        <div class="multiselect-search">
+                            <input type="text" id="prefijo-search" placeholder="Buscar prefijo..." autocomplete="off">
+                        </div>
+
+                        <form method="GET" id="prefijo-form">
+                            <!-- Preservar los demás filtros -->
+                            {% if marcas_seleccionadas %}
+                                <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') }}">
+                            {% endif %}
+                            {% if lineas_seleccionadas %}
+                                <input type="hidden" name="linea" value="{{ lineas_seleccionadas|join(',') }}">
+                            {% endif %}
+                            {% if sucursal_seleccionada != "TODAS" %}
+                                <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
+                            {% endif %}
+                            {% for mes in meses_seleccionados %}
+                                <input type="hidden" name="mes" value="{{ mes }}">
+                            {% endfor %}
+
+                            <!-- Opciones desplegables con casillas cuadradas (checkbox) -->
+                            <div class="multiselect-options">
+                                <label class="multiselect-option">
+                                    <input 
+                                        type="checkbox" 
+                                        class="prefijo-checkbox"
+                                        value="TODOS" 
+                                        onchange="this.form.submit()" 
+                                        {% if prefijo_seleccionado == 'TODOS' or not prefijo_seleccionado %}checked{% endif %}
+                                    >
+                                    <span>TODOS</span>
+                                </label>
+
+                                {% for prefijo in lista_prefijos %}
+                                    <label class="multiselect-option">
+                                        <input 
+                                            type="checkbox" 
+                                            class="prefijo-checkbox"
+                                            name="prefijo" 
+                                            value="{{ prefijo }}" 
+                                            onchange="this.form.submit()" 
+                                            {% if prefijo_seleccionado == prefijo %}checked{% endif %}
+                                        >
+                                        <span>{{ prefijo }}</span>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FILTRO MARCA (MÚLTIPLE) -->
+            <div class="filter-group">
+                <label>MARCA</label>
+                <form method="GET" id="marca-form">
+                    <!-- Mantener otros filtros -->
+                    {% for mes in meses_seleccionados %}
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                    {% endfor %}
+                    {% if sucursal_seleccionada and sucursal_seleccionada != "TODAS" %}
+                        <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
+                    {% endif %}
+                    {% if almacen_seleccionado and almacen_seleccionado != "TODOS" %}
+                        <input type="hidden" name="almacen" value="{{ almacen_seleccionado }}">
+                    {% endif %}
+        
+                    <!-- Campo hidden donde se concatenan las marcas elegidas -->
+                    <input type="hidden" name="marca" id="marca_input" value="{{ marcas_seleccionadas|join(',') if marcas_seleccionadas else 'TODAS' }}">
+
+                    <div class="custom-multiselect">
+                        <button type="button" class="multiselect-btn" onclick="toggleDropdown('marca-dropdown')">
+                            {% if not marcas_seleccionadas %}
+                                TODAS
+                            {% elif marcas_seleccionadas|length == 1 %}
+                                {{ marcas_seleccionadas[0] }}
+                            {% else %}
+                                {{ marcas_seleccionadas|length }} marcas seleccionadas
+                            {% endif %}
+                            <span class="arrow">▼</span>
+                        </button>
+            
+                        <div id="marca-dropdown" class="multiselect-content">
+                            <div class="multiselect-search">
+                                <input
+                                    type="text"
+                                    id="marca-search"
+                                    placeholder="Buscar marca..."
+                                    autocomplete="off"
+                                    onclick="event.stopPropagation()"
+                                >
+                            </div>
+
+                            <label class="multiselect-option">
+                                <input type="checkbox" id="marca-all" onchange="toggleSelectAll('marca')" {% if not marcas_seleccionadas %}checked{% endif %}>
+                                <strong>TODAS</strong>
+                            </label>
+                            <hr style="margin: 4px 0; border: 0; border-top: 1px solid #eee;">
                             {% for marca in marcas %}
-
-                            <option
-                                value="{{ marca }}"
-                                {% if marca == marca_seleccionada %}
-                                    selected
-                                {% endif %}
-                        >
-                                {{ marca }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
+                                <label class="multiselect-option">
+                                    <input type="checkbox" class="marca-checkbox" value="{{ marca }}" onchange="onCheckboxChange('marca')" {% if marca in marcas_seleccionadas %}checked{% endif %}>
+                                    {{ marca }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </form>
-
             </div>
 
+            <!-- FILTRO LÍNEA (MÚLTIPLE) -->
             <div class="filter-group">
-
                 <label>LÍNEA</label>
-
                 <form method="GET" id="linea-form">
-
-                    <!-- Conservamos la marca seleccionada -->
-                    {% if marca_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="marca"
-                            value="{{ marca_seleccionada }}"
-                        >
+                    <!-- Conservar marca seleccionada -->
+                    <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') if marcas_seleccionadas else 'TODAS' }}">
+        
+                    <!-- Mantener otros filtros -->
+                    {% for mes in meses_seleccionados %}
+                        <input type="hidden" name="mes" value="{{ mes }}">
+                    {% endfor %}
+                    {% if sucursal_seleccionada and sucursal_seleccionada != "TODAS" %}
+                        <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
+                    {% endif %}
+                    {% if almacen_seleccionado and almacen_seleccionado != "TODOS" %}
+                        <input type="hidden" name="almacen" value="{{ almacen_seleccionado }}">
                     {% endif %}
 
-                    <!-- Conservamos los meses seleccionados -->
-                    {% for mes in meses_seleccionados %}
-                        <input
-                            type="hidden"
-                            name="mes"
-                            value="{{ mes }}"
-                        > 
-                    {% endfor %}
+                    <!-- Campo hidden donde se concatenan las líneas elegidas -->
+                    <input type="hidden" name="linea" id="linea_input" value="{{ lineas_seleccionadas|join(',') if lineas_seleccionadas else 'TODAS' }}">
 
-                    <select
-                        name="linea"
-                        class="select-active"
-                        onchange="this.form.submit()"
-                    >
-
-                        <option
-                            value="TODAS"
-                            {% if linea_seleccionada == "TODAS" %}
-                                selected
+                    <div class="custom-multiselect">
+                        <button type="button" class="multiselect-btn" onclick="toggleDropdown('linea-dropdown')">
+                            {% if not lineas_seleccionadas %}
+                                TODAS 
+                            {% elif lineas_seleccionadas|length == 1 %}
+                                {{ lineas_seleccionadas[0] }}
+                            {% else %}
+                                {{ lineas_seleccionadas|length }} líneas seleccionadas
                             {% endif %}
-                        >
-                            Todas las líneas
-                        </option>
+                            <span class="arrow">▼</span>
+                        </button>
+            
+                        <div id="linea-dropdown" class="multiselect-content">
+                            <div class="multiselect-search">
+                                <input
+                                    type="text"
+                                    id="linea-search"
+                                    placeholder="Buscar línea..."
+                                    autocomplete="off"
+                                    onclick="event.stopPropagation()"
+                                >
+                            </div>
 
-                        {% for linea in lineas %}
-
-                            <option
-                                value="{{ linea }}"
-                                {% if linea == linea_seleccionada %}
-                                    selected
-                                {% endif %}
-                            >
-                                {{ linea }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
+                            <label class="multiselect-option">
+                                <input type="checkbox" id="linea-all" onchange="toggleSelectAll('linea')" {% if not lineas_seleccionadas %}checked{% endif %}>
+                                <strong>TODAS</strong>
+                            </label>
+                            <hr style="margin: 4px 0; border: 0; border-top: 1px solid #eee;">
+                            {% for linea in lineas %}
+                                <label class="multiselect-option">
+                                    <input type="checkbox" class="linea-checkbox" value="{{ linea }}" onchange="onCheckboxChange('linea')" {% if linea in lineas_seleccionadas %}checked{% endif %}>
+                                    {{ linea }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </form>
-
             </div>
 
             <div class="filter-group">
@@ -585,84 +664,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </form>
 
             </div>
-
-
-            <div class="filter-group">
-
-                <label>ALMACÉN</label>
-
-                <form method="GET" id="almacen-form">
-
-                    <!-- Conservamos la marca -->
-                    {% if marca_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="marca"
-                            value="{{ marca_seleccionada }}"
-                        >
-                    {% endif %}
-
-                    <!-- Conservamos la línea -->
-                    {% if linea_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="linea"
-                            value="{{ linea_seleccionada }}"
-                        >
-                    {% endif %}
-
-                    <!-- Conservamos la sucursal -->
-                    {% if sucursal_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="sucursal"
-                            value="{{ sucursal_seleccionada }}"
-                        >
-                    {% endif %}
-
-                    <!-- Conservamos los meses -->
-                    {% for mes in meses_seleccionados %}
-                        <input
-                            type="hidden"
-                            name="mes"
-                            value="{{ mes }}"
-                        >
-                    {% endfor %}
-
-                    <select
-                        name="almacen"
-                        class="select-active"
-                        onchange="this.form.submit()"
-                    >
-
-                        <option
-                            value="TODOS"
-                            {% if almacen_seleccionado == "TODOS" %}
-                                selected
-                            {% endif %}
-                        >
-                            Todos los almacenes
-                        </option>
-
-                        {% for almacen in almacenes %}
-
-                            <option
-                                value="{{ almacen }}"
-                                {% if almacen == almacen_seleccionado %}
-                                    selected
-                                {% endif %}
-                            >
-                                {{ almacen }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </form>
-
-            </div>
-
 
         </section>
 
@@ -759,7 +760,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     <div>
                         <h2>
                             {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
-                                Evolución diaria (Mes {{ mes_seleccionado }})
+                                {% set nombres_meses = {
+                                    '1': 'Enero', '2': 'Febrero', '3': 'Marzo', '4': 'Abril',
+                                    '5': 'Mayo', '6': 'Junio', '7': 'Julio', '8': 'Agosto',
+                                    '9': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+                                } %}
+                                {% set clave_mes = mes_seleccionado|string %}
+                                Evolución diaria ({{ nombres_meses.get(clave_mes, 'Mes ' ~ mes_seleccionado) }})
                             {% else %}
                                 Evolución mensual
                             {% endif %}
@@ -777,26 +784,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="line-chart">
 
                     <!-- Botones de navegación dinámicos -->
-                    <div style="margin-bottom: 25px; display: flex; gap: 10px; position: relative; z-index: 1000;">
+                    <div style="margin-bottom: 15px; display: flex; gap: 8px; position: relative; z-index: 1000;">
                         {% if mes_seleccionado and mes_seleccionado != 'TODOS' %}
                             <!-- Botón 1: Volver a todos los meses -->
                             <button type="button"
                                     onclick="seleccionarMes(event, 'TODOS')"
-                                    tyle="padding: 8px 12px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold; color: #374151;">
+                                    style="padding: 4px 10px; background: #00216d; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-weight: 500; color: #ffffff;">
                                 Todos los meses
                             </button>
 
                             <!-- Botón 2: Ver todos los días del mes actual -->
                             <button type="button"
                                     onclick="seleccionarDia(event, 'TODOS')"
-                                    style="padding: 8px 12px; background: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#2563eb{% else %}#f3f4f6{% endif %}; color: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#ffffff{% else %}#374151{% endif %}; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                    style="padding: 4px 10px; background: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#00216d{% else %}#f3f4f6{% endif %}; color: {% if not dia_seleccionado or dia_seleccionado == 'TODOS' %}#ffffff{% else %}#374151{% endif %}; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-weight: 500;">
                                 Todos los días
                             </button>
                         {% else %}
                             <!-- Botón Vista General -->
                             <button type="button"
                                     onclick="seleccionarMes(event, 'TODOS')"
-                                    style="padding: 8px 12px; background: #2563eb; color: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                                    style="padding: 4px 10px; background: #00216d; color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; font-weight: 500;">
                                 Todos los meses
                             </button>
                         {% endif %}
@@ -1103,16 +1110,73 @@ document.addEventListener("DOMContentLoaded", function () {
             <article class="panel table-panel">
 
                 <div class="panel-header">
+                    <div>
+                        <h3>
+                            Margen por Artículo
+                        </h3>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ARTÍCULO</th>
+                                <th>IMP. VENTA</th>
+                                <th>IMP. COSTO</th>
+                                <th>IMP. COSTO CON PP</th>
+                                <th>MARGEN SIN PP</th>
+                                <th>MARGEN CON PP</th>
+                                <th>% DE PARTICIPACIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dato in margen_articulo %}
+                                <tr>
+                                    <td class="strong">
+                                        {{ dato.articulo }}
+                                    </td>
+
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_venta) }}
+                                    </td>
+
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo) }}
+                                    </td>
+
+                                    <td>
+                                        ${{ "{:,.2f}".format(dato.imp_costo_pp) }}
+                                    </td>
+
+                                    <td class="blue-text">
+                                        {{ "%.2f"|format(dato.margen_sin_pp * 100) }}%
+                                    </td>
+
+                                    <td class="green-text">
+                                        {{ "%.2f"|format(dato.margen_con_pp * 100) }}%
+                                    </td>
+
+                                    <td>
+                                        {{ "%.2f"|format(dato.participacion * 100) }}%
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </article>
+
+            <article class="panel table-panel">
+
+                <div class="panel-header">
 
                     <div>
 
-                        <h2>
+                        <h3>
                             Margen por sucursal
-                        </h2>
-
-                        <p>
-                            Vista independiente del almacén
-                        </p>
+                        </h3>
 
                     </div>
 
@@ -1161,15 +1225,15 @@ document.addEventListener("DOMContentLoaded", function () {
                                     </td>
 
                                     <td class="blue-text">
-                                        {{ "%.1f"|format(dato.margen_sin_pp * 100) }}%
+                                        {{ "%.2f"|format(dato.margen_sin_pp * 100) }}%
                                     </td>
 
                                     <td class="green-text">
-                                        {{ "%.1f"|format(dato.margen_con_pp * 100) }}%
+                                        {{ "%.2f"|format(dato.margen_con_pp * 100) }}%
                                     </td>
 
                                     <td>
-                                        {{ "%.1f"|format(dato.participacion * 100) }}%
+                                        {{ "%.2f"|format(dato.participacion * 100) }}%
                                     </td>
 
                                 </tr>
@@ -1183,90 +1247,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
 
             </article>
-
-            <article class="panel table-panel">
-
-                <div class="panel-header">
-
-                    <div>
-
-                        <h2>
-                            Margen por almacén
-                        </h2>
-
-                        <p>
-                            Vista independiente de la sucursal
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="table-container">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>ALMACÉN</th>
-                                <th>IMP. VENTA</th>
-                                <th>IMP. COSTO</th>
-                                <th>IMP. COSTO CON PP</th>
-                                <th>MARGEN SIN PP</th>
-                                <th>MARGEN CON PP</th>
-                                <th>% DE PARTICIPACIÓN</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {% for dato in margen_por_almacen %}
-
-                                <tr>
-
-                                    <td class="strong">
-                                        {{ dato.almacen }}
-                                    </td>
-
-                                    <td>
-                                        ${{ "{:,.2f}".format(dato.imp_venta) }}
-                                    </td>
-
-                                    <td>
-                                        ${{ "{:,.2f}".format(dato.imp_costo) }}
-                                    </td>
-
-                                    <td>
-                                        ${{ "{:,.2f}".format(dato.imp_costo_pp) }}
-                                    </td>
-
-                                    <td class="blue-text">
-                                        {{ "%.1f"|format(dato.margen_sin_pp * 100) }}%
-                                    </td>
-
-                                    <td class="green-text">
-                                        {{ "%.1f"|format(dato.margen_con_pp * 100) }}%
-                                    </td>
-
-                                    <td>
-                                         {{ "%.1f"|format(dato.participacion * 100) }}%
-                                    </td>
-
-                                </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
-
-                </div>
-
-            </article>
-
             
         </section>
 
@@ -1275,4 +1255,125 @@ document.addEventListener("DOMContentLoaded", function () {
 </body>
 
 </html>
+
+<!-- 1. LIBRERÍAS EXTERNAS (JQUERY Y SELECT2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.js"></script>
+
+<!-- 2. CÓDIGO JAVASCRIPT DE TU DASHBOARD -->
+<script>
+
+// ============================================================
+// FUNCIONES GENERALES DE MENÚS DESPLEGABLES
+// ============================================================
+
+// Abrir/Cerrar menú desplegable
+function toggleDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const isOpen = dropdown.classList.contains('show');
+    
+    // Cerrar todos los demás menús abiertos
+    document.querySelectorAll('.multiselect-content').forEach(el => el.classList.remove('show'));
+    
+    if (!isOpen) {
+        dropdown.classList.add('show');
+    }
 }
+
+// Cerrar si se da clic fuera del menú
+window.onclick = function(event) {
+    if (!event.target.matches('.multiselect-btn') && !event.target.closest('.custom-multiselect')) {
+        document.querySelectorAll('.multiselect-content').forEach(el => el.classList.remove('show'));
+    }
+}
+
+// ============================================================
+// BÚSQUEDA EN TIEMPO REAL (MARCAS Y LÍNEAS)
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // 1. Búsqueda de Prefijos
+    const prefijoSearch = document.getElementById("prefijo-search");
+    if (prefijoSearch) {
+        prefijoSearch.addEventListener("input", function () {
+            const texto = this.value.trim().toLowerCase();
+            const opciones = document.querySelectorAll("#prefijo-dropdown .multiselect-option");
+
+            opciones.forEach(function (opcion) {
+                const prefijoTexto = opcion.textContent.trim().toLowerCase();
+                opcion.style.display = prefijoTexto.includes(texto) ? "flex" : "none";
+            });
+        });
+    }
+
+    // Búsqueda de Marcas
+    const marcaSearch = document.getElementById("marca-search");
+    if (marcaSearch) {
+        marcaSearch.addEventListener("input", function () {
+            const texto = this.value.trim().toLowerCase();
+            const opciones = document.querySelectorAll("#marca-dropdown .marca-checkbox");
+
+            opciones.forEach(function (checkbox) {
+                const opcion = checkbox.closest(".multiselect-option");
+                if (!opcion) return;
+
+                const marca = checkbox.value.toLowerCase();
+                opcion.style.display = marca.includes(texto) ? "flex" : "none";
+            });
+        });
+    }
+
+    // Búsqueda de Líneas
+    const lineaSearch = document.getElementById("linea-search");
+    if (lineaSearch) {
+        lineaSearch.addEventListener("input", function () {
+            const texto = this.value.trim().toLowerCase();
+            const opciones = document.querySelectorAll("#linea-dropdown .linea-checkbox");
+
+            opciones.forEach(function (checkbox) {
+                const opcion = checkbox.closest(".multiselect-option");
+                if (!opcion) return;
+
+                const linea = checkbox.value.toLowerCase();
+                opcion.style.display = linea.includes(texto) ? "flex" : "none";
+            });
+        });
+    }
+});
+
+// ============================================================
+// EVENTOS PARA CHECKBOXES (MARCA Y LÍNEA)
+// ============================================================
+
+// Acción cuando se marca/desmarca "Todas"
+function toggleSelectAll(tipo) {
+    const allCheckbox = document.getElementById(tipo + '-all');
+    const checkboxes = document.querySelectorAll('.' + tipo + '-checkbox');
+    
+    if (allCheckbox.checked) {
+        checkboxes.forEach(cb => cb.checked = false);
+        document.getElementById(tipo + '_input').value = 'TODAS';
+        document.getElementById(tipo + '-form').submit();
+    }
+}
+
+// Acción cuando se marca/desmarca una opción individual
+function onCheckboxChange(tipo) {
+    const checkboxes = document.querySelectorAll('.' + tipo + '-checkbox:checked');
+    const allCheckbox = document.getElementById(tipo + '-all');
+    const hiddenInput = document.getElementById(tipo + '_input');
+    
+    if (checkboxes.length > 0) {
+        allCheckbox.checked = false;
+        const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+        hiddenInput.value = selectedValues.join(',');
+    } else {
+        allCheckbox.checked = true;
+        hiddenInput.value = 'TODAS';
+    }
+    
+    document.getElementById(tipo + '-form').submit();
+}
+</script>

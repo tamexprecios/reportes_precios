@@ -291,6 +291,100 @@ def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
 
     return resultado
 
+def calcular_margen_por_articulo(df: pd.DataFrame) -> list:
+    """
+    Calcula el margen de utilidad por artículo.
+
+    La tabla muestra una fila por cada artículo
+    disponible en el DataFrame recibido.
+    """
+
+    df = df.copy()
+
+    if df.empty or "Articulo" not in df.columns:
+        return []
+
+    # ========================================================
+    # LIMPIAR NOMBRE DE ARTÍCULO
+    # ========================================================
+
+    df["Articulo"] = (
+        df["Articulo"]
+        .fillna("SIN ARTÍCULO")
+        .astype(str)
+        .str.strip()
+    )
+
+    # ========================================================
+    # AGRUPAR POR ARTÍCULO
+    # ========================================================
+
+    resumen = (
+        df.groupby("Articulo", as_index=False)
+        .agg(
+            imp_venta=("SubTotalMN", "sum"),
+            imp_costo=("ImporteCosto", "sum"),
+            imp_costo_pp=("ImporteCostoPPP", "sum")
+        )
+    )
+
+    # ========================================================
+    # PORCENTAJE DE PARTICIPACIÓN EN VENTAS
+    # ========================================================
+
+    venta_total = resumen["imp_venta"].sum()
+
+    if venta_total != 0:
+        resumen["participacion"] = resumen["imp_venta"] / venta_total
+    else:
+        resumen["participacion"] = 0
+
+    # ========================================================
+    # MARGEN SIN PP
+    # ========================================================
+
+    resumen["margen_sin_pp"] = (
+        (resumen["imp_venta"] - resumen["imp_costo"])
+        / resumen["imp_venta"]
+    ).where(resumen["imp_venta"] != 0, 0)
+
+    # ========================================================
+    # MARGEN CON PP
+    # ========================================================
+
+    resumen["margen_con_pp"] = (
+        (resumen["imp_venta"] - resumen["imp_costo_pp"])
+        / resumen["imp_venta"]
+    ).where(resumen["imp_venta"] != 0, 0)
+
+    # ========================================================
+    # ORDENAR POR IMPORTE DE VENTA
+    # ========================================================
+
+    resumen = resumen.sort_values(
+        "imp_venta",
+        ascending=False
+    ).reset_index(drop=True)
+
+    # ========================================================
+    # CONSTRUIR RESULTADO
+    # ========================================================
+
+    resultado = []
+
+    for _, fila in resumen.iterrows():
+        resultado.append({
+            "articulo": fila["Articulo"],
+            "imp_venta": fila["imp_venta"],
+            "imp_costo": fila["imp_costo"],
+            "imp_costo_pp": fila["imp_costo_pp"],
+            "margen_sin_pp": fila["margen_sin_pp"],
+            "margen_con_pp": fila["margen_con_pp"],
+            "participacion": fila["participacion"],
+        })
+
+    return resultado
+
 def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
     """
     Calcula el margen de utilidad por sucursal.
@@ -508,3 +602,17 @@ def calcular_margen_por_almacen(df: pd.DataFrame) -> list:
         })
 
     return resultado
+
+def obtener_lista_prefijos(df):
+    
+    if df.empty or 'Articulo' not in df.columns:
+        return []
+    
+    # Extraer los primeros 3 caracteres de la columna Articulo
+    prefijos = df['Articulo'].astype(str).str[:3]
+    
+    # Filtrar solo prefijos válidos de 3 dígitos (por si hay registros vacíos o nulos)
+    prefijos_validos = prefijos[prefijos.str.len() == 3].unique()
+    
+    # Retornar la lista ordenada
+    return sorted(prefijos_validos.tolist())
