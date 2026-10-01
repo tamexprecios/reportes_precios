@@ -654,16 +654,14 @@ body {
     text-decoration: underline;
 }
 
-
 .bar-chart {
     padding: 3px 20px 10px;
 }
 
 .bar-row {
-    display: grid;
-    grid-template-columns: 180px 1fr;
+    display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    width: 100%;
 }
 
 .bar-line-link {
@@ -678,6 +676,7 @@ body {
 }
 
 .bar-name {
+    flex: 0 0 200px;        
     font-size: 12px;
     font-weight: 700;
     color: #30394a;
@@ -688,12 +687,11 @@ body {
 }
 
 .bars {
+    flex: 1;                
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
 }
-
 .bar-track {
     width: 90%;
     height: 8px;

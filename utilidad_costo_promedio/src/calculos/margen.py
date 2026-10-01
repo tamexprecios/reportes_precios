@@ -220,25 +220,24 @@ def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
 
     return resultado
 
-def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
-
-    """
-    Calcula el margen de utilidad con costo promedio
-    agrupado por línea.
-    """
-
+def calcular_margen_por_linea(df: pd.DataFrame, marca: str | list = "TODAS") -> list:
     df = df.copy()
 
-    if marca != "TODAS":
+    # 1. Normalizar y aplicar el filtro de marca (soporta string único, lista o comas)
+    if marca and marca not in ["TODAS", "TODOS"]:
+        if isinstance(marca, str):
+            marcas_lista = [m.strip() for m in marca.split(",") if m.strip()]
+        else:
+            marcas_lista = marca
 
-        df = df[
-            df["Categoria"]
-            .astype(str)
-            .str.strip()
-            == marca
-        ].copy()
+        if marcas_lista:
+            df["Categoria_clean"] = df["Categoria"].astype(str).str.strip()
+            df = df[df["Categoria_clean"].isin(marcas_lista)].copy()
 
-    # Limpiar línea
+    if df.empty:
+        return []
+
+    # 2. Limpiar columna Línea
     df["Linea"] = (
         df["Linea"]
         .fillna("SIN LÍNEA")
@@ -246,42 +245,32 @@ def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
         .str.strip()
     )
 
+    # 3. Agrupar SOLO por Línea (para unificar la misma línea entre datos filtrados)
     resumen = (
-        df.groupby(
-            ["Categoria", "Linea"],
-            as_index=False
-        )
+        df.groupby("Linea", as_index=False)
         .agg(
             venta=("SubTotalMN", "sum"),
             costo_promedio=("ImporteCostoPPP", "sum")
         )
     )
 
-    # Calcular utilidad
-    resumen["utilidad"] = (
-        resumen["venta"] - resumen["costo_promedio"]
-    )
+    # 4. Calcular utilidad
+    resumen["utilidad"] = resumen["venta"] - resumen["costo_promedio"]
 
-    # Calcular margen
+    # 5. Calcular margen
     resumen["margen_promedio"] = (
         resumen["utilidad"] / resumen["venta"]
-    ).where(
-        resumen["venta"] != 0,
-        0
-    )
+    ).where(resumen["venta"] != 0, 0)
 
-    # Ordenar de mayor a menor margen
+    # 6. Ordenar de mayor a menor margen
     resumen = resumen.sort_values(
         "margen_promedio",
         ascending=False
     ).reset_index(drop=True)
 
     resultado = []
-
     for _, fila in resumen.iterrows():
-
         resultado.append({
-            "marca": fila["Categoria"],
             "linea": fila["Linea"],
             "venta": fila["venta"],
             "costo_promedio": fila["costo_promedio"],
@@ -292,12 +281,6 @@ def calcular_margen_por_linea(df: pd.DataFrame,marca: str = "TODAS") -> list:
     return resultado
 
 def calcular_margen_por_articulo(df: pd.DataFrame) -> list:
-    """
-    Calcula el margen de utilidad por artículo.
-
-    La tabla muestra una fila por cada artículo
-    disponible en el DataFrame recibido.
-    """
 
     df = df.copy()
 
@@ -494,117 +477,8 @@ def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
 
     return resultado
 
-def calcular_margen_por_almacen(df: pd.DataFrame) -> list:
-    """
-    Calcula el margen de utilidad por almacén.
-
-    La tabla muestra una fila por cada almacén
-    disponible en el DataFrame recibido.
-    """
-
-    df = df.copy()
-
-    # ========================================================
-    # LIMPIAR ALMACÉN
-    # ========================================================
-
-    df["Almacen"] = (
-        df["Almacen"]
-        .fillna("SIN ALMACÉN")
-        .astype(str)
-        .str.strip()
-    )
-
-    # ========================================================
-    # AGRUPAR POR ALMACÉN
-    # ========================================================
-
-    resumen = (
-        df.groupby("Almacen", as_index=False)
-        .agg(
-            imp_venta=("SubTotalMN", "sum"),
-            imp_costo=("ImporteCosto", "sum"),
-            imp_costo_pp=("ImporteCostoPPP", "sum")
-        )
-    )
-
-    # ========================================================
-    # PORCENTAJE DE PARTICIPACIÓN EN VENTAS
-    # ========================================================
-
-    venta_total = resumen["imp_venta"].sum()
-
-    if venta_total != 0:
-
-        resumen["participacion"] = (
-            resumen["imp_venta"] / venta_total
-        )
-
-    else:
-
-        resumen["participacion"] = 0
-
-    # ========================================================
-    # MARGEN SIN PP
-    # ========================================================
-
-    resumen["margen_sin_pp"] = (
-        (
-            resumen["imp_venta"]
-            - resumen["imp_costo"]
-        )
-        / resumen["imp_venta"]
-    ).where(
-        resumen["imp_venta"] != 0,
-        0
-    )
-
-    # ========================================================
-    # MARGEN CON PP
-    # ========================================================
-
-    resumen["margen_con_pp"] = (
-        (
-            resumen["imp_venta"]
-            - resumen["imp_costo_pp"]
-        )
-        / resumen["imp_venta"]
-    ).where(
-        resumen["imp_venta"] != 0,
-        0
-    )
-
-    # ========================================================
-    # ORDENAR POR IMPORTE DE VENTA
-    # ========================================================
-
-    resumen = resumen.sort_values(
-        "imp_venta",
-        ascending=False
-    ).reset_index(drop=True)
-
-    # ========================================================
-    # CONSTRUIR RESULTADO
-    # ========================================================
-
-    resultado = []
-
-    for _, fila in resumen.iterrows():
-
-        resultado.append({
-            "almacen": fila["Almacen"],
-            "imp_venta": fila["imp_venta"],
-            "imp_costo": fila["imp_costo"],
-            "imp_costo_pp": fila["imp_costo_pp"],
-            "margen_sin_pp": fila["margen_sin_pp"],
-            "margen_con_pp": fila["margen_con_pp"],
-            "participacion": fila["participacion"],
-        })
-
-    return resultado
-
 def obtener_lista_prefijos(df):
-    
+
     if df.empty or 'Articulo' not in df.columns:
         return []
     

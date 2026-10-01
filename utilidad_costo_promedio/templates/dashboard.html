@@ -26,6 +26,24 @@ function seleccionarMarca(event, marca) {
     window.location.href = nuevaUrl;
 }
 
+function seleccionarLinea(event, linea) {
+    if (event) event.preventDefault();
+    
+    // 1. Capturamos los parámetros actuales de la URL (preserva mes, marca, sucursal, etc.)
+    const parametros = new URLSearchParams(window.location.search);
+
+    // 2. Si se hace clic en 'TODAS' o en la misma línea activa, la removemos para desfiltrar
+    if (linea === 'TODAS' || parametros.get('linea') === linea) {
+        parametros.delete('linea');
+    } else {
+        parametros.set('linea', linea);
+    }
+
+    // 3. Recargamos la página manteniendo todos los parámetros anteriores + la nueva línea
+    const nuevaUrl = "{{ url_for('dashboard') }}" + (parametros.toString() ? "?" + parametros.toString() : "");
+    window.location.href = nuevaUrl;
+}
+
 // =========================================================================
 // FUNCIÓN PARA SELECCIONAR MES
 // =========================================================================
@@ -366,9 +384,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                             </label>
 
-
                             <div class="multi-divider"></div>
-
 
                             {% for numero, nombre in meses %}
 
@@ -392,7 +408,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                             {% endfor %}
 
-
                             <div class="multi-select-footer">
 
                                 <button
@@ -413,23 +428,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </div>
 
-            <div class="filter-group">
+           <div class="filter-group">
                 <label>PREFIJO</label>
                 <div class="custom-multiselect" id="prefijo-multiselect">
         
-                    <!-- Botón principal con la flecha desplegable -->
                     <button type="button" class="multiselect-btn" onclick="toggleDropdown('prefijo-dropdown')">
-                            {% if prefijo_seleccionado and prefijo_seleccionado != 'TODOS' %}
+                            {% if prefijo_seleccionado and prefijo_seleccionado != 'TODAS' and prefijo_seleccionado != 'TODOS' %}
                                 {{ prefijo_seleccionado }}
                             {% else %}
-                                TODOS
+                                Todos los prefijos
                             {% endif %}
-                         <span class="arrow">▼</span>
-                    
+                            <span class="arrow">▼</span>
                     </button>
 
                     <div id="prefijo-dropdown" class="multiselect-content">
-                        <!-- Buscador interno -->
                         <div class="multiselect-search">
                             <input type="text" id="prefijo-search" placeholder="Buscar prefijo..." autocomplete="off">
                         </div>
@@ -437,39 +449,41 @@ document.addEventListener("DOMContentLoaded", function () {
                         <form method="GET" id="prefijo-form">
                             <!-- Preservar los demás filtros -->
                             {% if marcas_seleccionadas %}
-                                <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') }}">
+                                <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') if marcas_seleccionadas is iterable and marcas_seleccionadas is not string else marcas_seleccionadas }}">
                             {% endif %}
                             {% if lineas_seleccionadas %}
-                                <input type="hidden" name="linea" value="{{ lineas_seleccionadas|join(',') }}">
+                                <input type="hidden" name="linea" value="{{ lineas_seleccionadas|join(',') if lineas_seleccionadas is iterable and lineas_seleccionadas is not string else lineas_seleccionadas }}">
                             {% endif %}
-                            {% if sucursal_seleccionada != "TODAS" %}
+                            {% if sucursal_seleccionada and sucursal_seleccionada != "TODAS" %}
                                 <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
-                            {% endif %}
+                                {% endif %}
                             {% for mes in meses_seleccionados %}
                                 <input type="hidden" name="mes" value="{{ mes }}">
-                            {% endfor %}
+                                {% endfor %}
 
-                            <!-- Opciones desplegables con casillas cuadradas (checkbox) -->
+                            <input type="hidden" name="prefijo" id="prefijo_input" value="{{ prefijo_seleccionado if prefijo_seleccionado else 'TODAS' }}">
+
                             <div class="multiselect-options">
+                                <!-- Opción TODAS -->
                                 <label class="multiselect-option">
                                     <input 
                                         type="checkbox" 
-                                        class="prefijo-checkbox"
-                                        value="TODOS" 
-                                        onchange="this.form.submit()" 
-                                        {% if prefijo_seleccionado == 'TODOS' or not prefijo_seleccionado %}checked{% endif %}
+                                        id="prefijo-all" 
+                                        onchange="toggleSelectAll('prefijo')" 
+                                        {% if not prefijo_seleccionado or prefijo_seleccionado == 'TODAS' or prefijo_seleccionado == 'TODOS' %}checked{% endif %}
                                     >
-                                    <span>TODOS</span>
+                                    <strong>TODOS</strong>
                                 </label>
+                                <hr style="margin: 4px 0; border: 0; border-top: 1px solid #eee;">
 
+                                <!-- Opciones individuales -->
                                 {% for prefijo in lista_prefijos %}
                                     <label class="multiselect-option">
                                         <input 
                                             type="checkbox" 
-                                            class="prefijo-checkbox"
-                                            name="prefijo" 
+                                            class="prefijo-checkbox" 
                                             value="{{ prefijo }}" 
-                                            onchange="this.form.submit()" 
+                                            onchange="onCheckboxChange('prefijo')" 
                                             {% if prefijo_seleccionado == prefijo %}checked{% endif %}
                                         >
                                         <span>{{ prefijo }}</span>
@@ -491,9 +505,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     {% endfor %}
                     {% if sucursal_seleccionada and sucursal_seleccionada != "TODAS" %}
                         <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
-                    {% endif %}
-                    {% if almacen_seleccionado and almacen_seleccionado != "TODOS" %}
-                        <input type="hidden" name="almacen" value="{{ almacen_seleccionado }}">
                     {% endif %}
         
                     <!-- Campo hidden donde se concatenan las marcas elegidas -->
@@ -542,18 +553,17 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="filter-group">
                 <label>LÍNEA</label>
                 <form method="GET" id="linea-form">
-                    <!-- Conservar marca seleccionada -->
+                    <!-- Conservar marcas seleccionadas -->
                     <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') if marcas_seleccionadas else 'TODAS' }}">
-        
-                    <!-- Mantener otros filtros -->
+
+                    <!-- Conservar meses seleccionados -->
                     {% for mes in meses_seleccionados %}
                         <input type="hidden" name="mes" value="{{ mes }}">
                     {% endfor %}
+
+                    <!-- Conservar sucursal seleccionada -->
                     {% if sucursal_seleccionada and sucursal_seleccionada != "TODAS" %}
                         <input type="hidden" name="sucursal" value="{{ sucursal_seleccionada }}">
-                    {% endif %}
-                    {% if almacen_seleccionado and almacen_seleccionado != "TODOS" %}
-                        <input type="hidden" name="almacen" value="{{ almacen_seleccionado }}">
                     {% endif %}
 
                     <!-- Campo hidden donde se concatenan las líneas elegidas -->
@@ -570,7 +580,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             {% endif %}
                             <span class="arrow">▼</span>
                         </button>
-            
+
                         <div id="linea-dropdown" class="multiselect-content">
                             <div class="multiselect-search">
                                 <input
@@ -598,71 +608,36 @@ document.addEventListener("DOMContentLoaded", function () {
                 </form>
             </div>
 
+            <!-- FILTRO SUCURSAL -->
             <div class="filter-group">
-
                 <label>SUCURSAL</label>
-
                 <form method="GET" id="sucursal-form">
-
-                    <!-- Conservamos la marca -->
-                    {% if marca_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="marca"
-                            value="{{ marca_seleccionada }}"
-                        >
+                    <!-- Conservar marcas seleccionadas -->
+                    {% if marcas_seleccionadas and marcas_seleccionadas != "TODAS" %}
+                        <input type="hidden" name="marca" value="{{ marcas_seleccionadas|join(',') if marcas_seleccionadas is iterable and marcas_seleccionadas is not string else marcas_seleccionadas }}">
                     {% endif %}
 
-                    <!-- Conservamos la línea -->
-                    {% if linea_seleccionada != "TODAS" %}
-                        <input
-                            type="hidden"
-                            name="linea"
-                            value="{{ linea_seleccionada }}"
-                        >
+                    <!-- Conservar líneas seleccionadas -->
+                    {% if lineas_seleccionadas and lineas_seleccionadas != "TODAS" %}
+                        <input type="hidden" name="linea" value="{{ lineas_seleccionadas|join(',') if lineas_seleccionadas is iterable and lineas_seleccionadas is not string else lineas_seleccionadas }}">
                     {% endif %}
 
-                    <!-- Conservamos los meses -->
+                    <!-- Conservar meses seleccionados (Duplicado eliminado) -->
                     {% for mes in meses_seleccionados %}
-                        <input
-                            type="hidden"
-                            name="mes"
-                            value="{{ mes }}"
-                        >
+                        <input type="hidden" name="mes" value="{{ mes }}">
                     {% endfor %}
 
-                        <select
-                            name="sucursal"
-                            class="select-active"
-                            onchange="this.form.submit()"
-                        >
-
-                        <option
-                            value="TODAS"
-                            {% if sucursal_seleccionada == "TODAS" %}
-                                selected
-                            {% endif %}
-                        >
+                    <select name="sucursal" class="select-active" onchange="this.form.submit()">
+                        <option value="TODAS" {% if sucursal_seleccionada == "TODAS" or not sucursal_seleccionada %}selected{% endif %}>
                             Todas las sucursales
                         </option>
-
                         {% for sucursal in sucursales %}
-
-                            <option
-                                value="{{ sucursal }}"
-                                {% if sucursal == sucursal_seleccionada %}
-                                    selected
-                                {% endif %}
-                            >
+                            <option value="{{ sucursal }}" {% if sucursal == sucursal_seleccionada %}selected{% endif %}>
                                 {{ sucursal }}
                             </option>
-
                         {% endfor %}
-
                     </select>
-
                 </form>
-
             </div>
 
         </section>
@@ -728,7 +703,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
 
             </article>
-
 
     <!-- KPI 4 · CONTRIBUCIÓN -->
 
@@ -956,14 +930,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 </div>
 
-
                 <div class="brand-margin-chart">
 
                     <a href="#" 
                         class="brand-margin-row {% if not request.args.get('marca') or request.args.get('marca') == 'TODAS' %}active{% endif %}" 
                         onclick="seleccionarMarca(event, 'TODAS')">
                         <div class="brand-margin-name" style="font-weight: bold;">
-                            Todas las marcas
+                            Ver todas las marcas
                         </div>
                     </a>
 
@@ -1012,97 +985,72 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </article>
 
-       
             <article class="panel line-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2>Margen de utilidad por línea</h2>
+                    </div>
 
-    <div class="panel-header">
+                    <div class="line-filter-actions">
+                        
+                        {% if linea_seleccionada != "TODAS" %}
+                            <a
+                                href="{{ url_for(
+                                    'dashboard',
+                                    marca=marca_seleccionada,
+                                    linea='TODAS',
+                                    mes=meses_seleccionados,
+                                    sucursal=sucursal_seleccionada,
+                                    prefijo=prefijo_seleccionado
+                                ) }}"
+                                class="all-lines-link"
+                            >
+                                Ver todas las líneas
+                            </a>
+                        {% endif %}
+                    </div>
 
-        <div>
-
-            <h2>
-                Margen por línea
-            </h2>
-
-            <div class="line-filter-actions">
-
-                <div class="brand-pill">
-                    MARCA: {{ marca_seleccionada }}
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="legend-line blue-line"></span>
+                            Costo promedio con PP
+                        </div>
+                    </div>
                 </div>
 
-                {% if linea_seleccionada != "TODAS" %}
+                <div class="bar-chart">
+                    {% for dato in margen_por_linea %}
+                        <a
+                            href="{{ url_for(
+                                'dashboard',
+                                marca=marca_seleccionada,
+                                linea=dato.linea,
+                                mes=meses_seleccionados,
+                                sucursal=sucursal_seleccionada
+                            ) }}"
+                            class="bar-row bar-line-link"
+                        >
+                            <div class="bar-name">
+                                {{ dato.linea }}
+                            </div>
 
-                    <a
-                        href="{{ url_for(
-                            'dashboard',
-                            marca=marca_seleccionada,
-                            linea='TODAS',
-                            mes=meses_seleccionados
-                        ) }}"
-                        class="all-lines-link"
-                    >
-                        Ver todas las líneas
-                    </a>
+                            <div class="bars">
+                                <div class="bar-track">
+                                    <div
+                                        class="bar blue-bar"
+                                        style="width: {{ dato.margen_promedio * 100 }}%;"
+                                    ></div>
+                                </div>
 
-                {% endif %}
-
-            </div>
-
-        </div>
-
-        <div class="legend">
-
-            <div class="legend-item">
-                <span class="legend-line blue-line"></span>
-                Costo promedio con PP
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bar-chart">
-
-        {% for dato in margen_por_linea %}
-
-        <a
-            href="{{ url_for(
-                'dashboard',
-                marca=marca_seleccionada,
-                linea=dato.linea
-            ) }}"
-            class="bar-row bar-line-link"
-        >
-
-            <div class="bar-name">
-                {{ dato.linea }}
-            </div>
-
-            <div class="bars">
-
-                <div class="bar-track">
-
-                    <div
-                        class="bar blue-bar"
-                        style="width: {{ dato.margen_promedio * 100 }}%;"
-                    ></div>
-
+                                <span class="bar-value">
+                                    {{ "%.1f"|format(dato.margen_promedio * 100) }}%
+                                </span>
+                            </div>
+                        </a>
+                    {% endfor %}
                 </div>
-
-                <span class="bar-value">
-                    {{ "%.1f"|format(dato.margen_promedio * 100) }}%
-                </span>
-
-            </div>
-
-        </a>
-
-    {% endfor %}
-
-    </div>
-       
-</article>
-
+            </article>
+        
         </section>
 
         <section class="tables-grid">
@@ -1377,3 +1325,6 @@ function onCheckboxChange(tipo) {
     document.getElementById(tipo + '-form').submit();
 }
 </script>
+
+
+
