@@ -1,9 +1,45 @@
 import pandas as pd
 
+def aplicar_costos_especiales(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sustituye ImporteCosto e ImporteCostoPPP por el importe de venta (SubTotalMN)
+    para las excepciones de negocio especificadas:
+    - Categoría SERVICIOS
+    - Artículos que empiezan con '900' o 'ET'
+    - Artículos específicos '175-FREIGHTCHARGE' y '201-LOTE'
+    """
+    if df.empty:
+        return df
+
+    df = df.copy()
+
+    # Normalizar valores de texto para evitar fallos por espacios o caja (mayúsculas/minúsculas)
+    cat_clean = df["Categoria"].fillna("").astype(str).str.strip().str.upper() if "Categoria" in df.columns else pd.Series("", index=df.index)
+    art_clean = df["Articulo"].fillna("").astype(str).str.strip().str.upper() if "Articulo" in df.columns else pd.Series("", index=df.index)
+
+    # Máscara lógica con todas las condiciones solicitadas
+    condicion_especial = (
+        (cat_clean == "SERVICIOS") |
+        (art_clean.str.startswith("900")) |
+        (art_clean == "175-FREIGHTCHARGE") |
+        (art_clean == "201-LOTE") |
+        (art_clean.str.startswith("ET"))
+    )
+
+    # Si la fila cumple alguna condición, forzamos costo = venta
+    if "SubTotalMN" in df.columns:
+        if "ImporteCosto" in df.columns:
+            df.loc[condicion_especial, "ImporteCosto"] = df.loc[condicion_especial, "SubTotalMN"]
+        if "ImporteCostoPPP" in df.columns:
+            df.loc[condicion_especial, "ImporteCostoPPP"] = df.loc[condicion_especial, "SubTotalMN"]
+
+    return df
+
 def calcular_metricas(df: pd.DataFrame) -> dict:
     """
     Calcula las métricas generales del periodo seleccionado.
     """
+    df = aplicar_costos_especiales(df)  # <--- SE AGREGA AQUÍ
 
     venta = df["SubTotalMN"].sum()
 
@@ -45,6 +81,7 @@ def calcular_evolucion_mensual(
     Calcula la evolución del margen de utilidad con PP.
     """
     df = df.copy()
+    df = aplicar_costos_especiales(df)  # <--- SE AGREGA AQUÍ
     df["FechaEmision"] = pd.to_datetime(df["FechaEmision"], errors="coerce")
     df = df.dropna(subset=["FechaEmision"])
 
@@ -110,6 +147,8 @@ def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
 
     df = df.copy()
 
+    df = aplicar_costos_especiales(df)
+    
     # ========================================================
     # LIMPIAR MARCA
     # ========================================================
@@ -223,6 +262,8 @@ def calcular_contribucion_utilidad(df: pd.DataFrame) -> list:
 def calcular_margen_por_linea(df: pd.DataFrame, marca: str | list = "TODAS") -> list:
     df = df.copy()
 
+    df = aplicar_costos_especiales(df)
+
     # 1. Normalizar y aplicar el filtro de marca (soporta string único, lista o comas)
     if marca and marca not in ["TODAS", "TODOS"]:
         if isinstance(marca, str):
@@ -283,6 +324,8 @@ def calcular_margen_por_linea(df: pd.DataFrame, marca: str | list = "TODAS") -> 
 def calcular_margen_por_articulo(df: pd.DataFrame) -> list:
 
     df = df.copy()
+
+    df = aplicar_costos_especiales(df)
 
     if df.empty or "Articulo" not in df.columns:
         return []
@@ -377,6 +420,8 @@ def calcular_margen_por_sucursal(df: pd.DataFrame) -> list:
     """
 
     df = df.copy()
+
+    df = aplicar_costos_especiales(df)
 
     # ========================================================
     # LIMPIAR NOMBRE DE SUCURSAL
